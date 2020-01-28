@@ -24,7 +24,7 @@ export namespace JsonDecoder {
       onErr: (error: string) => b
     ): b {
       const result = this.decode(json);
-      if (result instanceof Ok) {
+      if (result.isOk()) {
         return onOk(result.value);
       } else {
         return onErr(result.error);
@@ -38,7 +38,7 @@ export namespace JsonDecoder {
     decodePromise<b>(json: any): Promise<a> {
       return new Promise<a>((resolve, reject) => {
         const result = this.decode(json);
-        if (result instanceof Ok) {
+        if (result.isOk()) {
           return resolve(result.value);
         } else {
           return reject(result.error);
@@ -53,7 +53,7 @@ export namespace JsonDecoder {
     map<b>(fn: (value: a) => b): Decoder<b> {
       return new Decoder<b>((json: any) => {
         const result = this.decodeFn(json);
-        if (result instanceof Ok) {
+        if (result.isOk()) {
           return ok(fn(result.value));
         } else {
           return err(result.error);
@@ -68,7 +68,7 @@ export namespace JsonDecoder {
     then<b>(fn: (value: a) => Decoder<b>): Decoder<b> {
       return new Decoder<b>((json: any) => {
         const result = this.decodeFn(json);
-        if (result instanceof Ok) {
+        if (result.isOk()) {
           return fn(result.value).decode(json);
         } else {
           return err(result.error);
@@ -143,7 +143,7 @@ export namespace JsonDecoder {
             if (keyMap && key in keyMap) {
               const jsonKey = keyMap[key] as string;
               const r = decoders[key].decode(json[jsonKey]);
-              if (r instanceof Ok) {
+              if (r.isOk()) {
                 result[key] = r.value;
               } else {
                 return err<a>(
@@ -157,7 +157,7 @@ export namespace JsonDecoder {
               }
             } else {
               const r = decoders[key].decode(json[key]);
-              if (r instanceof Ok) {
+              if (r.isOk()) {
                 result[key] = r.value;
               } else {
                 return err<a>(
@@ -198,7 +198,7 @@ export namespace JsonDecoder {
         for (const key in decoders) {
           if (decoders.hasOwnProperty(key)) {
             const r = decoders[key].decode(json[key]);
-            if (r instanceof Ok) {
+            if (r.isOk()) {
               result[key] = r.value;
             } else {
               return err<a>(
@@ -243,7 +243,7 @@ export namespace JsonDecoder {
   ): Decoder<a> {
     return new Decoder<a>((json: any) => {
       const result = decoder.decode(json);
-      if (result instanceof Ok) {
+      if (result.isOk()) {
         return result;
       } else {
         return ok<a>(defaultValue);
@@ -284,7 +284,7 @@ export namespace JsonDecoder {
     return new Decoder<a>((json: any) => {
       for (let i = 0; i < decoders.length; i++) {
         const result = decoders[i].decode(json);
-        if (result instanceof Ok) {
+        if (result.isOk()) {
           return result;
         }
       }
@@ -352,7 +352,7 @@ export namespace JsonDecoder {
     return new Decoder<R>((json: any) =>
       decoders.reduce(
         (prev, curr) =>
-          (prev instanceof Ok ? curr.decode(prev.value) : prev) as Result<R>,
+          (prev.isOk() ? curr.decode(prev.value) : prev) as Result<R>,
         ok<R>(json)
       )
     );
@@ -373,7 +373,7 @@ export namespace JsonDecoder {
         for (const key in json) {
           if (json.hasOwnProperty(key)) {
             const result = decoder.decode(json[key]);
-            if (result instanceof Ok) {
+            if (result.isOk()) {
               obj[key] = result.value;
             } else {
               return err<{ [name: string]: a }>(
@@ -409,7 +409,7 @@ export namespace JsonDecoder {
         const arr: Array<a> = [];
         for (let i = 0; i < json.length; i++) {
           const result = decoder.decode(json[i]);
-          if (result instanceof Ok) {
+          if (result.isOk()) {
             arr.push(result.value);
           } else {
             return err<Array<a>>(
