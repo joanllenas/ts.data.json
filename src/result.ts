@@ -4,6 +4,10 @@ export class Ok<a> {
   map<b>(fn: (a: a) => b): Result<b> {
     return ok(fn(this.value));
   }
+
+  isOk(): this is Ok<a> {
+    return true;
+  }
 }
 
 export class Err<a> {
@@ -11,6 +15,10 @@ export class Err<a> {
 
   map<b>(fn: (a: a) => b): Result<b> {
     return err<b>(this.error);
+  }
+
+  isOk(): this is Ok<a> {
+    return false;
   }
 }
 
