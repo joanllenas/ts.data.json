@@ -401,6 +401,36 @@ treeDecoder.decode({
 
 The `optional` decoder tries to decode the provided JSON with the provided decoder if the json value is not `undefined` or `null`. This decoder is to allow for an optional value in the TypeScript definition while retaining the ability to give a detailed error message if the wrapped decoder fails.
 
+### JsonDecoder.nullable
+
+> `nullable<a>(decoder: Decoder<a>): Decoder<a | null>`
+
+The `nullable` decoder tries to decode the provided JSON with the provided decoder, but allows for `null` value. It returns a detailed error message if the value is not `null` and the wrapped decoder fails.
+
+```ts
+interface User {
+  name: string;
+  email: string | null;
+}
+
+const userDecoder = JsonDecoder.object<User>(
+  {
+    name: JsonDecoder.string,
+    email: JsonDecoder.nullable(JsonDecoder.string)
+  },
+  'User'
+);
+
+userDecoder.decode({ name: 'Alice', email: 'alice@example.com' })
+// Output: Ok<User>({value: {name: 'Alice', email: 'alice@example.com'}})
+
+userDecoder.decode({ name: 'Alice', email: null })
+// Output: Ok<User>({value: {name: 'Alice', email: null}})
+
+userDecoder.decode({ name: 'Alice' })
+// Output: Err({error: "<User> decoder failed at key 'email' with error: undefined is not a valid string"})
+```
+
 #### @param `decoder: Decoder<a>`
 
 Decoder the JSON will be decoded with if the value is not `null` or `undefined`.
