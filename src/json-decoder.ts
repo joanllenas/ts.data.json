@@ -271,6 +271,20 @@ export namespace JsonDecoder {
   }
 
   /**
+   * Tries to decode with `decoder` and returns `error` on failure, but allows for `null` value.
+   *
+   * @param decoder The actual decoder to use
+   */
+  export function nullable<a>(decoder: Decoder<a>): Decoder<a | null> {
+    return new Decoder<a | null>((json: any) => {
+      if (json === null) {
+        return ok(null);
+      }
+      return decoder.decode(json);
+    });
+  }
+
+  /**
    * Tries to decode the provided json value with any of the provided `decoders`.
    * If all provided `decoders` fail, this decoder fails.
    * Otherwise, it returns the first successful decoder.

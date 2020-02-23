@@ -207,6 +207,39 @@ describe('json-decoder', () => {
     });
   });
 
+  // nullable
+  describe('nullable', () => {
+    const nullableStringDecoder = JsonDecoder.nullable(JsonDecoder.string);
+
+    it('should decode a null value', () => {
+      expectOkWithValue(
+        nullableStringDecoder.decode(null),
+        null
+      );
+    });
+
+    it('should decode an actual value', () => {
+      expectOkWithValue(
+        nullableStringDecoder.decode('a string'),
+        'a string'
+      );
+    });
+
+    it('should fail on undefined value', () => {
+      const expectedErrorResult = JsonDecoder.string.decode(undefined);
+      const result = nullableStringDecoder.decode(undefined);
+
+      expect(result).to.deep.equal(expectedErrorResult);
+    });
+
+    it('should fail with message from wrapped decoder when unable to decode object', () => {
+      const expectedErrorResult = JsonDecoder.string.decode(1);
+      const result = nullableStringDecoder.decode(1);
+
+      expect(result).to.deep.equal(expectedErrorResult);
+    });
+  });
+
   // oneOf
   describe('oneOf (union types)', () => {
     it('should pick the number decoder', () => {
