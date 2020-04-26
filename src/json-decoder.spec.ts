@@ -7,9 +7,7 @@ const expect = chai.expect;
 
 // Test utils
 const expectOkWithValue = <a>(result: Result<a>, expectedValue: a) =>
-  expect(result)
-    .to.be.an.instanceof(Ok)
-    .and.to.deep.equal(ok(expectedValue));
+  expect(result).to.be.an.instanceof(Ok).and.to.deep.equal(ok(expectedValue));
 const expectErr = <a>(result: Result<a>) =>
   expect(result).to.be.an.instanceof(Err);
 const expectErrWithMsg = <a>(result: Result<a>, expectedErrorMsg: string) =>
@@ -212,17 +210,11 @@ describe('json-decoder', () => {
     const nullableStringDecoder = JsonDecoder.nullable(JsonDecoder.string);
 
     it('should decode a null value', () => {
-      expectOkWithValue(
-        nullableStringDecoder.decode(null),
-        null
-      );
+      expectOkWithValue(nullableStringDecoder.decode(null), null);
     });
 
     it('should decode an actual value', () => {
-      expectOkWithValue(
-        nullableStringDecoder.decode('a string'),
-        'a string'
-      );
+      expectOkWithValue(nullableStringDecoder.decode('a string'), 'a string');
     });
 
     it('should fail on undefined value', () => {

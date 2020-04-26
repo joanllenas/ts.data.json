@@ -7,7 +7,7 @@
   "scripts": {
     "build": "tsc",
     "test": "mocha --require ts-node/register 'src/**/*.spec.ts'",
-    "lint": "tslint -p ./tsconfig.json",
+    "lint": "tslint --project ./tsconfig.json",
     "prepub": "npm run test && npm run lint",
     "pub": "npm run build && npm publish"
   },
@@ -39,9 +39,10 @@
     "@types/mocha": "^5.2.7",
     "chai": "^4.2.0",
     "mocha": "^6.2.2",
-    "prettier": "^1.19.1",
-    "ts-node": "^8.5.4",
+    "prettier": "^2.0.5",
+    "ts-lint": "^4.5.1",
+    "ts-node": "^8.9.1",
     "tslint": "^5.20.1",
-    "typescript": "^3.7.3"
+    "typescript": "^3.8.3"
   }
 }

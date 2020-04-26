@@ -14,11 +14,9 @@ describe('Result', () => {
       expect(new Ok('hola').value).to.equal('hola');
     });
     it('should chain transformations while mapping', () => {
-      expect(
-        ok('hola')
-          .map(toUpper)
-          .map(exclamation)
-      ).to.deep.equal(ok('HOLA!'));
+      expect(ok('hola').map(toUpper).map(exclamation)).to.deep.equal(
+        ok('HOLA!')
+      );
     });
   });
 
@@ -27,11 +25,9 @@ describe('Result', () => {
       expect(err('Wrong!')).to.deep.equal(err('Wrong!'));
     });
     it('should keep the first error while mapping', () => {
-      expect(
-        err<string>('Wrong')
-          .map(toUpper)
-          .map(exclamation)
-      ).to.deep.equal(err('Wrong'));
+      expect(err<string>('Wrong').map(toUpper).map(exclamation)).to.deep.equal(
+        err('Wrong')
+      );
     });
   });
 
