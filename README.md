@@ -421,13 +421,13 @@ const userDecoder = JsonDecoder.object<User>(
   'User'
 );
 
-userDecoder.decode({ name: 'Alice', email: 'alice@example.com' })
+userDecoder.decode({ name: 'Alice', email: 'alice@example.com' });
 // Output: Ok<User>({value: {name: 'Alice', email: 'alice@example.com'}})
 
-userDecoder.decode({ name: 'Alice', email: null })
+userDecoder.decode({ name: 'Alice', email: null });
 // Output: Ok<User>({value: {name: 'Alice', email: null}})
 
-userDecoder.decode({ name: 'Alice' })
+userDecoder.decode({ name: 'Alice' });
 // Output: Err({error: "<User> decoder failed at key 'email' with error: undefined is not a valid string"})
 ```
 
@@ -598,6 +598,42 @@ Value always returned.
 ```ts
 JsonDecoder.constant(true).decode(false);
 // Ok({value: true})
+```
+
+### JsonDecoder.combine
+
+A `combine` decoder tries to decode the provided JSON with all of the provided decoders and returns an intersection of them all.
+
+Value always returned.
+
+```ts
+type User = { id: string };
+type WithName = { name: string };
+type WithAge = { age: number };
+
+const userDecoder = JsonDecoder.object<User>(
+  { id: JsonDecoder.string },
+  'User'
+);
+
+const nameDecoder = JsonDecoder.object<WithName>(
+  { name: JsonDecoder.string },
+  'WithName'
+);
+
+const ageDecoder = JsonDecoder.object<WithAge>(
+  { age: JsonDecoder.number },
+  'WithAge'
+);
+
+const finalDecoder = JsonDecoder.combine(userDecoder, nameDecoder, ageDecoder);
+// Decoder<User & WithName & WithAge>
+
+finalDecoder.decode({ id: 'alice', name: 'Alice', age: 30 });
+// Ok({ id: 'alice', name: 'Alice', age: 30 })
+
+finalDecoder.decode({ id: 'alice' });
+// Err({ error: '<WithName> decoder failed at key "name" with error: undefined is not a valid string' })
 ```
 
 ## Related libraries
