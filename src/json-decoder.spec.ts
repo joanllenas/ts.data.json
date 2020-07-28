@@ -822,6 +822,41 @@ describe('json-decoder', () => {
     });
   });
 
+  // combine
+  describe('combine', () => {
+    type WithName = { name: string };
+    type WithAge = { age: number };
+
+    const nameDecoder = JsonDecoder.object<WithName>(
+      { name: JsonDecoder.string },
+      'WithName'
+    );
+
+    const ageDecoder = JsonDecoder.object<WithAge>(
+      { age: JsonDecoder.number },
+      'WithAge'
+    );
+
+    const combinedDecoder = JsonDecoder.combine(nameDecoder, ageDecoder);
+
+    it('creates decoder that succeeds when both decoders succeed', () => {
+      const data = { name: 'Alice', age: 30 };
+      expectOkWithValue(combinedDecoder.decode(data), data);
+    });
+
+    it('creates decoder that fails when at least of of the decoders failed', () => {
+      expectErrWithMsg(
+        combinedDecoder.decode({ age: 30 }),
+        `<WithName> decoder failed at key "name" with error: undefined is not a valid string`
+      );
+
+      expectErrWithMsg(
+        combinedDecoder.decode({ name: 'Alice' }),
+        `<WithAge> decoder failed at key "age" with error: undefined is not a valid number`
+      );
+    });
+  });
+
   // Mixed
   describe('complex combinations', () => {
     type User = {
