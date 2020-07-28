@@ -494,6 +494,69 @@ export namespace JsonDecoder {
       }
     });
   }
+
+  /**
+   * Transforms union type to intersection type.
+   *
+   * For example:
+   *
+   *    Intersect<{ x: number } | { y: number }>
+   *
+   * becomes
+   *
+   *    { x: number } & { y: number }
+   */
+  type Intersect<T> = (T extends any ? (x: T) => void : never) extends (
+    x: infer R
+  ) => void
+    ? R
+    : never;
+
+  /**
+   * Transforms array of objects to a combined intersection type
+   *
+   * For example:
+   *
+   *    Combine<[{ x: number }, { y: number }]>
+   *
+   * becomes
+   *
+   *    { x: number } & { y: number }
+   */
+  type Combine<T extends { [k: string]: any }[]> = Intersect<T[number]>;
+
+  /**
+   * Combines a list of decoders into a single decoder
+   * which result is an intersection type of input decoders.
+   *
+   * Example:
+   *
+   *    > JsonDecoder.combine(Decoder<User>, Decoder<Metadata>)
+   *    // => Decoder<User & Metadata>
+   *
+   * @param decoders Variable arguments list of decoders
+   */
+  export function combine<TS extends { [k: string]: any }[]>(
+    ...decoders: { [T in keyof TS]: Decoder<TS[T]> }
+  ): Decoder<Combine<TS>> {
+    return new Decoder((json: any) => {
+      try {
+        const finalResult = decoders.reduce((acc, decoder) => {
+          const result = decoder.decode(json);
+          if (result.isOk()) {
+            return {
+              ...acc,
+              ...result.value
+            };
+          }
+          throw result.error;
+        }, {}) as Combine<TS>;
+        return ok(finalResult);
+      } catch (error) {
+        return err(error);
+      }
+    });
+  }
 }
 
 export namespace $JsonDecoderErrors {
