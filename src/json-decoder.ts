@@ -506,7 +506,7 @@ export namespace JsonDecoder {
    *
    *    { x: number } & { y: number }
    */
-  export type Intersect<T> = (T extends any ? (x: T) => void : never) extends (
+  type Intersect<T> = (T extends any ? (x: T) => void : never) extends (
     x: infer R
   ) => void
     ? R
@@ -523,7 +523,7 @@ export namespace JsonDecoder {
    *
    *    { x: number } & { y: number }
    */
-  export type Combine<T extends { [k: string]: any }[]> = Intersect<T[number]>;
+  type Combine<T extends { [k: string]: any }[]> = Intersect<T[number]>;
 
   /**
    * Combines a list of decoders into a single decoder
