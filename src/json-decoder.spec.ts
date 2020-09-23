@@ -88,6 +88,54 @@ describe('json-decoder', () => {
     });
   });
 
+  // enumerate
+  describe('enumerate', () => {
+    enum IntEnum {
+      A,
+      B,
+      C,
+    }
+    enum OddlyOrderedIntEnum {
+      A = 2,
+      B = 8,
+      C = -3,
+    }
+    enum HeterogeneousEnum {
+      X = 1,
+      Y, /* 2 */
+      Z = 'foo',
+    }
+    it('should decode when the value is in the enum', () => {
+      expectOkWithValue(JsonDecoder.enumeration<IntEnum>(IntEnum, 'IntEnum').decode(1),
+        IntEnum.B /* 1 */);
+      expectOkWithValue(JsonDecoder.enumeration<OddlyOrderedIntEnum>(
+        OddlyOrderedIntEnum, 'OddlyOrderedIntEnum').decode(-3),
+        OddlyOrderedIntEnum.C /* -3 */);
+      expectOkWithValue(JsonDecoder.enumeration<HeterogeneousEnum>(
+        HeterogeneousEnum, 'HeterogeneousEnum').decode(2),
+        HeterogeneousEnum.Y /* 2 */);
+      expectOkWithValue(JsonDecoder.enumeration<HeterogeneousEnum>(
+        HeterogeneousEnum, 'HeterogeneousEnum').decode('foo'),
+        HeterogeneousEnum.Z /* 'foo' */);
+    });
+    it('should fail when the value is not in the enum', () => {
+      expectErrWithMsg(
+        JsonDecoder.enumeration<IntEnum>(IntEnum, 'IntEnum').decode(3),
+        $JsonDecoderErrors.enumValueError('IntEnum', 3)
+      );
+      expectErrWithMsg(
+        JsonDecoder.enumeration<IntEnum>(
+          OddlyOrderedIntEnum, 'OddlyOrderedIntEnum').decode(3),
+        $JsonDecoderErrors.enumValueError('OddlyOrderedIntEnum', 3)
+      );
+      expectErrWithMsg(
+        JsonDecoder.enumeration<HeterogeneousEnum>(
+          HeterogeneousEnum, 'HeterogeneousEnum').decode(0),
+        $JsonDecoderErrors.enumValueError('HeterogeneousEnum', 0)
+      );
+    });
+  });
+
   // failover
   describe('failover (on failure provide a default value)', () => {
     it('should decode a value when value is provided', () => {

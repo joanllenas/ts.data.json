@@ -119,6 +119,25 @@ export namespace JsonDecoder {
     }
   });
 
+  /**
+   * Decode for `enumeration`.
+   *
+   * @param enumObj The enum object to use for decoding. Must not be a const enum.
+   * @param decoderName How to display the name of the object being decoded in errors.
+   */
+  export function enumeration<e>(
+    enumObj: object,
+    decoderName: string
+  ): Decoder<e> {
+    return new Decoder<e>((json: any) => {
+      const enumValue = Object.values(enumObj).find((x: any) => x === json);
+      if (enumValue) {
+        return ok<e>(enumValue);
+      }
+      return err<e>($JsonDecoderErrors.enumValueError(decoderName, json));
+    });
+  }
+
   export type DecoderObject<a> = { [p in keyof Required<a>]: Decoder<a[p]> };
   export type DecoderObjectKeyMap<a> = { [p in keyof a]?: string };
 
@@ -583,6 +602,12 @@ export namespace $JsonDecoderErrors {
     `<${decoderName}> decoder failed because ${JSON.stringify(
       json
     )} can't be decoded with any of the provided oneOf decoders`;
+
+  export const enumValueError = (
+    decoderName: string,
+    invalidValue: any,
+  ): string =>
+    `<${decoderName}> decoder failed at value "${invalidValue}" which is not in the enum`;
 
   export const objectError = (
     decoderName: string,
