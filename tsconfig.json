@@ -7,7 +7,7 @@
     "outDir": "./dist",
     "strict": true,
     "lib": [
-      "es2016",
+      "ES2017",
       "dom"
     ]
   },

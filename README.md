@@ -101,6 +101,37 @@ JsonDecoder.boolean.decode(true); // Ok<boolean>({value: true})
 JsonDecoder.boolean.decode(null); // Err({error: 'null is not a valid boolean'})
 ```
 
+### JsonDecoder.enumeration
+
+> `enumeration<e>(enumObj: object, decoderName: string): Decoder<e>`
+
+Creates a decoder for a (non-const) enum.
+
+#### @param `enumObj: object`
+
+The enum object to use for decoding. This doesn't exist for const enums.
+
+#### @param `decoderName: string`
+
+Type of the object we are decoding. i.e. `User`. It is used to generate meaningful decoding error messages.
+
+#### Basic example
+
+```ts
+enum ExampleEnum {
+  X = 1,
+  Y, /* 2 */
+  Z = 'foo',
+}
+
+const exampleEnumDecoder = JsonDecoder.enumeration<ExampleEnum>(
+  ExampleEnum, 'ExampleEnum');
+
+exampleEnumDecoder.decode(1); // Ok<ExampleEnum>({value: 1})
+exampleEnumDecoder.decode(ExampleEnum.Y); // Ok<ExampleEnum>({value: 2})
+exampleEnumDecoder.decode(3); // Err({error: '<ExampleEnum> decoder failed at value "3" which is not in the enum'})
+```
+
 ### JsonDecoder.object
 
 > `object<a>(decoders: DecoderObject<a>, decoderName: string, keyMap?: DecoderObjectKeyMap<a>): Decoder<a>`
