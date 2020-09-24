@@ -88,8 +88,8 @@ describe('json-decoder', () => {
     });
   });
 
-  // enumerate
-  describe('enumerate', () => {
+  // enumeration
+  describe('enumeration', () => {
     enum IntEnum {
       A,
       B,
