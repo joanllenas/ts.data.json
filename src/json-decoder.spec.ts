@@ -1228,6 +1228,23 @@ describe('json-decoder', () => {
         ]);
       });
     });
+
+    describe('mapError', () => {
+      const numberWithMapErrorToNull = JsonDecoder.number.mapError(() => null)
+      const numberWithMapErrorToErrorMessage = JsonDecoder.number.mapError((error) => error)
+      
+      it('should decode successfully', () => {
+        expectOkWithValue(numberWithMapErrorToNull.decode(9), 9);
+      });
+
+      it('should transform the value when decoding fails', () => {
+        expectOkWithValue(numberWithMapErrorToNull.decode("not a number"), null);
+      });
+
+      it('should provide the callback function with the error message', () => {
+        expectOkWithValue(numberWithMapErrorToErrorMessage.decode("not a number"), "\"not a number\" is not a valid number");
+      });
+    });
   });
 
   describe('readme examples', () => {
