@@ -62,7 +62,7 @@ export namespace JsonDecoder {
     }
 
     /**
-     * Chains decoder error transformations
+     * Transforms an error into a new value
      * @param fn The transformation function
      */
     mapError<b>(fn: (error: string) => b): Decoder<a | b> {
@@ -620,7 +620,7 @@ export namespace $JsonDecoderErrors {
 
   export const enumValueError = (
     decoderName: string,
-    invalidValue: any
+    invalidValue: any,
   ): string =>
     `<${decoderName}> decoder failed at value "${invalidValue}" which is not in the enum`;
 
