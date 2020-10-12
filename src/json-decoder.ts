@@ -62,6 +62,21 @@ export namespace JsonDecoder {
     }
 
     /**
+     * Transforms an error into a new value
+     * @param fn The transformation function
+     */
+    mapError<b>(fn: (error: string) => b): Decoder<a | b> {
+      return new Decoder<a | b>((json: any) => {
+        const result = this.decodeFn(json);
+        if (result.isOk()) {
+          return ok<a>(result.value);
+        } else {
+          return ok<b>(fn(result.error));
+        }
+      });
+    }
+
+    /**
      * Chains decoders
      * @param fn Function that returns a new decoder
      */
