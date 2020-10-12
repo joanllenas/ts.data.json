@@ -620,7 +620,7 @@ export namespace $JsonDecoderErrors {
 
   export const enumValueError = (
     decoderName: string,
-    invalidValue: any,
+    invalidValue: any
   ): string =>
     `<${decoderName}> decoder failed at value "${invalidValue}" which is not in the enum`;
 

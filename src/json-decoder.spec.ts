@@ -93,30 +93,44 @@ describe('json-decoder', () => {
     enum IntEnum {
       A,
       B,
-      C,
+      C
     }
     enum OddlyOrderedIntEnum {
       A = 2,
       B = 8,
-      C = -3,
+      C = -3
     }
     enum HeterogeneousEnum {
       X = 1,
-      Y, /* 2 */
-      Z = 'foo',
+      Y /* 2 */,
+      Z = 'foo'
     }
     it('should decode when the value is in the enum', () => {
-      expectOkWithValue(JsonDecoder.enumeration<IntEnum>(IntEnum, 'IntEnum').decode(1),
-        IntEnum.B /* 1 */);
-      expectOkWithValue(JsonDecoder.enumeration<OddlyOrderedIntEnum>(
-        OddlyOrderedIntEnum, 'OddlyOrderedIntEnum').decode(-3),
-        OddlyOrderedIntEnum.C /* -3 */);
-      expectOkWithValue(JsonDecoder.enumeration<HeterogeneousEnum>(
-        HeterogeneousEnum, 'HeterogeneousEnum').decode(2),
-        HeterogeneousEnum.Y /* 2 */);
-      expectOkWithValue(JsonDecoder.enumeration<HeterogeneousEnum>(
-        HeterogeneousEnum, 'HeterogeneousEnum').decode('foo'),
-        HeterogeneousEnum.Z /* 'foo' */);
+      expectOkWithValue(
+        JsonDecoder.enumeration<IntEnum>(IntEnum, 'IntEnum').decode(1),
+        IntEnum.B /* 1 */
+      );
+      expectOkWithValue(
+        JsonDecoder.enumeration<OddlyOrderedIntEnum>(
+          OddlyOrderedIntEnum,
+          'OddlyOrderedIntEnum'
+        ).decode(-3),
+        OddlyOrderedIntEnum.C /* -3 */
+      );
+      expectOkWithValue(
+        JsonDecoder.enumeration<HeterogeneousEnum>(
+          HeterogeneousEnum,
+          'HeterogeneousEnum'
+        ).decode(2),
+        HeterogeneousEnum.Y /* 2 */
+      );
+      expectOkWithValue(
+        JsonDecoder.enumeration<HeterogeneousEnum>(
+          HeterogeneousEnum,
+          'HeterogeneousEnum'
+        ).decode('foo'),
+        HeterogeneousEnum.Z /* 'foo' */
+      );
     });
     it('should fail when the value is not in the enum', () => {
       expectErrWithMsg(
@@ -125,12 +139,16 @@ describe('json-decoder', () => {
       );
       expectErrWithMsg(
         JsonDecoder.enumeration<IntEnum>(
-          OddlyOrderedIntEnum, 'OddlyOrderedIntEnum').decode(3),
+          OddlyOrderedIntEnum,
+          'OddlyOrderedIntEnum'
+        ).decode(3),
         $JsonDecoderErrors.enumValueError('OddlyOrderedIntEnum', 3)
       );
       expectErrWithMsg(
         JsonDecoder.enumeration<HeterogeneousEnum>(
-          HeterogeneousEnum, 'HeterogeneousEnum').decode(0),
+          HeterogeneousEnum,
+          'HeterogeneousEnum'
+        ).decode(0),
         $JsonDecoderErrors.enumValueError('HeterogeneousEnum', 0)
       );
     });
@@ -1230,19 +1248,27 @@ describe('json-decoder', () => {
     });
 
     describe('mapError', () => {
-      const numberWithMapErrorToNull = JsonDecoder.number.mapError(() => null)
-      const numberWithMapErrorToErrorMessage = JsonDecoder.number.mapError((error) => error)
-      
+      const numberWithMapErrorToNull = JsonDecoder.number.mapError(() => null);
+      const numberWithMapErrorToErrorMessage = JsonDecoder.number.mapError(
+        error => error
+      );
+
       it('should decode successfully', () => {
         expectOkWithValue(numberWithMapErrorToNull.decode(9), 9);
       });
 
       it('should transform the value when decoding fails', () => {
-        expectOkWithValue(numberWithMapErrorToNull.decode("not a number"), null);
+        expectOkWithValue(
+          numberWithMapErrorToNull.decode('not a number'),
+          null
+        );
       });
 
       it('should provide the callback function with the error message', () => {
-        expectOkWithValue(numberWithMapErrorToErrorMessage.decode("not a number"), "\"not a number\" is not a valid number");
+        expectOkWithValue(
+          numberWithMapErrorToErrorMessage.decode('not a number'),
+          '"not a number" is not a valid number'
+        );
       });
     });
   });
