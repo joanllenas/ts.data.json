@@ -696,5 +696,5 @@ export namespace $JsonDecoderErrors {
     decoders: readonly any[]
   ): string =>
     `<${decoderName}> tuple decoder failed because it received a tuple of length ` +
-    `${jsonArray.length} and ${decoders.length} decoders.`;
+    `${jsonArray.length}, but ${decoders.length} decoders.`;
 }
