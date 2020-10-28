@@ -279,6 +279,30 @@ JsonDecoder.array<number>(JsonDecoder.number, 'number[]').decode([1, '2', 3]);
 // Output: Err({error: '<number[]> decoder failed at index 1 with error: "2" is not a valid number'})
 ```
 
+### JsonDecoder.tuple
+
+> `tuple(decoders: Decoder[], decoderName: string): Decoder`
+
+Creates a `tuple` decoder.
+
+#### @param `decoders: Decoder[]`
+
+An array containing a decoder for each element of the tuple.
+
+#### @param `decoderName: string`
+
+Type of the object we are decoding. i.e. `[number, string]`. It is used to generate meaningful decoding error messages.
+
+```ts
+decoder: Decoder<[number, string]> = JsonDecoder.tuple(
+  [JsonDecoder.number, JsonDecoder.string], '[number, string]');
+decoder.decode([1, "foo"]);
+// Output: Ok<[number, string]>([1, "foo"])
+
+decoder.decode([1, "foo", 2]);
+// Output: Err({error: '<[number, string]> tuple decoder failed because it received a tuple of length 3, but 2 decoders.
+```
+
 ### JsonDecoder.dictionary
 
 > `dictionary<a>(decoder: Decoder<a>, decoderName: string): Decoder<{ [name: string]: a }>`
