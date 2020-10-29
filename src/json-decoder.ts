@@ -479,7 +479,7 @@ export namespace JsonDecoder {
    */
   // This turns a tuple of decoders into a tuple of their results.
   type TupleOfResults<T extends readonly [] | readonly Decoder<any>[]> = {
-    [K in keyof T]: T[K] extends Decoder<infer R> ? R : never
+    [K in keyof T]: T[K] extends Decoder<infer R> ? R : never;
   };
   export const tuple = <T extends readonly [] | readonly Decoder<any>[]>(
     decoders: T,
@@ -489,8 +489,13 @@ export namespace JsonDecoder {
       if (json instanceof Array) {
         const arr = [];
         if (json.length !== decoders.length) {
-          return err<TupleOfResults<T>>($JsonDecoderErrors.tupleLengthMismatchError(
-            decoderName, json, decoders));
+          return err<TupleOfResults<T>>(
+            $JsonDecoderErrors.tupleLengthMismatchError(
+              decoderName,
+              json,
+              decoders
+            )
+          );
         }
         for (let i = 0; i < json.length; i++) {
           const result = decoders[i].decode(json[i]);
@@ -503,9 +508,11 @@ export namespace JsonDecoder {
           }
         }
         // Cast to a tuple of the right type.
-        return ok<TupleOfResults<T>>(arr as unknown as TupleOfResults<T>);
+        return ok<TupleOfResults<T>>((arr as unknown) as TupleOfResults<T>);
       } else {
-        return err<TupleOfResults<T>>($JsonDecoderErrors.primitiveError(json, 'array'));
+        return err<TupleOfResults<T>>(
+          $JsonDecoderErrors.primitiveError(json, 'array')
+        );
       }
     });
   };
