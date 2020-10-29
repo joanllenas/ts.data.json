@@ -473,6 +473,44 @@ export namespace JsonDecoder {
   };
 
   /**
+   * Decoder for a tuple of a specific shape.
+   *
+   * @param decoders The decoders for each element of the tuple.
+   */
+  // This turns a tuple of decoders into a tuple of their results.
+  type TupleOfResults<T extends readonly [] | readonly Decoder<any>[]> = {
+    [K in keyof T]: T[K] extends Decoder<infer R> ? R : never
+  };
+  export const tuple = <T extends readonly [] | readonly Decoder<any>[]>(
+    decoders: T,
+    decoderName: string
+  ): Decoder<TupleOfResults<T>> => {
+    return new Decoder<TupleOfResults<T>>(json => {
+      if (json instanceof Array) {
+        const arr = [];
+        if (json.length !== decoders.length) {
+          return err<TupleOfResults<T>>($JsonDecoderErrors.tupleLengthMismatchError(
+            decoderName, json, decoders));
+        }
+        for (let i = 0; i < json.length; i++) {
+          const result = decoders[i].decode(json[i]);
+          if (result.isOk()) {
+            arr.push(result.value);
+          } else {
+            return err<TupleOfResults<T>>(
+              $JsonDecoderErrors.arrayError(decoderName, i, result.error)
+            );
+          }
+        }
+        // Cast to a tuple of the right type.
+        return ok<TupleOfResults<T>>(arr as unknown as TupleOfResults<T>);
+      } else {
+        return err<TupleOfResults<T>>($JsonDecoderErrors.primitiveError(json, 'array'));
+      }
+    });
+  };
+
+  /**
    * Decoder that only succeeds when json is strictly (===) `null`.
    * When succeeds it returns `defaultValue`.
    *
@@ -651,4 +689,12 @@ export namespace $JsonDecoderErrors {
     key: string
   ): string =>
     `Unknown key "${key}" found while processing strict <${decoderName}> decoder`;
+
+  export const tupleLengthMismatchError = (
+    decoderName: string,
+    jsonArray: readonly any[],
+    decoders: readonly any[]
+  ): string =>
+    `<${decoderName}> tuple decoder failed because it received a tuple of length ` +
+    `${jsonArray.length}, but ${decoders.length} decoders.`;
 }

@@ -730,6 +730,43 @@ describe('json-decoder', () => {
     });
   });
 
+  // tuple
+  describe('tuple', () => {
+    it('no decoders returns empty tuple', () => {
+      expectOkWithValue(
+        JsonDecoder.tuple([], '[]').decode([]),
+        []
+      );
+    });
+    it('should decode a [number, number] tuple', () => {
+      const decoder: JsonDecoder.Decoder<[number, number]> =
+        JsonDecoder.tuple([JsonDecoder.number, JsonDecoder.number], '[number, number]');
+      expectOkWithValue(decoder.decode([2, 3]),
+        [2, 3]
+      );
+    });
+    it('should decode a [number, string, number[]] tuple', () => {
+      const decoder: JsonDecoder.Decoder<[number, string, number[]]> =
+        JsonDecoder.tuple([
+          JsonDecoder.number,
+          JsonDecoder.string,
+          JsonDecoder.array<number>(JsonDecoder.number, 'number[]')
+        ], '[number, string, number[]]');
+      expectOkWithValue(decoder.decode([2, "foo", [3, 4, 5]]), [2, "foo", [3, 4, 5]]
+      );
+    });
+    it('should decode throw a length mismatch error', () => {
+      const decoder: JsonDecoder.Decoder<[number, number[]]> =
+        JsonDecoder.tuple([
+          JsonDecoder.number,
+          JsonDecoder.array<number>(JsonDecoder.number, 'number[]')
+        ], '[number, number[]]');
+      expectErrWithMsg(decoder.decode([2, "foo", [3, 4, 5]]),
+        $JsonDecoderErrors.tupleLengthMismatchError('[number, number[]]', [0, 1, 2], [0, 1])
+      );
+    });
+  });
+
   // lazy
   describe('lazy (recursive decoders)', () => {
     type Node<a> = {
