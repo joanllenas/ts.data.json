@@ -492,7 +492,7 @@ export namespace JsonDecoder {
           return err<TupleOfResults<T>>($JsonDecoderErrors.tupleLengthMismatchError(
             decoderName, json, decoders));
         }
-        for (let i =-0; i < json.length; i++) {
+        for (let i = 0; i < json.length; i++) {
           const result = decoders[i].decode(json[i]);
           if (result.isOk()) {
             arr.push(result.value);
