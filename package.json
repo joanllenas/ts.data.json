@@ -1,15 +1,20 @@
 {
   "name": "ts.data.json",
-  "version": "1.5.0",
+  "version": "1.6.0",
   "description": "A JSON decoding library for Typescript",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "main": "./dist/cjs/index.js",
+  "module": "./dist/esm/index.js",
+  "files": [
+    "dist/"
+  ],
   "scripts": {
-    "build": "tsc",
+    "build": "tsc -p tsconfig.json && tsc -p tsconfig-cjs.json",
     "test": "mocha --require ts-node/register 'src/**/*.spec.ts'",
     "lint": "tslint --project ./tsconfig.json",
     "prepub": "npm run test && npm run lint",
-    "pub": "npm run build && npm publish"
+    "pub": "npm run build && npm publish",
+    "prebeta": "npm run test && npm run lint",
+    "beta": "npm run build && npm publish --tag beta"
   },
   "keywords": [
     "json",

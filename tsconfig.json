@@ -1,15 +1,23 @@
 {
   "compilerOptions": {
-    "module": "commonjs",
+    "module": "ES2020",
     "target": "es5",
     "declaration": true,
     "noImplicitAny": true,
-    "outDir": "./dist",
+    "outDir": "./dist/esm",
     "strict": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
     "lib": [
       "ES2017",
       "dom"
     ]
+  },
+  "ts-node": {
+    // these overrides are used by ts-node
+    "compilerOptions": {
+      "module": "commonjs"
+    }
   },
   "include": ["src/**/*"]
 }
