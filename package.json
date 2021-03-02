@@ -1,6 +1,6 @@
 {
   "name": "ts.data.json",
-  "version": "1.6.0",
+  "version": "1.6.1",
   "description": "A JSON decoding library for Typescript",
   "main": "./dist/cjs/index.js",
   "module": "./dist/esm/index.js",
