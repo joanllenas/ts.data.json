@@ -11,7 +11,36 @@ JSON decoders validate the JSON before it comes into our program. So if the data
 
 [![](./.github/all-your-json-are-belong-to-us.jpg)](https://en.wikipedia.org/wiki/All_your_base_are_belong_to_us)
 
-## Install
+## Table Of Contents
+
+- [Installation](#installation)
+- [Example](#example)
+- [Decoders](#api)
+  - [string](#jsondecoderstring)
+  - [number](#jsondecodernumber)
+  - [boolean](#jsondecoderboolean)
+  - [object](#jsondecoderobject)
+  - [object (strict)](#jsondecoderobjectstrict)
+  - [array](#jsondecoderarray)
+  - [dictionary](#jsondecoderdictionary)
+  - [oneOf](#jsondecoderoneof)
+  - [allOf](#jsondecoderallof)
+  - [tuple](#jsondecodertuple)
+  - [enumeration](#jsondecoderenumeration)
+  - [lazy](#jsondecoderlazy)
+  - [optional](#jsondecoderoptional)
+  - [nullable](#jsondecodernullable)
+  - [failover](#jsondecoderfailover)
+  - [succeed](#jsondecodersucceed)
+  - [fail](#jsondecoderfail)
+  - [isNull](#jsondecoderisnull)
+  - [isUndefined](#jsondecoderisundefined)
+  - [isExactly](#jsondecoderisexactly)
+  - [constant](#jsondecoderconstant)
+  - [combine](#jsondecodercombine)
+- [Related libraries](#related-libraries)
+
+## Installation
 
 ```
 npm install ts.data.json --save
@@ -68,7 +97,7 @@ userDecoder
 
 ## API
 
-### JsonDecoder.string
+### 📚 JsonDecoder.string
 
 > `string: Decoder<string>`
 
@@ -79,7 +108,7 @@ JsonDecoder.string.decode('hi'); // Ok<string>({value: 'hi'})
 JsonDecoder.string.decode(5); // Err({error: '5 is not a valid string'})
 ```
 
-### JsonDecoder.number
+### 📚 JsonDecoder.number
 
 > `number: Decoder<number>`
 
@@ -90,7 +119,7 @@ JsonDecoder.number.decode(99); // Ok<number>({value: 99})
 JsonDecoder.number.decode('hola'); // Err({error: 'hola is not a valid number'})
 ```
 
-### JsonDecoder.boolean
+### 📚 JsonDecoder.boolean
 
 > `boolean: Decoder<boolean>`
 
@@ -101,38 +130,7 @@ JsonDecoder.boolean.decode(true); // Ok<boolean>({value: true})
 JsonDecoder.boolean.decode(null); // Err({error: 'null is not a valid boolean'})
 ```
 
-### JsonDecoder.enumeration
-
-> `enumeration<e>(enumObj: object, decoderName: string): Decoder<e>`
-
-Creates a decoder for a (non-const) enum.
-
-#### @param `enumObj: object`
-
-The enum object to use for decoding. This doesn't exist for const enums.
-
-#### @param `decoderName: string`
-
-Type of the object we are decoding. i.e. `User`. It is used to generate meaningful decoding error messages.
-
-#### Basic example
-
-```ts
-enum ExampleEnum {
-  X = 1,
-  Y, /* 2 */
-  Z = 'foo',
-}
-
-const exampleEnumDecoder = JsonDecoder.enumeration<ExampleEnum>(
-  ExampleEnum, 'ExampleEnum');
-
-exampleEnumDecoder.decode(1); // Ok<ExampleEnum>({value: 1})
-exampleEnumDecoder.decode(ExampleEnum.Y); // Ok<ExampleEnum>({value: 2})
-exampleEnumDecoder.decode(3); // Err({error: '<ExampleEnum> decoder failed at value "3" which is not in the enum'})
-```
-
-### JsonDecoder.object
+### 📚 JsonDecoder.object
 
 > `object<a>(decoders: DecoderObject<a>, decoderName: string, keyMap?: DecoderObjectKeyMap<a>): Decoder<a>`
 
@@ -212,7 +210,7 @@ userDecoder.decode(json);
 // Output: Err({error: '<User> decoder failed at key "lastname" (mapped from the JSON key "lName") with error: undefined is not a valid string'})
 ```
 
-### JsonDecoder.objectStrict
+### 📚 JsonDecoder.objectStrict
 
 > `objectStrict<a>(decoders: DecoderObject<a>, decoderName: string): Decoder<a>`
 
@@ -257,7 +255,7 @@ userDecoder.decode(jsonKo);
 // Output: Err({error: 'Unknown key "email" found while processing strict <User> decoder'})
 ```
 
-### JsonDecoder.array
+### 📚 JsonDecoder.array
 
 > `array<a>(decoder: Decoder<a>, decoderName: string): Decoder<Array<a>>`
 
@@ -279,31 +277,7 @@ JsonDecoder.array<number>(JsonDecoder.number, 'number[]').decode([1, '2', 3]);
 // Output: Err({error: '<number[]> decoder failed at index 1 with error: "2" is not a valid number'})
 ```
 
-### JsonDecoder.tuple
-
-> `tuple(decoders: Decoder[], decoderName: string): Decoder`
-
-Creates a `tuple` decoder.
-
-#### @param `decoders: Decoder[]`
-
-An array containing a decoder for each element of the tuple.
-
-#### @param `decoderName: string`
-
-Type of the object we are decoding. i.e. `[number, string]`. It is used to generate meaningful decoding error messages.
-
-```ts
-decoder: Decoder<[number, string]> = JsonDecoder.tuple(
-  [JsonDecoder.number, JsonDecoder.string], '[number, string]');
-decoder.decode([1, "foo"]);
-// Output: Ok<[number, string]>([1, "foo"])
-
-decoder.decode([1, "foo", 2]);
-// Output: Err({error: '<[number, string]> tuple decoder failed because it received a tuple of length 3, but 2 decoders.
-```
-
-### JsonDecoder.dictionary
+### 📚 JsonDecoder.dictionary
 
 > `dictionary<a>(decoder: Decoder<a>, decoderName: string): Decoder<{ [name: string]: a }>`
 
@@ -332,7 +306,7 @@ JsonDecoder.dictionary(JsonDecoder.number, 'Dict<number>').decode({
 // Output: Err({error: '<Dict<number>> dictionary decoder failed at key "c" with error: null is not a valid number'})
 ```
 
-### JsonDecoder.oneOf
+### 📚 JsonDecoder.oneOf
 
 > `oneOf<a>(decoders: Array<Decoder<a>>, decoderName: string): Decoder<a>`
 
@@ -360,7 +334,7 @@ JsonDecoder.oneOf<string | number>(
 // Output: Err({error: "<string | number> decoder failed because true can't be decoded with any of the provided oneOf decoders"})
 ```
 
-### JsonDecoder.allOf
+### 📚 JsonDecoder.allOf
 
 > `allOf<T extends Array<Decoder<unknown>>, R = AllOfDecoderReturn<T>>(decoders: T): Decoder<R>`
 
@@ -404,7 +378,64 @@ JsonDecoder.allOf(
 // Output: Err({error: "hasLength() decoder failed because the provided array is of length 3."})
 ```
 
-### JsonDecoder.lazy
+### 📚 JsonDecoder.tuple
+
+> `tuple(decoders: Decoder[], decoderName: string): Decoder`
+
+Creates a `tuple` decoder.
+
+#### @param `decoders: Decoder[]`
+
+An array containing a decoder for each element of the tuple.
+
+#### @param `decoderName: string`
+
+Type of the object we are decoding. i.e. `[number, string]`. It is used to generate meaningful decoding error messages.
+
+```ts
+decoder: Decoder<[number, string]> = JsonDecoder.tuple(
+  [JsonDecoder.number, JsonDecoder.string], '[number, string]');
+decoder.decode([1, "foo"]);
+// Output: Ok<[number, string]>([1, "foo"])
+
+decoder.decode([1, "foo", 2]);
+// Output: Err({error: '<[number, string]> tuple decoder failed because it received a tuple of length 3, but 2 decoders.
+```
+
+### 📚 JsonDecoder.enumeration
+
+> `enumeration<e>(enumObj: object, decoderName: string): Decoder<e>`
+
+Creates a decoder for a (non-const) enum.
+
+#### @param `enumObj: object`
+
+The enum object to use for decoding. This doesn't exist for const enums.
+
+#### @param `decoderName: string`
+
+Type of the object we are decoding. i.e. `User`. It is used to generate meaningful decoding error messages.
+
+#### Basic example
+
+```ts
+enum ExampleEnum {
+  X = 1,
+  Y /* 2 */,
+  Z = 'foo'
+}
+
+const exampleEnumDecoder = JsonDecoder.enumeration<ExampleEnum>(
+  ExampleEnum,
+  'ExampleEnum'
+);
+
+exampleEnumDecoder.decode(1); // Ok<ExampleEnum>({value: 1})
+exampleEnumDecoder.decode(ExampleEnum.Y); // Ok<ExampleEnum>({value: 2})
+exampleEnumDecoder.decode(3); // Err({error: '<ExampleEnum> decoder failed at value "3" which is not in the enum'})
+```
+
+### 📚 JsonDecoder.lazy
 
 > `lazy<a>(mkDecoder: () => Decoder<a>): Decoder<a>`
 
@@ -450,13 +481,13 @@ treeDecoder.decode({
 // Output: Err({error: "<Node<string>> decoder failed at key 'children' with error: <Node<string>[] | isUndefined> decoder failed because null can't be decoded with any of the provided oneOf decoders"})
 ```
 
-### JsonDecoder.optional
+### 📚 JsonDecoder.optional
 
 > `optional<a>(decoder: Decoder<a>): Decoder<a | undefined>`
 
 The `optional` decoder tries to decode the provided JSON with the provided decoder if the json value is not `undefined` or `null`. This decoder is to allow for an optional value in the TypeScript definition while retaining the ability to give a detailed error message if the wrapped decoder fails.
 
-### JsonDecoder.nullable
+### 📚 JsonDecoder.nullable
 
 > `nullable<a>(decoder: Decoder<a>): Decoder<a | null>`
 
@@ -537,7 +568,7 @@ JsonDecoder.optional(userDecoder).decode(jsonKo);
 // Output: Err({error: '<User> decoder failed at key "firstname" with error: null is not a valid string'})
 ```
 
-### JsonDecoder.failover
+### 📚 JsonDecoder.failover
 
 > `failover<a>(defaultValue: a, decoder: Decoder<a>): Decoder<a>`
 
@@ -561,7 +592,7 @@ JsonDecoder.failover('default value', JsonDecoder.string).decode(null);
 // Ok<string>({value: 'default value'})
 ```
 
-### JsonDecoder.succeed
+### 📚 JsonDecoder.succeed
 
 > `succeed: Decoder<any>`
 
@@ -571,7 +602,7 @@ Creates a decoder that always succeeds.
 JsonDecoder.succeed.decode(null); // Ok<any>({value: null})
 ```
 
-### JsonDecoder.fail
+### 📚 JsonDecoder.fail
 
 > `fail<a>(error: string): Decoder<a>`
 
@@ -586,7 +617,7 @@ JsonDecoder.fail('Something wrong happened').decode('This is fine');
 // Err({error: 'Something wrong happened'})
 ```
 
-### JsonDecoder.isNull
+### 📚 JsonDecoder.isNull
 
 > `isNull<a>(defaultValue: a): Decoder<a>`
 
@@ -604,7 +635,7 @@ JsonDecoder.isNull('default value').decode(999);
 // Err({error: '999 is not null'})
 ```
 
-### JsonDecoder.isUndefined
+### 📚 JsonDecoder.isUndefined
 
 > `isUndefined<a>(defaultValue: a): Decoder<a>`
 
@@ -622,7 +653,7 @@ JsonDecoder.isUndefined('default value').decode(999);
 // Err({error: '999 is not undefined'})
 ```
 
-### JsonDecoder.isExactly
+### 📚 JsonDecoder.isExactly
 
 > `isExactly<a>(value: a): Decoder<a>`
 
@@ -640,7 +671,7 @@ JsonDecoder.isExactly(999).decode(true);
 // Err({error: 'true is not 999'})
 ```
 
-### JsonDecoder.constant
+### 📚 JsonDecoder.constant
 
 > `constant<a>(value: a): Decoder<a>`
 
@@ -655,7 +686,7 @@ JsonDecoder.constant(true).decode(false);
 // Ok({value: true})
 ```
 
-### JsonDecoder.combine
+### 📚 JsonDecoder.combine
 
 A `combine` decoder tries to decode the provided JSON with all of the provided decoders and returns an intersection of them all.
 
