@@ -1,4 +1,4 @@
-import { Result, Ok, ok, err } from './result';
+import { Result, ok, err } from './result';
 
 export namespace JsonDecoder {
   export class Decoder<a> {
@@ -13,16 +13,24 @@ export namespace JsonDecoder {
     }
 
     /**
-     * Decodes a JSON object of type <a> and calls onOk() on success or onErr() on failure, both return <b>
-     * @param json The JSON object to decode
-     * @param onOk function called when the decoder succeeds
-     * @param onErr function called when the decoder fails
+     * @deprecated Use `fold` instead.
      */
     onDecode<b>(
       json: any,
       onOk: (result: a) => b,
       onErr: (error: string) => b
     ): b {
+      return this.fold(onOk, onErr, json);
+    }
+
+    /**
+     * Decodes a JSON object of type <a> and calls onOk() on success or onErr() on failure, both return <b>
+     *
+     * @param onOk function called when the decoder succeeds
+     * @param onErr function called when the decoder fails
+     * @param json The JSON object to decode
+     */
+    fold<b>(onOk: (result: a) => b, onErr: (error: string) => b, json: any): b {
       const result = this.decode(json);
       if (result.isOk()) {
         return onOk(result.value);
@@ -32,11 +40,18 @@ export namespace JsonDecoder {
     }
 
     /**
+     * @deprecated Use `decodeToPromise()` instead
+     */
+    decodePromise<b>(json: any): Promise<a> {
+      return this.decodeToPromise(json);
+    }
+
+    /**
      * Decodes a JSON object of type <a> and returns a Promise<a>
      * @param json The JSON object to decode
      */
-    decodePromise<b>(json: any): Promise<a> {
-      return new Promise<a>((resolve, reject) => {
+    decodeToPromise(json: any): Promise<a> {
+      return new Promise((resolve, reject) => {
         const result = this.decode(json);
         if (result.isOk()) {
           return resolve(result.value);
@@ -47,7 +62,7 @@ export namespace JsonDecoder {
     }
 
     /**
-     * Chains decoder result transformations
+     * If the decoder has succeeded, transforms the decoded value into something else
      * @param fn The transformation function
      */
     map<b>(fn: (value: a) => b): Decoder<b> {
@@ -62,7 +77,9 @@ export namespace JsonDecoder {
     }
 
     /**
-     * Transforms an error into a new value
+     * FIXME: Next BREAKING CHANGE: this has to return Decoder<a> insetad of <a | b>
+     * TODO: Add documentation in the readme
+     * If the decoder has failed, transforms the error into an Ok value
      * @param fn The transformation function
      */
     mapError<b>(fn: (error: string) => b): Decoder<a | b> {
@@ -77,10 +94,17 @@ export namespace JsonDecoder {
     }
 
     /**
+     * @deprecated Use `chain()` instead
+     */
+    then<b>(fn: (value: a) => Decoder<b>): Decoder<b> {
+      return this.chain(fn);
+    }
+
+    /**
      * Chains decoders
      * @param fn Function that returns a new decoder
      */
-    then<b>(fn: (value: a) => Decoder<b>): Decoder<b> {
+    chain<b>(fn: (value: a) => Decoder<b>): Decoder<b> {
       return new Decoder<b>((json: any) => {
         const result = this.decodeFn(json);
         if (result.isOk()) {

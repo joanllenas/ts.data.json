@@ -15,7 +15,13 @@ JSON decoders validate the JSON before it comes into our program. So if the data
 
 - [Installation](#installation)
 - [Example](#example)
-- [Decoders](#api)
+- [Decoder API](#decoder-api)
+  - [decode()](#decode)
+  - [fold()](#fold)
+  - [decodeToPromise()](#decodetopromise)
+  - [map()](#map)
+  - [chain()](#chain)
+- [Available decoders](#available-decoders)
   - [string](#jsondecoderstring)
   - [number](#jsondecodernumber)
   - [boolean](#jsondecoderboolean)
@@ -68,7 +74,7 @@ const jsonObjectOk = {
 };
 
 userDecoder
-  .decodePromise(jsonObjectOk)
+  .decodeToPromise(jsonObjectOk)
   .then(user => {
     console.log(`User ${user.firstname} ${user.lastname} decoded successfully`);
   })
@@ -84,7 +90,7 @@ const jsonObjectKo = {
 };
 
 userDecoder
-  .decodePromise(jsonObjectKo)
+  .decodeToPromise(jsonObjectKo)
   .then(user => {
     console.log('User decoded successfully');
   })
@@ -95,7 +101,104 @@ userDecoder
 // Output: <User> decoder failed at key "lastname" with error: null is not a valid string
 ```
 
-## API
+## Decoder API
+
+### 📚 decode()
+
+> `decode(json: any): Result<a>`
+
+Decodes a JSON object of type `<a>` and returns a `Result<a>`.
+
+#### @param `json: any`
+
+The JSON object to decode.
+
+```ts
+JsonDecoder.string.decode('hi'); // Ok<string>({value: 'hi'})
+JsonDecoder.string.decode(5); // Err({error: '5 is not a valid string'})
+```
+
+### 📚 fold()
+
+> `fold<b>( onOk: (result: a) => b, onErr: (error: string) => b, json: any ): b`
+
+Decodes a JSON object of type `<a>` and calls `onOk()` on success or `onErr()` on failure, both return `<b>`.
+
+#### @param `onOk: (result: a) => b`
+
+Function called when the decoder succeeds.
+
+#### @param `onErr: (error: string) => b`
+
+Function called when the decoder fails.
+
+#### @param `json: any`
+
+The JSON object to decode.
+
+```ts
+JsonDecoder.string.fold(
+  (value: string) => parseInt(value, 10),
+  (error: string) => 0,
+  '000000000001'
+); // 1
+```
+
+### 📚 decodeToPromise()
+
+> `decodeToPromise(json: any): Promise<a>`
+
+Decodes a JSON object of type `<a>` and returns a `Promise<a>`
+
+#### @param `json: any`
+
+The JSON object to decode.
+
+```ts
+JsonDecoder.string.decodeToPromise('hola').then(res => console.log(res)); // 'hola'
+JsonDecoder.string.decodeToPromise(2).catch(err => console.log(err)); // '2 is not a valid string'
+```
+
+### 📚 map()
+
+> `map<b>(fn: (value: a) => b): Decoder<b>`
+
+If the decoder has succeeded, transform the decoded value into something else, otherwise nothing will happen.
+
+#### @param `fn: (value: a) => b`
+
+The transformation function.
+
+```ts
+// Decode a string, then transform it into a Date
+const dateDecoder = JsonDecoder.string.map(stringDate => new Date(stringDate));
+// Ok scenario
+dateDecoder.decode('2018-12-21T18:22:25.490Z'); // Ok<Date>({value: Date(......)})
+// Err scenario
+dateDecoder.decode(false); // Err({error: 'false is not a valid string'})
+```
+
+### 📚 chain()
+
+> `chain<b>(fn: (value: a) => Decoder<b>): Decoder<b>`
+
+Chain decoders that might fail.
+
+#### @param `fn: (value: a) => Decoder<b>`
+
+The chain function.
+
+```ts
+const adultDecoder = JsonDecoder.number.chain(age =>
+  age >= 18
+    ? JsonDecoder.succeed
+    : JsonDecoder.fail(`Age ${age} is less than 18`)
+);
+adultDecoder.decode(18); // Ok<number>({value: 18})
+adultDecoder.decode(17); // Err({error: 'Age 17 is less than 18'})
+```
+
+## Available decoders
 
 ### 📚 JsonDecoder.string
 

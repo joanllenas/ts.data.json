@@ -1298,6 +1298,16 @@ describe('json-decoder', () => {
           10
         ]);
       });
+
+      it('should chain age decoder', () => {
+        const adultDecoder = JsonDecoder.number.chain(age =>
+          age >= 18
+            ? JsonDecoder.succeed
+            : JsonDecoder.fail(`Age ${age} is less than 18`)
+        );
+        expectOkWithValue(adultDecoder.decode(18), 18);
+        expectErrWithMsg(adultDecoder.decode(17), 'Age 17 is less than 18');
+      });
     });
 
     describe('mapError', () => {
