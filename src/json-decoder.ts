@@ -337,51 +337,6 @@ export namespace JsonDecoder {
     });
   }
 
-  type SubtractOne<T extends number> = [
-    -1,
-    0,
-    1,
-    2,
-    3,
-    4,
-    5,
-    6,
-    7,
-    8,
-    9,
-    10,
-    11,
-    12,
-    13,
-    14,
-    15,
-    16,
-    17,
-    18,
-    19,
-    20,
-    21,
-    22,
-    23,
-    24,
-    25,
-    26,
-    27,
-    28,
-    29,
-    30
-  ][T];
-
-  /**
-   * Plucks the last type in a tuple of length 30 or less.
-   * Else returns the first type in a tuple.
-   */
-  export type AllOfDecoderReturn<T extends unknown[]> = T[SubtractOne<
-    T['length']
-  >] extends JsonDecoder.Decoder<infer R>
-    ? R
-    : T[0];
-
   /**
    * Tries to decode the provided json value with all of the provided `decoders`.
    * The order of the provided decoders matters: the output of one decoder is passed
@@ -392,8 +347,8 @@ export namespace JsonDecoder {
    */
   export function allOf<
     T extends Array<Decoder<unknown>>,
-    R = AllOfDecoderReturn<T>
-  >(...decoders: T): Decoder<R> {
+    R
+  >(...decoders: [...T, Decoder<R>]): Decoder<R> {
     return new Decoder<R>((json: any) =>
       decoders.reduce(
         (prev, curr) =>
