@@ -13,17 +13,6 @@ export namespace JsonDecoder {
     }
 
     /**
-     * @deprecated Use `fold` instead.
-     */
-    onDecode<b>(
-      json: any,
-      onOk: (result: a) => b,
-      onErr: (error: string) => b
-    ): b {
-      return this.fold(onOk, onErr, json);
-    }
-
-    /**
      * Decodes a JSON object of type <a> and calls onOk() on success or onErr() on failure, both return <b>
      *
      * @param onOk function called when the decoder succeeds
@@ -37,13 +26,6 @@ export namespace JsonDecoder {
       } else {
         return onErr(result.error);
       }
-    }
-
-    /**
-     * @deprecated Use `decodeToPromise()` instead
-     */
-    decodePromise<b>(json: any): Promise<a> {
-      return this.decodeToPromise(json);
     }
 
     /**
@@ -77,7 +59,6 @@ export namespace JsonDecoder {
     }
 
     /**
-     * FIXME: Next BREAKING CHANGE: this has to return Decoder<a> insetad of <a | b>
      * TODO: Add documentation in the readme
      * If the decoder has failed, transforms the error into an Ok value
      * @param fn The transformation function
@@ -91,13 +72,6 @@ export namespace JsonDecoder {
           return ok<b>(fn(result.error));
         }
       });
-    }
-
-    /**
-     * @deprecated Use `chain()` instead
-     */
-    then<b>(fn: (value: a) => Decoder<b>): Decoder<b> {
-      return this.chain(fn);
     }
 
     /**
@@ -290,7 +264,6 @@ export namespace JsonDecoder {
 
   /**
    * Tries to decode with `decoder` and returns `defaultValue` on failure.
-   * (It was called maybe() before)
    *
    * @param defaultValue The default value returned in case of decoding failure.
    * @param decoder The actual decoder to use.

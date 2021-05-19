@@ -1114,31 +1114,33 @@ describe('json-decoder', () => {
   });
 
   describe('Decoder<a>', () => {
-    describe('onDecode', () => {
+    describe('fold', () => {
       it('should take the onErr() route when the decoder fails', () => {
-        const numberToStringWithDefault = JsonDecoder.number.onDecode(
-          false,
+        const numberToStringWithDefault = JsonDecoder.number.fold(
           (value: number) => value.toString(16),
-          (error: string) => '0'
+          (error: string) => '0',
+          false
         );
         expect(numberToStringWithDefault).to.equal('0');
       });
       it('should take the onOk() route when the decoder succeeds', () => {
-        const stringToNumber = JsonDecoder.string.onDecode(
-          '000000000001',
+        const stringToNumber = JsonDecoder.string.fold(
           (value: string) => parseInt(value, 10),
-          (error: string) => 0
+          (error: string) => 0,
+          '000000000001'
         );
         expect(stringToNumber).to.equal(1);
       });
     });
 
-    describe('decodePromise', () => {
+    describe('decodeToPromise', () => {
       it('should resolve when decoding succeeds', async () => {
-        expect(await JsonDecoder.string.decodePromise('hola')).to.equal('hola');
+        expect(await JsonDecoder.string.decodeToPromise('hola')).to.equal(
+          'hola'
+        );
       });
       it('should reject when decoding fails', () => {
-        JsonDecoder.string.decodePromise(2).catch(error => {
+        JsonDecoder.string.decodeToPromise(2).catch(error => {
           expect(error).to.equal(
             $JsonDecoderErrors.primitiveError(2, 'string')
           );
@@ -1169,7 +1171,7 @@ describe('json-decoder', () => {
       });
     });
 
-    describe('then', () => {
+    describe('chain', () => {
       type SquareProps = { side: number };
       type RectangleProps = { width: number; height: number };
       type Shape<T> = {
@@ -1212,7 +1214,7 @@ describe('json-decoder', () => {
           properties: JsonDecoder.succeed
         },
         'Shape'
-      ).then(value => {
+      ).chain(value => {
         switch (value.type) {
           case 'square':
             return squareDecoder;
@@ -1286,11 +1288,11 @@ describe('json-decoder', () => {
           });
         const decoder = JsonDecoder.array(JsonDecoder.number, 'latLang')
           .map(arr => arr.slice(2))
-          .then(hasLength(8))
+          .chain(hasLength(8))
           .map(arr => arr.slice(2))
-          .then(hasLength(6))
+          .chain(hasLength(6))
           .map(arr => arr.slice(2))
-          .then(hasLength(4));
+          .chain(hasLength(4));
         expectOkWithValue(decoder.decode([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]), [
           7,
           8,
@@ -1357,7 +1359,7 @@ describe('json-decoder', () => {
       };
 
       userDecoder
-        .decodePromise(jsonObjectOk)
+        .decodeToPromise(jsonObjectOk)
         .then(user => {
           done();
         })
@@ -1373,7 +1375,7 @@ describe('json-decoder', () => {
       };
 
       userDecoder
-        .decodePromise(jsonObjectKo)
+        .decodeToPromise(jsonObjectKo)
         .then(user => {
           done('Unexpectedly the User decoded successfully');
         })
