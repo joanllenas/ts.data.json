@@ -1,5 +1,9 @@
 import { Result, ok, err } from './result';
 
+export type FromDecoder<Decoder> = Decoder extends JsonDecoder.Decoder<infer T>
+  ? T
+  : never;
+
 export namespace JsonDecoder {
   export class Decoder<a> {
     constructor(private decodeFn: (json: any) => Result<a>) {}
@@ -345,10 +349,9 @@ export namespace JsonDecoder {
    *
    * @param decoders a spread of decoders to use.
    */
-  export function allOf<
-    T extends Array<Decoder<unknown>>,
-    R
-  >(...decoders: [...T, Decoder<R>]): Decoder<R> {
+  export function allOf<T extends Array<Decoder<unknown>>, R>(
+    ...decoders: [...T, Decoder<R>]
+  ): Decoder<R> {
     return new Decoder<R>((json: any) =>
       decoders.reduce(
         (prev, curr) =>
@@ -460,7 +463,7 @@ export namespace JsonDecoder {
           }
         }
         // Cast to a tuple of the right type.
-        return ok<TupleOfResults<T>>((arr as unknown) as TupleOfResults<T>);
+        return ok<TupleOfResults<T>>(arr as unknown as TupleOfResults<T>);
       } else {
         return err<TupleOfResults<T>>(
           $JsonDecoderErrors.primitiveError(json, 'array')
@@ -584,7 +587,7 @@ export namespace JsonDecoder {
         }, {}) as Combine<TS>;
         return ok(finalResult);
       } catch (error) {
-        return err(error);
+        return err(error as string);
       }
     });
   }

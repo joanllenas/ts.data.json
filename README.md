@@ -15,6 +15,7 @@ JSON decoders validate the JSON before it comes into our program. So if the data
 
 - [Installation](#installation)
 - [Example](#example)
+  - [FromDecoder](#fromdecoder)
 - [Decoder API](#decoder-api)
   - [decode()](#-decode)
   - [fold()](#-fold)
@@ -99,6 +100,21 @@ userDecoder
   });
 
 // Output: <User> decoder failed at key "lastname" with error: null is not a valid string
+```
+
+### FromDecoder
+
+Alternatively, you can use `FromDecoder<D>` to infer your types based on your decoder definitions:
+
+```ts
+const userDecoder = JsonDecoder.object(
+  {
+    firstname: JsonDecoder.string,
+    lastname: JsonDecoder.string
+  },
+  'User'
+);
+type User = FromDecoder<typeof userDecoder>; // no need to declare the User interface!
 ```
 
 ## Decoder API

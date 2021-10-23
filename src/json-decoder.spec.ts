@@ -1,4 +1,4 @@
-import { JsonDecoder, $JsonDecoderErrors } from './json-decoder';
+import { JsonDecoder, $JsonDecoderErrors, FromDecoder } from './json-decoder';
 
 import * as chai from 'chai';
 import { Ok, Result, Err, ok, err } from './result';
@@ -647,9 +647,7 @@ describe('json-decoder', () => {
     it('should decode a filled array', () => {
       expectOkWithValue(
         JsonDecoder.array<number>(JsonDecoder.number, 'number[]').decode([
-          1,
-          2,
-          3
+          1, 2, 3
         ]),
         [1, 2, 3]
       );
@@ -743,18 +741,15 @@ describe('json-decoder', () => {
       expectOkWithValue(decoder.decode([2, 3]), [2, 3]);
     });
     it('should decode a [number, string, number[]] tuple', () => {
-      const decoder: JsonDecoder.Decoder<[
-        number,
-        string,
-        number[]
-      ]> = JsonDecoder.tuple(
-        [
-          JsonDecoder.number,
-          JsonDecoder.string,
-          JsonDecoder.array<number>(JsonDecoder.number, 'number[]')
-        ],
-        '[number, string, number[]]'
-      );
+      const decoder: JsonDecoder.Decoder<[number, string, number[]]> =
+        JsonDecoder.tuple(
+          [
+            JsonDecoder.number,
+            JsonDecoder.string,
+            JsonDecoder.array<number>(JsonDecoder.number, 'number[]')
+          ],
+          '[number, string, number[]]'
+        );
       expectOkWithValue(decoder.decode([2, 'foo', [3, 4, 5]]), [
         2,
         'foo',
@@ -762,16 +757,14 @@ describe('json-decoder', () => {
       ]);
     });
     it('should decode throw a length mismatch error', () => {
-      const decoder: JsonDecoder.Decoder<[
-        number,
-        number[]
-      ]> = JsonDecoder.tuple(
-        [
-          JsonDecoder.number,
-          JsonDecoder.array<number>(JsonDecoder.number, 'number[]')
-        ],
-        '[number, number[]]'
-      );
+      const decoder: JsonDecoder.Decoder<[number, number[]]> =
+        JsonDecoder.tuple(
+          [
+            JsonDecoder.number,
+            JsonDecoder.array<number>(JsonDecoder.number, 'number[]')
+          ],
+          '[number, number[]]'
+        );
       expectErrWithMsg(
         decoder.decode([2, 'foo', [3, 4, 5]]),
         $JsonDecoderErrors.tupleLengthMismatchError(
@@ -1063,40 +1056,39 @@ describe('json-decoder', () => {
       },
       'User'
     );
-    const decodeSession: JsonDecoder.Decoder<Session> = JsonDecoder.object<
-      Session
-    >(
-      {
-        id: JsonDecoder.string,
-        name: userDecoder,
-        payment: JsonDecoder.object<Payment>(
-          {
-            iban: JsonDecoder.string,
-            valid: JsonDecoder.boolean,
-            account_holder: JsonDecoder.failover<undefined | User>(
-              undefined,
-              JsonDecoder.object<User>(
-                {
-                  firstname: JsonDecoder.string,
-                  lastname: JsonDecoder.string
-                },
-                'User'
+    const decodeSession: JsonDecoder.Decoder<Session> =
+      JsonDecoder.object<Session>(
+        {
+          id: JsonDecoder.string,
+          name: userDecoder,
+          payment: JsonDecoder.object<Payment>(
+            {
+              iban: JsonDecoder.string,
+              valid: JsonDecoder.boolean,
+              account_holder: JsonDecoder.failover<undefined | User>(
+                undefined,
+                JsonDecoder.object<User>(
+                  {
+                    firstname: JsonDecoder.string,
+                    lastname: JsonDecoder.string
+                  },
+                  'User'
+                )
               )
-            )
-          },
-          'Payment'
-        ),
-        tracking: JsonDecoder.object<Tracking>(
-          {
-            uid: JsonDecoder.string,
-            ga: JsonDecoder.string
-          },
-          'Tracking'
-        ),
-        addons: JsonDecoder.array(JsonDecoder.string, 'string[]')
-      },
-      'Session'
-    );
+            },
+            'Payment'
+          ),
+          tracking: JsonDecoder.object<Tracking>(
+            {
+              uid: JsonDecoder.string,
+              ga: JsonDecoder.string
+            },
+            'Tracking'
+          ),
+          addons: JsonDecoder.array(JsonDecoder.string, 'string[]')
+        },
+        'Session'
+      );
 
     it('should work', () => {
       expect(decodeSession.decode(session_json)).to.be.an.instanceOf(Ok);
@@ -1163,11 +1155,10 @@ describe('json-decoder', () => {
           .map(arr => arr.slice(2))
           .map(arr => arr.slice(2))
           .map(arr => arr.slice(2));
-        expectOkWithValue(decoder.decode([1, 2, 3, 4, 5, 6, 7, 8, 9]), [
-          7,
-          8,
-          9
-        ]);
+        expectOkWithValue(
+          decoder.decode([1, 2, 3, 4, 5, 6, 7, 8, 9]),
+          [7, 8, 9]
+        );
       });
     });
 
@@ -1293,12 +1284,10 @@ describe('json-decoder', () => {
           .chain(hasLength(6))
           .map(arr => arr.slice(2))
           .chain(hasLength(4));
-        expectOkWithValue(decoder.decode([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]), [
-          7,
-          8,
-          9,
-          10
-        ]);
+        expectOkWithValue(
+          decoder.decode([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]),
+          [7, 8, 9, 10]
+        );
       });
 
       it('should chain age decoder', () => {
@@ -1335,6 +1324,34 @@ describe('json-decoder', () => {
           '"not a number" is not a valid number'
         );
       });
+    });
+  });
+
+  describe('FromDecoder<D>', () => {
+    it('should infer the primitive types', () => {
+      type s = FromDecoder<typeof JsonDecoder.string>;
+      const myString: s = "I'm a string!";
+      type n = FromDecoder<typeof JsonDecoder.number>;
+      const myNumber: n = 4;
+      type b = FromDecoder<typeof JsonDecoder.boolean>;
+      const myBoolean: b = true;
+      expect(true).eql(true);
+    });
+
+    it('should infer object', () => {
+      const userDecoder = JsonDecoder.object(
+        {
+          name: JsonDecoder.string,
+          age: JsonDecoder.number
+        },
+        'User'
+      );
+      type User = FromDecoder<typeof userDecoder>;
+      const myUser: User = {
+        name: 'John Doe',
+        age: 44
+      };
+      expect(true).eql(true);
     });
   });
 
