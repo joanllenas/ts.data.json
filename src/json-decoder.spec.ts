@@ -98,7 +98,8 @@ describe('json-decoder', () => {
     enum OddlyOrderedIntEnum {
       A = 2,
       B = 8,
-      C = -3
+      C = -3,
+      D = 0,
     }
     enum HeterogeneousEnum {
       X = 1,
@@ -116,6 +117,13 @@ describe('json-decoder', () => {
           'OddlyOrderedIntEnum'
         ).decode(-3),
         OddlyOrderedIntEnum.C /* -3 */
+      );
+      expectOkWithValue(
+        JsonDecoder.enumeration<OddlyOrderedIntEnum>(
+          OddlyOrderedIntEnum,
+          'OddlyOrderedIntEnum'
+        ).decode(0),
+        OddlyOrderedIntEnum.D /* 0 */
       );
       expectOkWithValue(
         JsonDecoder.enumeration<HeterogeneousEnum>(

@@ -148,7 +148,7 @@ export namespace JsonDecoder {
   ): Decoder<e> {
     return new Decoder<e>((json: any) => {
       const enumValue = Object.values(enumObj).find((x: any) => x === json);
-      if (enumValue) {
+      if (enumValue !== undefined) {
         return ok<e>(enumValue);
       }
       return err<e>($JsonDecoderErrors.enumValueError(decoderName, json));
