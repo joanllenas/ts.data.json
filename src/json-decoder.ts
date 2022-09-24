@@ -137,6 +137,21 @@ export namespace JsonDecoder {
   });
 
   /**
+   * Decoder for an empty object `{}`.
+   */
+  export const emptyObject: Decoder<{}> = new Decoder<{}>((json: any) => {
+    if (
+      json !== null &&
+      typeof json === 'object' &&
+      Object.keys(json).length === 0
+    ) {
+      return ok<{}>(json);
+    } else {
+      return err<{}>($JsonDecoderErrors.primitiveError(json, 'empty object'));
+    }
+  });
+
+  /**
    * Decode for `enumeration`.
    *
    * @param enumObj The enum object to use for decoding. Must not be a const enum.

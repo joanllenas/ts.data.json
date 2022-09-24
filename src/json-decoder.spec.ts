@@ -99,7 +99,7 @@ describe('json-decoder', () => {
       A = 2,
       B = 8,
       C = -3,
-      D = 0,
+      D = 0
     }
     enum HeterogeneousEnum {
       X = 1,
@@ -534,6 +534,35 @@ describe('json-decoder', () => {
           $JsonDecoderErrors.objectStrictUnknownKeyError('User', 'email')
         );
       });
+    });
+  });
+
+  // empty object
+  describe('empty object', () => {
+    it('should decode an empty object', () => {
+      const json = {};
+      expectOkWithValue(JsonDecoder.emptyObject.decode(json), {});
+    });
+    it('should fail to decode an object with properties', () => {
+      const json = { a: 1 };
+      expectErrWithMsg(
+        JsonDecoder.emptyObject.decode(json),
+        $JsonDecoderErrors.primitiveError(json, 'empty object')
+      );
+    });
+    it('should fail to decode a non-object', () => {
+      expectErrWithMsg(
+        JsonDecoder.emptyObject.decode('hello'),
+        $JsonDecoderErrors.primitiveError('hello', 'empty object')
+      );
+      expectErrWithMsg(
+        JsonDecoder.emptyObject.decode(undefined),
+        $JsonDecoderErrors.primitiveError(undefined, 'empty object')
+      );
+      expectErrWithMsg(
+        JsonDecoder.emptyObject.decode(null),
+        $JsonDecoderErrors.primitiveError(null, 'empty object')
+      );
     });
   });
 
@@ -1335,14 +1364,15 @@ describe('json-decoder', () => {
     });
   });
 
+  // type checker tests
   describe('FromDecoder<D>', () => {
     it('should infer the primitive types', () => {
-      type s = FromDecoder<typeof JsonDecoder.string>;
-      const myString: s = "I'm a string!";
-      type n = FromDecoder<typeof JsonDecoder.number>;
-      const myNumber: n = 4;
-      type b = FromDecoder<typeof JsonDecoder.boolean>;
-      const myBoolean: b = true;
+      type Str = FromDecoder<typeof JsonDecoder.string>;
+      const myString: Str = "I'm a string!";
+      type Num = FromDecoder<typeof JsonDecoder.number>;
+      const myNumber: Num = 4;
+      type Bool = FromDecoder<typeof JsonDecoder.boolean>;
+      const myBoolean: Bool = true;
       expect(true).eql(true);
     });
 

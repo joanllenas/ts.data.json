@@ -26,6 +26,7 @@ JSON decoders validate the JSON before it comes into our program. So if the data
   - [string](#-jsondecoderstring)
   - [number](#-jsondecodernumber)
   - [boolean](#-jsondecoderboolean)
+  - [emptyObject](#-jsondecoderemptyobject)
   - [object](#-jsondecoderobject)
   - [object (strict)](#-jsondecoderobjectstrict)
   - [array](#-jsondecoderarray)
@@ -247,6 +248,17 @@ Creates a `boolean` decoder.
 ```ts
 JsonDecoder.boolean.decode(true); // Ok<boolean>({value: true})
 JsonDecoder.boolean.decode(null); // Err({error: 'null is not a valid boolean'})
+```
+
+### 📚 JsonDecoder.emptyObject
+
+> `emptyObject: Decoder<{}>`
+
+Creates a `{}` decoder.
+
+```ts
+JsonDecoder.emptyObject.decode({}); // Ok<{}>({value: {}})
+JsonDecoder.emptyObject.decode({ a: 1 }); // Err({error: '{a:1} is not a valid empty object'})
 ```
 
 ### 📚 JsonDecoder.object
