@@ -15,7 +15,7 @@ JSON decoders validate the JSON before it comes into our program. So if the data
 
 - [Installation](#installation)
 - [Example](#example)
-  - [FromDecoder](#fromdecoder)
+- [FromDecoder](#fromdecoder)
 - [Decoder API](#decoder-api)
   - [decode()](#-decode)
   - [fold()](#-fold)
