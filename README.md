@@ -2,6 +2,7 @@
 
 [![Build Status](https://travis-ci.org/joanllenas/ts.data.json.svg?branch=master)](https://travis-ci.org/joanllenas/ts.data.json)
 [![npm version](https://badge.fury.io/js/ts.data.json.svg)](https://www.npmjs.com/package/ts.data.json)
+[![downloads - 33k/week](https://img.shields.io/badge/downloads-33k%2Fweek-45BE1D)](https://www.npmjs.com/package/ts.data.json)
 
 Typescript type annotations give us compile-time guarantees, but at run-time, when data flows from the server to our clients, lots of things can go wrong.
 
