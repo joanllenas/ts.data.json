@@ -4,9 +4,9 @@
 [![npm version](https://badge.fury.io/js/ts.data.json.svg)](https://www.npmjs.com/package/ts.data.json)
 [![downloads - 33k/week](https://img.shields.io/badge/downloads-33k%2Fweek-45BE1D)](https://www.npmjs.com/package/ts.data.json)
 
-Typescript type annotations give us compile-time guarantees, but at run-time, when data flows from the server to our clients, lots of things can go wrong.
+Typescript type annotations give us compile-time guarantees, but when data flows to our clients from the outside world, lots of things can go wrong at run-time.
 
-JSON decoders validate the JSON before it comes into our program. So if the data has an unexpected structure, we learn about it immediately.
+JSON decoders validate our JSON before it gets into our program. So, if the data has an unexpected structure, we learn about it immediately.
 
 > If you are new to JSON decoding, you may want to read the introductory article [Decoding JSON with Typescript](https://dev.to/joanllenas/decoding-json-with-typescript-1jjc) about why and how to use this library.
 
