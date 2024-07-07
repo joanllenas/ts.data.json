@@ -856,6 +856,7 @@ finalDecoder.decode({ id: 'alice' });
 
 ## Related libraries
 
+- https://valibot.dev
 - https://github.com/gcanti/io-ts
 - https://github.com/kofno/jsonous
 - https://github.com/jquense/yup
