@@ -11,20 +11,20 @@
     "build": "tsc -p tsconfig.json && tsc -p tsconfig-cjs.json",
     "test": "vitest",
     "test:coverage": "vitest run --coverage",
-    "lint": "eslint . --ext .ts",
+    "lint": "eslint ./src --ext .ts",
     "format": "prettier ./src --write",
-    "prepub": "npm run test && npm run lint",
-    "pub": "npm run build && npm publish",
-    "prebeta": "npm run test && npm run lint",
-    "beta": "npm run build && npm publish --tag beta"
+    "format:check": "prettier ./src --check",
+    "_prepub": "npm run test && npm run lint",
+    "_pub": "npm run build && npm publish",
+    "_prebeta": "npm run test && npm run lint",
+    "_beta": "npm run build && npm publish --tag beta"
   },
   "keywords": [
     "json",
     "decoder",
-    "encoder",
     "codec",
-    "parse",
-    "elm"
+    "validate",
+    "parse"
   ],
   "author": "daniel van den eijkel",
   "contributors": [
@@ -45,12 +45,12 @@
   "homepage": "https://github.com/joanllenas/ts.data.json#readme",
   "devDependencies": {
     "@types/node": "^20.11.24",
-    "@typescript-eslint/eslint-plugin": "^7.1.0",
-    "@typescript-eslint/parser": "^7.1.0",
+    "@typescript-eslint/eslint-plugin": "~7.1.0",
+    "@typescript-eslint/parser": "~7.1.0",
     "@vitest/coverage-v8": "^1.3.1",
-    "eslint": "^8.57.0",
-    "prettier": "^3.2.5",
-    "typescript": "^5.3.3",
+    "eslint": "~8.57.0",
+    "prettier": "~3.2.5",
+    "typescript": "~5.3.3",
     "vitest": "^1.3.1",
     "@standard-schema/spec": "^1.0.0"
   }
