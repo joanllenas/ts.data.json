@@ -1,9 +1,5 @@
-import { JsonDecoder, $JsonDecoderErrors } from './json-decoder';
-
-import * as chai from 'chai';
+import { describe, expect, it } from 'vitest';
 import { Ok, ok, err } from './result';
-
-const expect = chai.expect;
 
 describe('Result', () => {
   const toUpper = (str: string) => str.toUpperCase();

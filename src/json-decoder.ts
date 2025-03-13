@@ -1,11 +1,11 @@
-import { Result, ok, err } from './result';
+import type { StandardSchemaV1 } from './standard-schema-v1';
+import { Result, err, ok } from './result';
 
-export type FromDecoder<Decoder> = Decoder extends JsonDecoder.Decoder<infer T>
-  ? T
-  : never;
+export type FromDecoder<Decoder> =
+  Decoder extends JsonDecoder.Decoder<infer T> ? T : never;
 
 export namespace JsonDecoder {
-  export class Decoder<a> {
+  export class Decoder<a> implements StandardSchemaV1<unknown, a> {
     constructor(private decodeFn: (json: any) => Result<a>) {}
 
     /**
@@ -15,6 +15,25 @@ export namespace JsonDecoder {
     decode(json: any): Result<a> {
       return this.decodeFn(json);
     }
+
+    // readonly _output!: Output;
+    // readonly _input!: Input;
+
+    /**
+     * The Standard Schema interface for this decoder.
+     */
+    '~standard': StandardSchemaV1.Props<unknown, a> = {
+      version: 1 as const,
+      vendor: 'ts.data.json',
+      validate: (value: unknown): StandardSchemaV1.Result<a> => {
+        const result = this.decode(value);
+        if (result.isOk()) {
+          return { value: result.value };
+        } else {
+          return { issues: [{ message: result.error }] };
+        }
+      }
+    };
 
     /**
      * Decodes a JSON object of type <a> and calls onOk() on success or onErr() on failure, both return <b>
@@ -136,20 +155,25 @@ export namespace JsonDecoder {
     }
   });
 
+  type EmptyObject = Record<string, never>;
   /**
-   * Decoder for an empty object `{}`.
+   * Decoder for an empty object.
    */
-  export const emptyObject: Decoder<{}> = new Decoder<{}>((json: any) => {
-    if (
-      json !== null &&
-      typeof json === 'object' &&
-      Object.keys(json).length === 0
-    ) {
-      return ok<{}>(json);
-    } else {
-      return err<{}>($JsonDecoderErrors.primitiveError(json, 'empty object'));
+  export const emptyObject: Decoder<EmptyObject> = new Decoder<EmptyObject>(
+    (json: any) => {
+      if (
+        json !== null &&
+        typeof json === 'object' &&
+        Object.keys(json).length === 0
+      ) {
+        return ok<EmptyObject>(json);
+      } else {
+        return err<EmptyObject>(
+          $JsonDecoderErrors.primitiveError(json, 'empty object')
+        );
+      }
     }
-  });
+  );
 
   /**
    * Decode for `enumeration`.
@@ -190,7 +214,7 @@ export namespace JsonDecoder {
       if (json !== null && typeof json === 'object') {
         const result: any = {};
         for (const key in decoders) {
-          if (decoders.hasOwnProperty(key)) {
+          if (Object.prototype.hasOwnProperty.call(decoders, key)) {
             if (keyMap && key in keyMap) {
               const jsonKey = keyMap[key] as string;
               const r = decoders[key].decode(json[jsonKey]);
@@ -239,7 +263,7 @@ export namespace JsonDecoder {
     return new Decoder<a>((json: any) => {
       if (json !== null && typeof json === 'object') {
         for (const key in json) {
-          if (!decoders.hasOwnProperty(key)) {
+          if (!Object.prototype.hasOwnProperty.call(decoders, key)) {
             return err<a>(
               $JsonDecoderErrors.objectStrictUnknownKeyError(decoderName, key)
             );
@@ -247,7 +271,7 @@ export namespace JsonDecoder {
         }
         const result: any = {};
         for (const key in decoders) {
-          if (decoders.hasOwnProperty(key)) {
+          if (Object.prototype.hasOwnProperty.call(decoders, key)) {
             const r = decoders[key].decode(json[key]);
             if (r.isOk()) {
               result[key] = r.value;
@@ -276,7 +300,7 @@ export namespace JsonDecoder {
    * Always failing decoder
    */
   export function fail<a>(error: string): Decoder<a> {
-    return new Decoder<a>((json: any) => {
+    return new Decoder<a>(() => {
       return err<any>(error);
     });
   }
@@ -389,7 +413,7 @@ export namespace JsonDecoder {
       if (json !== null && typeof json === 'object') {
         const obj: { [name: string]: a } = {};
         for (const key in json) {
-          if (json.hasOwnProperty(key)) {
+          if (Object.prototype.hasOwnProperty.call(json, key)) {
             const result = decoder.decode(json[key]);
             if (result.isOk()) {
               obj[key] = result.value;
@@ -525,7 +549,7 @@ export namespace JsonDecoder {
    * @param value The value returned.
    */
   export const constant = <a>(value: a): Decoder<a> => {
-    return new Decoder<a>((json: any) => ok(value));
+    return new Decoder<a>(() => ok(value));
   };
 
   /**

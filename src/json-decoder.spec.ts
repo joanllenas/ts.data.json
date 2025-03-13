@@ -1,19 +1,27 @@
-import { JsonDecoder, $JsonDecoderErrors, FromDecoder } from './json-decoder';
-
-import * as chai from 'chai';
-import { Ok, Result, Err, ok, err } from './result';
-
-const expect = chai.expect;
+/* eslint-disable @typescript-eslint/no-unused-vars */
+import { describe, expect, it } from 'vitest';
+import { $JsonDecoderErrors, FromDecoder, JsonDecoder } from './json-decoder';
+import { Err, err, Ok, ok, Result } from './result';
+import type { StandardSchemaV1 } from './standard-schema-v1';
 
 // Test utils
-const expectOkWithValue = <a>(result: Result<a>, expectedValue: a) =>
-  expect(result).to.be.an.instanceof(Ok).and.to.deep.equal(ok(expectedValue));
-const expectErr = <a>(result: Result<a>) =>
-  expect(result).to.be.an.instanceof(Err);
-const expectErrWithMsg = <a>(result: Result<a>, expectedErrorMsg: string) =>
-  expect(result)
-    .to.be.an.instanceof(Err)
-    .and.to.deep.equal(err(expectedErrorMsg));
+const expectOkWithValue = <a>(result: Result<a>, expectedValue: a) => {
+  expect(result).toBeInstanceOf(Ok);
+  expect(result).toEqual(ok(expectedValue));
+};
+const expectStandardOkWithValue = <a>(
+  result: StandardSchemaV1.Result<a>,
+  expectedValue: a
+) => expect(result).toEqual({ value: expectedValue });
+const expectErr = <a>(result: Result<a>) => expect(result).toBeInstanceOf(Err);
+const expectErrWithMsg = <a>(result: Result<a>, expectedErrorMsg: string) => {
+  expect(result).toBeInstanceOf(Err);
+  expect(result).toEqual(err(expectedErrorMsg));
+};
+const expectStandardErrWithMsg = <a>(
+  result: StandardSchemaV1.Result<a>,
+  expectedErrorMsg: string
+) => expect(result).toEqual({ issues: [{ message: expectedErrorMsg }] });
 
 // Tests
 describe('json-decoder', () => {
@@ -261,21 +269,21 @@ describe('json-decoder', () => {
       const expectedSuccessResult = userDecoder.decode(user);
       const result = JsonDecoder.optional(userDecoder).decode(user);
 
-      expect(result).to.deep.equal(expectedSuccessResult);
+      expect(result).toEqual(expectedSuccessResult);
     });
 
     it('should recursively decode optional values when a valid value is provided', () => {
       const expectedSuccessResult = userDecoder.decode(userWithEmail);
       const result = JsonDecoder.optional(userDecoder).decode(userWithEmail);
 
-      expect(result).to.deep.equal(expectedSuccessResult);
+      expect(result).toEqual(expectedSuccessResult);
     });
 
     it('should fail with message from wrapped decoder when unable to decode object', () => {
       const expectedErrorResult = userDecoder.decode(badUserData);
       const result = JsonDecoder.optional(userDecoder).decode(badUserData);
 
-      expect(result).to.deep.equal(expectedErrorResult);
+      expect(result).toEqual(expectedErrorResult);
     });
   });
 
@@ -295,14 +303,14 @@ describe('json-decoder', () => {
       const expectedErrorResult = JsonDecoder.string.decode(undefined);
       const result = nullableStringDecoder.decode(undefined);
 
-      expect(result).to.deep.equal(expectedErrorResult);
+      expect(result).toEqual(expectedErrorResult);
     });
 
     it('should fail with message from wrapped decoder when unable to decode object', () => {
       const expectedErrorResult = JsonDecoder.string.decode(1);
       const result = nullableStringDecoder.decode(1);
 
-      expect(result).to.deep.equal(expectedErrorResult);
+      expect(result).toEqual(expectedErrorResult);
     });
   });
 
@@ -434,10 +442,14 @@ describe('json-decoder', () => {
         lastname: 'Doe',
         extra: true
       };
-      expect(userDecoder.decode(user))
-        .to.be.an.instanceof(Ok)
-        .and.not.to.have.nested.property('value.extra');
+      const res = userDecoder.decode(user);
+      expect(res).toBeInstanceOf(Ok);
+      expect(res).not.toHaveProperty('value.extra');
       expectOkWithValue(userDecoder.decode(user), {
+        firstname: 'John',
+        lastname: 'Doe'
+      });
+      expectStandardOkWithValue(userDecoder['~standard'].validate(user), {
         firstname: 'John',
         lastname: 'Doe'
       });
@@ -450,6 +462,15 @@ describe('json-decoder', () => {
       };
       expectErrWithMsg(
         userDecoder.decode(user),
+        $JsonDecoderErrors.objectError(
+          'User',
+          'firstname',
+          $JsonDecoderErrors.primitiveError(2, 'string')
+        )
+      );
+
+      expectStandardErrWithMsg(
+        userDecoder['~standard'].validate(user),
         $JsonDecoderErrors.objectError(
           'User',
           'firstname',
@@ -1128,17 +1149,15 @@ describe('json-decoder', () => {
       );
 
     it('should work', () => {
-      expect(decodeSession.decode(session_json)).to.be.an.instanceOf(Ok);
+      expect(decodeSession.decode(session_json)).toBeInstanceOf(Ok);
     });
 
     it('should work', () => {
-      expect(decodeSession.decode(session_json2)).to.be.an.instanceOf(Ok);
+      expect(decodeSession.decode(session_json2)).toBeInstanceOf(Ok);
     });
 
     it('should not work', () => {
-      expect(decodeSession.decode(session_json_invalid)).to.be.an.instanceOf(
-        Err
-      );
+      expect(decodeSession.decode(session_json_invalid)).toBeInstanceOf(Err);
     });
   });
 
@@ -1147,32 +1166,30 @@ describe('json-decoder', () => {
       it('should take the onErr() route when the decoder fails', () => {
         const numberToStringWithDefault = JsonDecoder.number.fold(
           (value: number) => value.toString(16),
-          (error: string) => '0',
+          () => '0',
           false
         );
-        expect(numberToStringWithDefault).to.equal('0');
+        expect(numberToStringWithDefault).toEqual('0');
       });
       it('should take the onOk() route when the decoder succeeds', () => {
         const stringToNumber = JsonDecoder.string.fold(
           (value: string) => parseInt(value, 10),
-          (error: string) => 0,
+          () => 0,
           '000000000001'
         );
-        expect(stringToNumber).to.equal(1);
+        expect(stringToNumber).toEqual(1);
       });
     });
 
     describe('decodeToPromise', () => {
       it('should resolve when decoding succeeds', async () => {
-        expect(await JsonDecoder.string.decodeToPromise('hola')).to.equal(
+        expect(await JsonDecoder.string.decodeToPromise('hola')).toEqual(
           'hola'
         );
       });
       it('should reject when decoding fails', () => {
         JsonDecoder.string.decodeToPromise(2).catch(error => {
-          expect(error).to.equal(
-            $JsonDecoderErrors.primitiveError(2, 'string')
-          );
+          expect(error).toEqual($JsonDecoderErrors.primitiveError(2, 'string'));
         });
       });
     });
@@ -1185,7 +1202,7 @@ describe('json-decoder', () => {
         expect(
           (stringToDateDecoder.decode('2018-12-21T18:22:25.490Z') as Ok<Date>)
             .value
-        ).to.be.an.instanceOf(Date);
+        ).toBeInstanceOf(Date);
       });
       it('should keep transforming based on the previous transformation value', () => {
         const decoder = JsonDecoder.array(JsonDecoder.number, 'latLang')
@@ -1368,11 +1385,14 @@ describe('json-decoder', () => {
   describe('FromDecoder<D>', () => {
     it('should infer the primitive types', () => {
       type Str = FromDecoder<typeof JsonDecoder.string>;
-      const myString: Str = "I'm a string!";
+      type StrTest = Expect<Equal<Str, string>>;
+
       type Num = FromDecoder<typeof JsonDecoder.number>;
-      const myNumber: Num = 4;
+      type NumTest = Expect<Equal<Num, number>>;
+
       type Bool = FromDecoder<typeof JsonDecoder.boolean>;
-      const myBoolean: Bool = true;
+      type BoolTest = Expect<Equal<Bool, boolean>>;
+
       expect(true).eql(true);
     });
 
@@ -1385,11 +1405,32 @@ describe('json-decoder', () => {
         'User'
       );
       type User = FromDecoder<typeof userDecoder>;
-      const myUser: User = {
-        name: 'John Doe',
-        age: 44
-      };
+      type UserTest = Expect<Equal<User, { name: string; age: number }>>;
+
       expect(true).eql(true);
+    });
+  });
+
+  describe('StandardSchemaV1', () => {
+    async function standardValidate<T extends StandardSchemaV1>(
+      schema: T,
+      input: StandardSchemaV1.InferInput<T>
+    ): Promise<StandardSchemaV1.InferOutput<T>> {
+      let result = schema['~standard'].validate(input);
+      if (result instanceof Promise) result = await result;
+
+      // if the `issues` field exists, the validation failed
+      if (result.issues) {
+        throw new Error(JSON.stringify(result.issues, null, 2));
+      }
+
+      return result.value;
+    }
+
+    it('should integrate with standard schema', async () => {
+      const res = await standardValidate(JsonDecoder.string, 'hello');
+      type TestType = Expect<Equal<typeof res, string>>;
+      expect(res).equal('hello');
     });
   });
 
@@ -1407,36 +1448,31 @@ describe('json-decoder', () => {
       'User'
     );
 
-    it('should succeed', done => {
+    it('should succeed', async () => {
       const jsonObjectOk = {
         firstname: 'Damien',
         lastname: 'Jurado'
       };
-
-      userDecoder
-        .decodeToPromise(jsonObjectOk)
-        .then(user => {
-          done();
-        })
-        .catch(error => {
-          done(error);
-        });
+      await expect(userDecoder.decodeToPromise(jsonObjectOk)).resolves.toEqual({
+        firstname: 'Damien',
+        lastname: 'Jurado'
+      });
     });
 
-    it('should fail', done => {
+    it('should fail', async () => {
       const jsonObjectKo = {
         firstname: 'Erik',
         lastname: null
       };
-
-      userDecoder
-        .decodeToPromise(jsonObjectKo)
-        .then(user => {
-          done('Unexpectedly the User decoded successfully');
-        })
-        .catch(error => {
-          done();
-        });
+      await expect(userDecoder.decodeToPromise(jsonObjectKo)).rejects.toThrow();
     });
   });
 });
+
+// -- Type-level testing
+
+export type Expect<T extends true> = T;
+export type Equal<X, Y> =
+  (<T>() => T extends X ? 1 : 2) extends <T>() => T extends Y ? 1 : 2
+    ? true
+    : false;

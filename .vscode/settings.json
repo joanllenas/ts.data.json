@@ -1,6 +1,0 @@
-{
-  "editor.formatOnSave": true,
-  "prettier.singleQuote": true,
-  "prettier.trailingComma": "none",
-  "editor.tabSize": 2
-}
