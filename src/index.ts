@@ -1,2 +1,2 @@
-export { JsonDecoder, FromDecoder } from './json-decoder';
-export { Ok, Err, Result, err, ok } from './result';
+export { JsonDecoder, type FromDecoder } from './json-decoder';
+export { Ok, Err, type Result, err, ok } from './result';

@@ -7,8 +7,20 @@
     "strict": true,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
-    "lib": ["ES2020", "dom"],
-    "moduleResolution": "Node"
+    "lib": ["ES2020"],
+    "moduleResolution": "Node",
+    "removeComments": true,
+    "sourceMap": true,
+    "inlineSourceMap": false,
+    "importHelpers": true,
+    "noEmitHelpers": true,
+    "noEmitOnError": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "isolatedModules": true,
+    "skipLibCheck": true
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist", "**/*.spec.ts"]
