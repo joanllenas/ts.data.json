@@ -1,23 +1,27 @@
 {
   "compilerOptions": {
     "module": "ES2020",
-    "target": "es5",
+    "target": "ES2020",
     "declaration": true,
-    "noImplicitAny": true,
     "outDir": "./dist/esm",
     "strict": true,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
-    "lib": [
-      "ES2017",
-      "dom"
-    ]
+    "lib": ["ES2020"],
+    "moduleResolution": "Node",
+    "removeComments": false,
+    "sourceMap": true,
+    "inlineSourceMap": false,
+    "importHelpers": true,
+    "noEmitHelpers": true,
+    "noEmitOnError": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "isolatedModules": true,
+    "skipLibCheck": true
   },
-  "ts-node": {
-    // these overrides are used by ts-node
-    "compilerOptions": {
-      "module": "commonjs"
-    }
-  },
-  "include": ["src/**/*"]
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist", "**/*.spec.ts"]
 }

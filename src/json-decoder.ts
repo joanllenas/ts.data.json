@@ -1,20 +1,83 @@
-import { Result, ok, err } from './result';
+import type { StandardSchemaV1 } from './standard-schema-v1';
+import { Result, err, ok } from './result';
 
-export type FromDecoder<Decoder> = Decoder extends JsonDecoder.Decoder<infer T>
-  ? T
-  : never;
+export type FromDecoder<Decoder> =
+  Decoder extends JsonDecoder.Decoder<infer T> ? T : never;
 
+/**
+ * TypeScript type annotations provide compile-time guarantees. However, when data flows into our clients from external sources, many things can go wrong at runtime.
+ *
+ * JSON decoders validate our JSON before it enters our program. This way, if the data has an unexpected structure, we're immediately alerted.
+ *
+ * @example
+ * ```ts
+ * type User = {
+ *   firstname: string;
+ *   lastname: string;
+ * };
+ *
+ * const userDecoder = JsonDecoder.object<User>(
+ *   {
+ *     firstname: JsonDecoder.string,
+ *     lastname: JsonDecoder.string
+ *   },
+ *   'User'
+ * );
+ *
+ * const jsonObjectOk = {
+ *   firstname: 'Damien',
+ *   lastname: 'Jurado'
+ * };
+ *
+ * userDecoder
+ *   .decodeToPromise(jsonObjectOk)
+ *   .then(user => {
+ *     console.log(`User ${user.firstname} ${user.lastname} decoded successfully`);
+ *   })
+ *   .catch(error => {
+ *     console.log(error);
+ *   });
+ * ```
+ */
 export namespace JsonDecoder {
-  export class Decoder<a> {
+  /**
+   * A decoder that can validate and transform JSON data into strongly typed TypeScript values.
+   *
+   * @template a - The type that this decoder will produce when successful
+   */
+  export class Decoder<a> implements StandardSchemaV1<unknown, a> {
     constructor(private decodeFn: (json: any) => Result<a>) {}
 
     /**
      * Decodes a JSON object of type <a> and returns a Result<a>
-     * @param json The JSON object
+     * @param json The JSON object to decode
+     * @returns A Result containing either the decoded value or an error message
+     *
+     * @example
+     * ```ts
+     * JsonDecoder.string.decode('hi'); // Ok<string>({value: 'hi'})
+     * JsonDecoder.string.decode(5); // Err({error: '5 is not a valid string'})
+     * ```
      */
     decode(json: any): Result<a> {
       return this.decodeFn(json);
     }
+
+    /**
+     * The Standard Schema interface for this decoder.
+     */
+    '~standard': StandardSchemaV1.Props<unknown, a> = {
+      version: 1 as const,
+      vendor: 'ts.data.json',
+      validate: (value: unknown): StandardSchemaV1.Result<a> => {
+        const result = this.decode(value);
+        if (result.isOk()) {
+          return { value: result.value };
+        } else {
+          return { issues: [{ message: result.error }] };
+        }
+      }
+    };
 
     /**
      * Decodes a JSON object of type <a> and calls onOk() on success or onErr() on failure, both return <b>
@@ -22,6 +85,16 @@ export namespace JsonDecoder {
      * @param onOk function called when the decoder succeeds
      * @param onErr function called when the decoder fails
      * @param json The JSON object to decode
+     * @returns The result of either onOk or onErr
+     *
+     * @example
+     * ```ts
+     * JsonDecoder.string.fold(
+     *   (value: string) => parseInt(value, 10),
+     *   (error: string) => 0,
+     *   '000000000001'
+     * ); // 1
+     * ```
      */
     fold<b>(onOk: (result: a) => b, onErr: (error: string) => b, json: any): b {
       const result = this.decode(json);
@@ -35,6 +108,13 @@ export namespace JsonDecoder {
     /**
      * Decodes a JSON object of type <a> and returns a Promise<a>
      * @param json The JSON object to decode
+     * @returns A Promise that resolves with the decoded value or rejects with an error message
+     *
+     * @example
+     * ```ts
+     * JsonDecoder.string.decodeToPromise('hola').then(res => console.log(res)); // 'hola'
+     * JsonDecoder.string.decodeToPromise(2).catch(err => console.log(err)); // '2 is not a valid string'
+     * ```
      */
     decodeToPromise(json: any): Promise<a> {
       return new Promise((resolve, reject) => {
@@ -50,6 +130,17 @@ export namespace JsonDecoder {
     /**
      * If the decoder has succeeded, transforms the decoded value into something else
      * @param fn The transformation function
+     * @returns A new decoder that applies the transformation
+     *
+     * @example
+     * ```ts
+     * // Decode a string, then transform it into a Date
+     * const dateDecoder = JsonDecoder.string.map(stringDate => new Date(stringDate));
+     * // Ok scenario
+     * dateDecoder.decode('2018-12-21T18:22:25.490Z'); // Ok<Date>({value: Date(......)})
+     * // Err scenario
+     * dateDecoder.decode(false); // Err({error: 'false is not a valid string'})
+     * ```
      */
     map<b>(fn: (value: a) => b): Decoder<b> {
       return new Decoder<b>((json: any) => {
@@ -79,8 +170,20 @@ export namespace JsonDecoder {
     }
 
     /**
-     * Chains decoders
+     * Chain decoders that might fail
      * @param fn Function that returns a new decoder
+     * @returns A new decoder that chains the current decoder with the result of fn
+     *
+     * @example
+     * ```ts
+     * const adultDecoder = JsonDecoder.number.chain(age =>
+     *   age >= 18
+     *     ? JsonDecoder.succeed
+     *     : JsonDecoder.fail(`Age ${age} is less than 18`)
+     * );
+     * adultDecoder.decode(18); // Ok<number>({value: 18})
+     * adultDecoder.decode(17); // Err({error: 'Age 17 is less than 18'})
+     * ```
      */
     chain<b>(fn: (value: a) => Decoder<b>): Decoder<b> {
       return new Decoder<b>((json: any) => {
@@ -98,13 +201,40 @@ export namespace JsonDecoder {
    * Decoder for recursive data structures.
    *
    * @param mkDecoder A function that returns a decoder
+   * @returns A decoder that can handle recursive data structures
+   *
+   * @example
+   * ```ts
+   * interface Tree {
+   *   value: number;
+   *   children?: Tree[];
+   * }
+   *
+   * const treeDecoder = JsonDecoder.lazy(() =>
+   *   JsonDecoder.object<Tree>(
+   *     {
+   *       value: JsonDecoder.number,
+   *       children: JsonDecoder.optional(JsonDecoder.array(treeDecoder))
+   *     },
+   *     'Tree'
+   *   )
+   * );
+   * ```
    */
   export function lazy<a>(mkDecoder: () => Decoder<a>): Decoder<a> {
     return new Decoder((json: any) => mkDecoder().decode(json));
   }
 
   /**
-   * Decoder for `string`.
+   * Decoder for `string` values.
+   *
+   * @returns A decoder that validates and returns string values
+   *
+   * @example
+   * ```ts
+   * JsonDecoder.string.decode('hi'); // Ok<string>({value: 'hi'})
+   * JsonDecoder.string.decode(5); // Err({error: '5 is not a valid string'})
+   * ```
    */
   export const string: Decoder<string> = new Decoder<string>((json: any) => {
     if (typeof json === 'string') {
@@ -115,7 +245,15 @@ export namespace JsonDecoder {
   });
 
   /**
-   * Decoder for `number`.
+   * Decoder for `number` values.
+   *
+   * @returns A decoder that validates and returns number values
+   *
+   * @example
+   * ```ts
+   * JsonDecoder.number.decode(99); // Ok<number>({value: 99})
+   * JsonDecoder.number.decode('hola'); // Err({error: 'hola is not a valid number'})
+   * ```
    */
   export const number: Decoder<number> = new Decoder<number>((json: any) => {
     if (typeof json === 'number') {
@@ -126,7 +264,15 @@ export namespace JsonDecoder {
   });
 
   /**
-   * Decoder for `boolean`.
+   * Decoder for `boolean` values.
+   *
+   * @returns A decoder that validates and returns boolean values
+   *
+   * @example
+   * ```ts
+   * JsonDecoder.boolean.decode(true); // Ok<boolean>({value: true})
+   * JsonDecoder.boolean.decode('true'); // Err({error: 'true is not a valid boolean'})
+   * ```
    */
   export const boolean: Decoder<boolean> = new Decoder<boolean>((json: any) => {
     if (typeof json === 'boolean') {
@@ -136,26 +282,52 @@ export namespace JsonDecoder {
     }
   });
 
+  type EmptyObject = Record<string, never>;
   /**
-   * Decoder for an empty object `{}`.
+   * Decoder for an empty object ({}).
+   *
+   * @returns A decoder that validates and returns empty objects
+   *
+   * @example
+   * ```ts
+   * JsonDecoder.emptyObject.decode({}); // Ok<EmptyObject>({value: {}})
+   * JsonDecoder.emptyObject.decode({a: 1}); // Err({error: '{a: 1} is not a valid empty object'})
+   * ```
    */
-  export const emptyObject: Decoder<{}> = new Decoder<{}>((json: any) => {
-    if (
-      json !== null &&
-      typeof json === 'object' &&
-      Object.keys(json).length === 0
-    ) {
-      return ok<{}>(json);
-    } else {
-      return err<{}>($JsonDecoderErrors.primitiveError(json, 'empty object'));
+  export const emptyObject: Decoder<EmptyObject> = new Decoder<EmptyObject>(
+    (json: any) => {
+      if (
+        json !== null &&
+        typeof json === 'object' &&
+        Object.keys(json).length === 0
+      ) {
+        return ok<EmptyObject>(json);
+      } else {
+        return err<EmptyObject>(
+          $JsonDecoderErrors.primitiveError(json, 'empty object')
+        );
+      }
     }
-  });
+  );
 
   /**
-   * Decode for `enumeration`.
+   * Decoder for `enumeration` values.
    *
    * @param enumObj The enum object to use for decoding. Must not be a const enum.
    * @param decoderName How to display the name of the object being decoded in errors.
+   * @returns A decoder that validates and returns enum values
+   *
+   * @example
+   * ```ts
+   * enum Color {
+   *   Red = 'red',
+   *   Blue = 'blue'
+   * }
+   *
+   * const colorDecoder = JsonDecoder.enumeration(Color, 'Color');
+   * colorDecoder.decode('red'); // Ok<Color>({value: Color.Red})
+   * colorDecoder.decode('green'); // Err({error: '<Color> decoder failed at value "green" which is not in the enum'})
+   * ```
    */
   export function enumeration<e>(
     enumObj: object,
@@ -174,12 +346,43 @@ export namespace JsonDecoder {
   export type DecoderObjectKeyMap<a> = { [p in keyof a]?: string };
 
   /**
-   * Decoder for objects.
+   * Decoder for objects with specified field decoders.
    *
    * @param decoders Key/value pairs of decoders for each object field.
    * @param decoderName How to display the name of the object being decoded in errors.
    * @param keyMap Optional map between json field names and user land field names.
    *               Useful when the client model does not match with what the server sends.
+   * @returns A decoder that validates and returns objects matching the specified structure
+   *
+   * @example
+   * ```ts
+   * interface User {
+   *   firstName: string;
+   *   lastName: string;
+   *   age: number;
+   * }
+   *
+   * const userDecoder = JsonDecoder.object<User>(
+   *   {
+   *     firstName: JsonDecoder.string,
+   *     lastName: JsonDecoder.string,
+   *     age: JsonDecoder.number
+   *   },
+   *   'User',
+   *   {
+   *     firstName: 'first_name',
+   *     lastName: 'last_name'
+   *   }
+   * );
+   *
+   * const json = {
+   *   first_name: 'John',
+   *   last_name: 'Doe',
+   *   age: 30
+   * };
+   *
+   * userDecoder.decode(json); // Ok<User>({value: {firstName: 'John', lastName: 'Doe', age: 30}})
+   * ```
    */
   export function object<a>(
     decoders: DecoderObject<a>,
@@ -190,7 +393,7 @@ export namespace JsonDecoder {
       if (json !== null && typeof json === 'object') {
         const result: any = {};
         for (const key in decoders) {
-          if (decoders.hasOwnProperty(key)) {
+          if (Object.prototype.hasOwnProperty.call(decoders, key)) {
             if (keyMap && key in keyMap) {
               const jsonKey = keyMap[key] as string;
               const r = decoders[key].decode(json[jsonKey]);
@@ -226,11 +429,30 @@ export namespace JsonDecoder {
   }
 
   /**
-   * Decoder for objects that performs strict key checks.
-   * The decoder will fail if there are any extra keys in the provided object.
+   * Decoder for objects with specified field decoders that fails if unknown fields are present.
    *
    * @param decoders Key/value pairs of decoders for each object field.
    * @param decoderName How to display the name of the object being decoded in errors.
+   * @returns A decoder that validates and returns objects matching the specified structure, failing if unknown fields are present
+   *
+   * @example
+   * ```ts
+   * interface User {
+   *   name: string;
+   *   age: number;
+   * }
+   *
+   * const userDecoder = JsonDecoder.objectStrict<User>(
+   *   {
+   *     name: JsonDecoder.string,
+   *     age: JsonDecoder.number
+   *   },
+   *   'User'
+   * );
+   *
+   * userDecoder.decode({name: 'John', age: 30}); // Ok<User>
+   * userDecoder.decode({name: 'John', age: 30, extra: 'field'}); // Err({error: 'Unknown key "extra" found while processing strict <User> decoder'})
+   * ```
    */
   export function objectStrict<a>(
     decoders: DecoderObject<a>,
@@ -239,7 +461,7 @@ export namespace JsonDecoder {
     return new Decoder<a>((json: any) => {
       if (json !== null && typeof json === 'object') {
         for (const key in json) {
-          if (!decoders.hasOwnProperty(key)) {
+          if (!Object.prototype.hasOwnProperty.call(decoders, key)) {
             return err<a>(
               $JsonDecoderErrors.objectStrictUnknownKeyError(decoderName, key)
             );
@@ -247,7 +469,7 @@ export namespace JsonDecoder {
         }
         const result: any = {};
         for (const key in decoders) {
-          if (decoders.hasOwnProperty(key)) {
+          if (Object.prototype.hasOwnProperty.call(decoders, key)) {
             const r = decoders[key].decode(json[key]);
             if (r.isOk()) {
               result[key] = r.value;
@@ -266,26 +488,51 @@ export namespace JsonDecoder {
   }
 
   /**
-   * Always succeeding decoder
+   * Decoder that always succeeds with the given value.
+   *
+   * @returns A decoder that always succeeds
+   *
+   * @example
+   * ```ts
+   * const succeedDecoder = JsonDecoder.succeed;
+   * succeedDecoder.decode('anything'); // Ok<any>({value: 'anything'})
+   * ```
    */
   export const succeed: Decoder<any> = new Decoder<any>((json: any) => {
     return ok<any>(json);
   });
 
   /**
-   * Always failing decoder
+   * Decoder that always fails with the given error message.
+   *
+   * @param error The error message to return
+   * @returns A decoder that always fails with the specified error
+   *
+   * @example
+   * ```ts
+   * const failDecoder = JsonDecoder.fail<string>('This decoder always fails');
+   * failDecoder.decode('anything'); // Err({error: 'This decoder always fails'})
+   * ```
    */
   export function fail<a>(error: string): Decoder<a> {
-    return new Decoder<a>((json: any) => {
+    return new Decoder<a>(() => {
       return err<any>(error);
     });
   }
 
   /**
-   * Tries to decode with `decoder` and returns `defaultValue` on failure.
+   * Decoder that falls back to a default value if the given decoder fails.
    *
-   * @param defaultValue The default value returned in case of decoding failure.
-   * @param decoder The actual decoder to use.
+   * @param defaultValue The value to return if the decoder fails
+   * @param decoder The decoder to try first
+   * @returns A decoder that returns the default value if the given decoder fails
+   *
+   * @example
+   * ```ts
+   * const numberOrZero = JsonDecoder.failover(0, JsonDecoder.number);
+   * numberOrZero.decode(42); // Ok<number>({value: 42})
+   * numberOrZero.decode('not a number'); // Ok<number>({value: 0})
+   * ```
    */
   export function failover<a>(
     defaultValue: a,
@@ -302,11 +549,29 @@ export namespace JsonDecoder {
   }
 
   /**
-   * Tries to decode with `decoder` and returns `error` on failure, but allows
-   * for `undefined` or `null` values to be present at the top level and returns
-   * an `undefined` if the value was `undefined` or `null`.
+   * Decoder that makes a field optional.
    *
-   * @param decoder The actual decoder to use.
+   * @param decoder The decoder for the field when it is present
+   * @returns A decoder that accepts either the decoded value or undefined
+   *
+   * @example
+   * ```ts
+   * interface User {
+   *   name: string;
+   *   age?: number;
+   * }
+   *
+   * const userDecoder = JsonDecoder.object<User>(
+   *   {
+   *     name: JsonDecoder.string,
+   *     age: JsonDecoder.optional(JsonDecoder.number)
+   *   },
+   *   'User'
+   * );
+   *
+   * userDecoder.decode({name: 'John'}); // Ok<User>
+   * userDecoder.decode({name: 'John', age: 30}); // Ok<User>
+   * ```
    */
   export function optional<a>(decoder: Decoder<a>): Decoder<a | undefined> {
     return new Decoder<a | undefined>((json: any) => {
@@ -321,9 +586,29 @@ export namespace JsonDecoder {
   }
 
   /**
-   * Tries to decode with `decoder` and returns `error` on failure, but allows for `null` value.
+   * Decoder that accepts null values.
    *
-   * @param decoder The actual decoder to use
+   * @param decoder The decoder for the non-null value
+   * @returns A decoder that accepts either the decoded value or null
+   *
+   * @example
+   * ```ts
+   * interface User {
+   *   name: string;
+   *   age: number | null;
+   * }
+   *
+   * const userDecoder = JsonDecoder.object<User>(
+   *   {
+   *     name: JsonDecoder.string,
+   *     age: JsonDecoder.nullable(JsonDecoder.number)
+   *   },
+   *   'User'
+   * );
+   *
+   * userDecoder.decode({name: 'John', age: null}); // Ok<User>
+   * userDecoder.decode({name: 'John', age: 30}); // Ok<User>
+   * ```
    */
   export function nullable<a>(decoder: Decoder<a>): Decoder<a | null> {
     return new Decoder<a | null>((json: any) => {
@@ -335,11 +620,23 @@ export namespace JsonDecoder {
   }
 
   /**
-   * Tries to decode the provided json value with any of the provided `decoders`.
-   * If all provided `decoders` fail, this decoder fails.
-   * Otherwise, it returns the first successful decoder.
+   * Decoder that tries multiple decoders in sequence until one succeeds.
    *
-   * @param decoders An array of decoders to try.
+   * @param decoders Array of decoders to try in sequence
+   * @param decoderName How to display the name of the object being decoded in errors
+   * @returns A decoder that tries each decoder in sequence until one succeeds
+   *
+   * @example
+   * ```ts
+   * const stringOrNumber = JsonDecoder.oneOf<string | number>(
+   *   [JsonDecoder.string, JsonDecoder.number],
+   *   'StringOrNumber'
+   * );
+   *
+   * stringOrNumber.decode('hello'); // Ok<string>({value: 'hello'})
+   * stringOrNumber.decode(42); // Ok<number>({value: 42})
+   * stringOrNumber.decode(true); // Err({error: '<StringOrNumber> decoder failed because true is not a valid value'})
+   * ```
    */
   export function oneOf<a>(
     decoders: Array<Decoder<a>>,
@@ -357,12 +654,27 @@ export namespace JsonDecoder {
   }
 
   /**
-   * Tries to decode the provided json value with all of the provided `decoders`.
-   * The order of the provided decoders matters: the output of one decoder is passed
-   * as input to the next decoder. If any of the provided `decoders` fail, this
-   * decoder fails. Otherwise, it returns the output of the last decoder.
+   * Decoder that combines multiple decoders into a single decoder.
    *
-   * @param decoders a spread of decoders to use.
+   * @param decoders Array of decoders to combine
+   * @returns A decoder that combines the results of multiple decoders
+   *
+   * @example
+   * ```ts
+   * interface User {
+   *   name: string;
+   *   age: number;
+   *   email: string;
+   * }
+   *
+   * const userDecoder = JsonDecoder.combine(
+   *   JsonDecoder.object({name: JsonDecoder.string}, 'User'),
+   *   JsonDecoder.object({age: JsonDecoder.number}, 'User'),
+   *   JsonDecoder.object({email: JsonDecoder.string}, 'User')
+   * );
+   *
+   * userDecoder.decode({name: 'John', age: 30, email: 'john@example.com'}); // Ok<User>
+   * ```
    */
   export function allOf<T extends Array<Decoder<unknown>>, R>(
     ...decoders: [...T, Decoder<R>]
@@ -377,9 +689,19 @@ export namespace JsonDecoder {
   }
 
   /**
-   * Decoder for key/value pairs.
+   * Decoder for dictionary/record types with string keys.
    *
-   * @param decoder An object decoder for the values. All values must have the same shape or use oneOf otherwise.
+   * @param decoder The decoder for the dictionary values
+   * @param decoderName How to display the name of the object being decoded in errors
+   * @returns A decoder that validates and returns a dictionary with string keys
+   *
+   * @example
+   * ```ts
+   * const numberDict = JsonDecoder.dictionary(JsonDecoder.number, 'NumberDict');
+   *
+   * numberDict.decode({a: 1, b: 2}); // Ok<Record<string, number>>
+   * numberDict.decode({a: '1', b: 2}); // Err({error: '<NumberDict> dictionary decoder failed at key "a" with error: "1" is not a valid number'})
+   * ```
    */
   export const dictionary = <a>(
     decoder: Decoder<a>,
@@ -389,7 +711,7 @@ export namespace JsonDecoder {
       if (json !== null && typeof json === 'object') {
         const obj: { [name: string]: a } = {};
         for (const key in json) {
-          if (json.hasOwnProperty(key)) {
+          if (Object.prototype.hasOwnProperty.call(json, key)) {
             const result = decoder.decode(json[key]);
             if (result.isOk()) {
               obj[key] = result.value;
@@ -414,9 +736,19 @@ export namespace JsonDecoder {
   };
 
   /**
-   * Decoder for Array<T>.
+   * Decoder for arrays.
    *
-   * @param decoder The decoder for the array element.
+   * @param decoder The decoder for array elements
+   * @param decoderName How to display the name of the object being decoded in errors
+   * @returns A decoder that validates and returns arrays
+   *
+   * @example
+   * ```ts
+   * const numberArray = JsonDecoder.array(JsonDecoder.number, 'NumberArray');
+   *
+   * numberArray.decode([1, 2, 3]); // Ok<number[]>
+   * numberArray.decode([1, '2', 3]); // Err({error: '<NumberArray> decoder failed at index "1" with error: "2" is not a valid number'})
+   * ```
    */
   export const array = <a>(
     decoder: Decoder<a>,
@@ -442,15 +774,28 @@ export namespace JsonDecoder {
     });
   };
 
-  /**
-   * Decoder for a tuple of a specific shape.
-   *
-   * @param decoders The decoders for each element of the tuple.
-   */
-  // This turns a tuple of decoders into a tuple of their results.
   type TupleOfResults<T extends readonly [] | readonly Decoder<any>[]> = {
     [K in keyof T]: T[K] extends Decoder<infer R> ? R : never;
   };
+
+  /**
+   * Decoder for tuples with fixed length and types.
+   *
+   * @param decoders Array of decoders for each tuple element
+   * @param decoderName How to display the name of the object being decoded in errors
+   * @returns A decoder that validates and returns tuples
+   *
+   * @example
+   * ```ts
+   * const pointDecoder = JsonDecoder.tuple(
+   *   [JsonDecoder.number, JsonDecoder.number],
+   *   'Point'
+   * );
+   *
+   * pointDecoder.decode([1, 2]); // Ok<[number, number]>
+   * pointDecoder.decode([1, 2, 3]); // Err({error: '<Point> tuple decoder failed because it received a tuple of length 3 but expected 2'})
+   * ```
+   */
   export const tuple = <T extends readonly [] | readonly Decoder<any>[]>(
     decoders: T,
     decoderName: string
@@ -488,10 +833,18 @@ export namespace JsonDecoder {
   };
 
   /**
-   * Decoder that only succeeds when json is strictly (===) `null`.
-   * When succeeds it returns `defaultValue`.
+   * Decoder that accepts null values and returns a default value.
    *
-   * @param defaultValue The value returned when json is `null`.
+   * @param defaultValue The value to return when null is encountered
+   * @returns A decoder that accepts null and returns the default value
+   *
+   * @example
+   * ```ts
+   * const numberOrZero = JsonDecoder.isNull(0);
+   *
+   * numberOrZero.decode(null); // Ok<number>({value: 0})
+   * numberOrZero.decode(42); // Err({error: '42 is not null'})
+   * ```
    */
   export function isNull<a>(defaultValue: a): Decoder<a> {
     return new Decoder((json: any) => {
@@ -504,10 +857,18 @@ export namespace JsonDecoder {
   }
 
   /**
-   * Decoder that only succeeds when json is strictly (===) `undefined`.
-   * When succeeds it returns `defaultValue`.
+   * Decoder that accepts undefined values and returns a default value.
    *
-   * @param defaultValue The value returned when json is `undefined`.
+   * @param defaultValue The value to return when undefined is encountered
+   * @returns A decoder that accepts undefined and returns the default value
+   *
+   * @example
+   * ```ts
+   * const numberOrZero = JsonDecoder.isUndefined(0);
+   *
+   * numberOrZero.decode(undefined); // Ok<number>({value: 0})
+   * numberOrZero.decode(42); // Err({error: '42 is not undefined'})
+   * ```
    */
   export function isUndefined<a>(defaultValue: a): Decoder<a> {
     return new Decoder((json: any) => {
@@ -520,19 +881,36 @@ export namespace JsonDecoder {
   }
 
   /**
-   * Decoder that always succeeds returning `value`.
+   * Decoder that only accepts a specific constant value.
    *
-   * @param value The value returned.
+   * @param value The constant value to accept
+   * @returns A decoder that only accepts the specified value
+   *
+   * @example
+   * ```ts
+   * const trueDecoder = JsonDecoder.constant(true);
+   *
+   * trueDecoder.decode(true); // Ok<boolean>({value: true})
+   * trueDecoder.decode(false); // Err({error: 'false is not exactly true'})
+   * ```
    */
   export const constant = <a>(value: a): Decoder<a> => {
-    return new Decoder<a>((json: any) => ok(value));
+    return new Decoder<a>(() => ok(value));
   };
 
   /**
-   * Decoder that only succeeds when json is strictly (===) `value`.
-   * When succeeds it returns `value`.
+   * Decoder that only accepts a specific value.
    *
-   * @param value The value returned on success.
+   * @param value The exact value to accept
+   * @returns A decoder that only accepts the specified value
+   *
+   * @example
+   * ```ts
+   * const oneDecoder = JsonDecoder.isExactly(1);
+   *
+   * oneDecoder.decode(1); // Ok<number>({value: 1})
+   * oneDecoder.decode(2); // Err({error: '2 is not exactly 1'})
+   * ```
    */
   export function isExactly<a>(value: a): Decoder<a> {
     return new Decoder((json: any) => {
@@ -575,15 +953,27 @@ export namespace JsonDecoder {
   type Combine<T extends { [k: string]: any }[]> = Intersect<T[number]>;
 
   /**
-   * Combines a list of decoders into a single decoder
-   * which result is an intersection type of input decoders.
+   * Combines multiple decoders into a single decoder that merges their results.
    *
-   * Example:
+   * @param decoders Array of decoders to combine
+   * @returns A decoder that combines the results of multiple decoders
    *
-   *    > JsonDecoder.combine(Decoder<User>, Decoder<Metadata>)
-   *    // => Decoder<User & Metadata>
+   * @example
+   * ```ts
+   * interface User {
+   *   name: string;
+   *   age: number;
+   *   email: string;
+   * }
    *
-   * @param decoders Variable arguments list of decoders
+   * const userDecoder = JsonDecoder.combine(
+   *   JsonDecoder.object({name: JsonDecoder.string}, 'User'),
+   *   JsonDecoder.object({age: JsonDecoder.number}, 'User'),
+   *   JsonDecoder.object({email: JsonDecoder.string}, 'User')
+   * );
+   *
+   * userDecoder.decode({name: 'John', age: 30, email: 'john@example.com'}); // Ok<User>
+   * ```
    */
   export function combine<TS extends { [k: string]: any }[]>(
     ...decoders: { [T in keyof TS]: Decoder<TS[T]> }

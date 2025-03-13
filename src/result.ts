@@ -13,7 +13,7 @@ export class Ok<a> {
 export class Err<a> {
   constructor(readonly error: string) {}
 
-  map<b>(fn: (a: a) => b): Result<b> {
+  map<b>(_fn: (a: a) => b): Result<b> {
     return err<b>(this.error);
   }
 

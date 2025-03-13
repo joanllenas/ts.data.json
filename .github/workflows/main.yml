@@ -1,0 +1,64 @@
+name: CI/CD Pipeline
+
+on:
+  pull_request:  # Triggers on PRs to master
+    branches:
+      - master
+  push:  # Triggers when a PR is merged into master
+    branches:
+      - master
+
+
+
+jobs:
+  ci:
+    name: Run Checks
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Run Linter
+        run: npm run lint
+
+      - name: Run Prettier Check
+        run: npm run format:check
+
+      - name: Run Tests with Coverage
+        run: npm run test:coverage
+
+      - name: Build Project
+        run: npm run build
+
+      - name: Check if Version Exists on NPM
+        run: |
+          CURRENT_VERSION=$(npm view ts.data.json version || echo "0.0.0")
+          NEW_VERSION=$(node -p "require('./package.json').version")
+          if [ "$CURRENT_VERSION" == "$NEW_VERSION" ]; then
+            echo "Version $NEW_VERSION already exists on NPM. Update package.json version before merging."
+            exit 1
+          fi
+
+  release:
+    name: Publish to NPM
+    needs: ci  # Only runs if CI passes
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'  # Only runs on master push
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Build Project
+        run: npm run build
+
+      - name: Publish to NPM
+        run: npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
