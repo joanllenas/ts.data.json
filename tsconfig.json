@@ -9,7 +9,7 @@
     "forceConsistentCasingInFileNames": true,
     "lib": ["ES2020"],
     "moduleResolution": "Node",
-    "removeComments": true,
+    "removeComments": false,
     "sourceMap": true,
     "inlineSourceMap": false,
     "importHelpers": true,

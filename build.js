@@ -8,6 +8,7 @@ const commonConfig = {
   target: ['es2020'],
   platform: 'node',
   external: ['typescript'], // Add any external dependencies here
+  legalComments: 'inline', // Preserve legal comments (including TSDoc)
 };
 
 // Build ESM version
