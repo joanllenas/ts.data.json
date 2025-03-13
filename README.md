@@ -1,14 +1,14 @@
-# JsonDecoder
+# ts.data.json
 
 [![Build Status](https://travis-ci.org/joanllenas/ts.data.json.svg?branch=master)](https://travis-ci.org/joanllenas/ts.data.json)
 [![npm version](https://badge.fury.io/js/ts.data.json.svg)](https://www.npmjs.com/package/ts.data.json)
 [![downloads - 33k/week](https://img.shields.io/badge/downloads-33k%2Fweek-45BE1D)](https://www.npmjs.com/package/ts.data.json)
 
-TypeScript type annotations provide compile-time guarantees. However, when data flows into our clients from external sources, many things can go wrong at runtime. 
+TypeScript type annotations provide compile-time guarantees. However, when data flows into our applications from external sources, many issues can arise at runtime.
 
-JSON decoders validate our JSON before it enters our program. This way, if the data has an unexpected structure, we're immediately alerted.
+JSON decoders validate incoming JSON before it enters our program. This way, if the data has an unexpected structure, we're immediately alerted.
 
-> If you are new to JSON decoding, you may want to read the introductory article [Decoding JSON with Typescript](https://dev.to/joanllenas/decoding-json-with-typescript-1jjc) about why and how to use this library.
+> If you're new to JSON decoding, consider reading the introductory article [Decoding JSON with TypeScript](https://dev.to/joanllenas/decoding-json-with-typescript-1jjc), which explains why and how to use this library.  
 
 [![](./.github/all-your-json-are-belong-to-us.jpg)](https://en.wikipedia.org/wiki/All_your_base_are_belong_to_us)
 
@@ -18,12 +18,10 @@ JSON decoders validate our JSON before it enters our program. This way, if the d
 npm install ts.data.json --save
 ```
 
-## Documentation
-
-The complete documentation is available in the source code using TSDoc format.
-You can view the documentation directly in your IDE by hovering over the `JsonDecoder` namespace or any of its methods.
-
 ### Quick Example
+
+You can play with this example in [this stackblitz playground](https://stackblitz.com/edit/ts-data-json-decoder-playground?file=src%2Fmain.ts).
+
 
 #### Define your types
 
@@ -33,17 +31,6 @@ interface Address {
   city: string;
   country: string;
   postalCode: string;
-}
-
-interface User {
-  id: number;
-  email: string;
-  name: string;
-  age?: number;
-  address: Address;
-  tags: string[];
-  isActive: boolean;
-  lastLogin: Date | null;
 }
 ```
 
@@ -60,7 +47,7 @@ const addressDecoder = JsonDecoder.object<Address>(
   'Address'
 );
 
-const userDecoder = JsonDecoder.object<User>(
+const userDecoder = JsonDecoder.object(
   {
     id: JsonDecoder.number,
     email: JsonDecoder.string,
@@ -75,6 +62,14 @@ const userDecoder = JsonDecoder.object<User>(
   },
   'User'
 );
+```
+
+#### Infer your types
+
+You can also infer the types from its decoders!
+
+```ts
+type User = FromDecoder<typeof userDecoder>;
 ```
 
 #### Decode a valid API response
@@ -100,7 +95,7 @@ const apiResponse = {
 // Decode the response
 userDecoder
   .decodeToPromise(apiResponse)
-  .then(user => {
+  .then((user: User) => {
     console.log(`Welcome back, ${user.name}!`);
     console.log(`Your last login was: ${user.lastLogin?.toLocaleString()}`);
   })
