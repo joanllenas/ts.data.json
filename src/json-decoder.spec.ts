@@ -10,7 +10,7 @@ const expectOkWithValue = <a>(result: Result<a>, expectedValue: a) => {
   expect(result).toEqual(ok(expectedValue));
 };
 const expectStandardOkWithValue = <a>(
-  result: StandardSchemaV1.Result<a>,
+  result: StandardSchemaV1.Result<a> | Promise<StandardSchemaV1.Result<a>>,
   expectedValue: a
 ) => expect(result).toEqual({ value: expectedValue });
 const expectErr = <a>(result: Result<a>) => expect(result).toBeInstanceOf(Err);
@@ -19,7 +19,7 @@ const expectErrWithMsg = <a>(result: Result<a>, expectedErrorMsg: string) => {
   expect(result).toEqual(err(expectedErrorMsg));
 };
 const expectStandardErrWithMsg = <a>(
-  result: StandardSchemaV1.Result<a>,
+  result: StandardSchemaV1.Result<a> | Promise<StandardSchemaV1.Result<a>>,
   expectedErrorMsg: string
 ) => expect(result).toEqual({ issues: [{ message: expectedErrorMsg }] });
 
