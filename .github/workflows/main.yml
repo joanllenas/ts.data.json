@@ -1,9 +1,14 @@
 name: CI/CD Pipeline
 
 on:
-  push:
+  pull_request:  # Triggers on PRs to master
     branches:
       - master
+  push:  # Triggers when a PR is merged into master
+    branches:
+      - master
+
+
 
 jobs:
   ci:
@@ -28,11 +33,20 @@ jobs:
       - name: Build Project
         run: npm run build
 
+      - name: Check if Version Exists on NPM
+        run: |
+          CURRENT_VERSION=$(npm view your-library-name version || echo "0.0.0")
+          NEW_VERSION=$(node -p "require('./package.json').version")
+          if [ "$CURRENT_VERSION" == "$NEW_VERSION" ]; then
+            echo "Version $NEW_VERSION already exists on NPM. Update package.json version before merging."
+            exit 1
+          fi
+
   release:
     name: Publish to NPM
     needs: ci  # Only runs if CI passes
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/master'  # Ensures this runs only on master branch
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'  # Only runs on master push
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -42,15 +56,6 @@ jobs:
 
       - name: Build Project
         run: npm run build
-
-      - name: Check if Version Exists on NPM
-        run: |
-          CURRENT_VERSION=$(npm view your-library-name version || echo "0.0.0")
-          NEW_VERSION=$(node -p "require('./package.json').version")
-          if [ "$CURRENT_VERSION" == "$NEW_VERSION" ]; then
-            echo "Version $NEW_VERSION already exists on NPM. Skipping publish."
-            exit 1
-          fi
 
       - name: Publish to NPM
         run: npm publish
