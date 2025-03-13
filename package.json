@@ -1,6 +1,6 @@
 {
   "name": "ts.data.json",
-  "version": "2.3.0-beta.2",
+  "version": "2.3.0",
   "description": "A JSON decoding library for Typescript",
   "main": "./dist/cjs/index.js",
   "module": "./dist/esm/index.js",
@@ -12,7 +12,8 @@
     "build:tsc": "tsc -p tsconfig.json && tsc -p tsconfig-cjs.json",
     "build:esbuild": "node build.js",
     "build": "npm run build:tsc && npm run build:esbuild && npm run size-check",
-    "test": "vitest",
+    "test:watch": "vitest",
+    "test": "vitest run",
     "test:coverage": "vitest run --coverage",
     "lint": "eslint ./src --ext .ts",
     "format": "prettier ./src --write",
