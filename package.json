@@ -37,7 +37,7 @@
   "license": "BSD-3-Clause",
   "repository": {
     "type": "git",
-    "url": "https://github.com/joanllenas/ts.data.json"
+    "url": "git+https://github.com/joanllenas/ts.data.json.git"
   },
   "bugs": {
     "url": "https://github.com/joanllenas/ts.data.json/issues"
