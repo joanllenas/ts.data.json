@@ -35,7 +35,7 @@ jobs:
 
       - name: Check if Version Exists on NPM
         run: |
-          CURRENT_VERSION=$(npm view your-library-name version || echo "0.0.0")
+          CURRENT_VERSION=$(npm view ts.data.json version || echo "0.0.0")
           NEW_VERSION=$(node -p "require('./package.json').version")
           if [ "$CURRENT_VERSION" == "$NEW_VERSION" ]; then
             echo "Version $NEW_VERSION already exists on NPM. Update package.json version before merging."
