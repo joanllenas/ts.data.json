@@ -1,8 +1,8 @@
 import type { StandardSchemaV1 } from './standard-schema-v1';
 import { Result, err, ok } from './result';
 
-export type FromDecoder<Decoder>  =
-  Decoder extends JsonDecoder.Decoder<infer T>  ? T  : never;
+export type FromDecoder<Decoder> =
+  Decoder extends JsonDecoder.Decoder<infer T> ? T : never;
 
 /**
  * TypeScript type annotations provide compile-time guarantees. However, when data flows into our clients from external sources, many things can go wrong at runtime.
