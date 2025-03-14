@@ -8,12 +8,12 @@ on:
     branches:
       - master
 
-
-
 jobs:
   ci:
     name: Run Checks
     runs-on: ubuntu-latest
+    outputs:
+      should_publish: ${{ steps.version_check.outputs.should_publish }}
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -34,19 +34,28 @@ jobs:
         run: npm run build
 
       - name: Check if Version Exists on NPM
+        id: version_check
         run: |
           CURRENT_VERSION=$(npm view ts.data.json version || echo "0.0.0")
           NEW_VERSION=$(node -p "require('./package.json').version")
           if [ "$CURRENT_VERSION" == "$NEW_VERSION" ]; then
-            echo "Version $NEW_VERSION already exists on NPM. Update package.json version before merging."
-            exit 1
+            echo "Version $NEW_VERSION already exists on NPM. Skipping publish."
+            echo "::warning::Version $NEW_VERSION already exists on NPM. The package won't be published unless you update the version in package.json"
+            echo "should_publish=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "Version $NEW_VERSION is new. Will publish."
+            echo "should_publish=true" >> "$GITHUB_OUTPUT"
           fi
 
   release:
     name: Publish to NPM
     needs: ci  # Only runs if CI passes
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' && github.ref == 'refs/heads/master'  # Only runs on master push
+    # Only runs on master push and if version doesn't exist
+    if: |
+      github.event_name == 'push' && 
+      github.ref == 'refs/heads/master' && 
+      needs.ci.outputs.should_publish == 'true'
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
