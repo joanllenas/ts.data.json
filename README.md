@@ -9,14 +9,17 @@ TypeScript type annotations provide compile-time guarantees. However, when data 
 
 JSON decoders validate incoming JSON before it enters our program. This way, if the data has an unexpected structure, we're immediately alerted.
 
+<p align="center">
+  <a href="https://en.wikipedia.org/wiki/All_your_base_are_belong_to_us">
+    <img src="./.github/all-your-json-are-belong-to-us.jpg">
+  </a>
+</p>
+
 ## Documentation
 
-The [documentation site](https://joanllenas.github.io/ts.data.json/) is auto-generated from TSDoc comments using TypeDoc.  
+The [documentation site](https://joanllenas.github.io/ts.data.json/) is auto-generated from TSDoc comments using TypeDoc.
 
-If you're new to JSON decoding, you may want to read the introductory article [Decoding JSON with TypeScript](https://dev.to/joanllenas/decoding-json-with-typescript-1jjc), which explains why and how to use this library.  
-
-
-[![](./.github/all-your-json-are-belong-to-us.jpg)](https://en.wikipedia.org/wiki/All_your_base_are_belong_to_us)
+If you're new to JSON decoding, you may want to read the introductory article [Decoding JSON with TypeScript](https://dev.to/joanllenas/decoding-json-with-typescript-1jjc), which explains why and how to use this library.
 
 ## Installation
 
@@ -27,7 +30,6 @@ npm install ts.data.json --save
 ### Quick Example
 
 You can play with this example in [this stackblitz playground](https://stackblitz.com/edit/ts-data-json-decoder-playground?file=src%2Fmain.ts).
-
 
 #### Define your types
 
@@ -62,9 +64,7 @@ const userDecoder = JsonDecoder.object(
     address: addressDecoder,
     tags: JsonDecoder.array(JsonDecoder.string, 'string[]'),
     isActive: JsonDecoder.boolean,
-    lastLogin: JsonDecoder.nullable(
-      JsonDecoder.string.map(str => new Date(str))
-    )
+    lastLogin: JsonDecoder.nullable(JsonDecoder.string.map(str => new Date(str)))
   },
   'User'
 );
@@ -84,18 +84,18 @@ type User = FromDecoder<typeof userDecoder>;
 // Valid API response
 const apiResponse = {
   id: 123,
-  email: "marty@mcfly.com",
-  name: "Marty McFly",
+  email: 'marty@mcfly.com',
+  name: 'Marty McFly',
   age: 17,
   address: {
-    street: "123 Main St",
-    city: "San Francisco",
-    country: "USA",
-    postalCode: "94105"
+    street: '123 Main St',
+    city: 'San Francisco',
+    country: 'USA',
+    postalCode: '94105'
   },
-  tags: ["user", "premium"],
+  tags: ['user', 'premium'],
   isActive: true,
-  lastLogin: "1985-10-26T01:21:00Z"
+  lastLogin: '1985-10-26T01:21:00Z'
 };
 
 // Decode the response
@@ -122,19 +122,19 @@ Your last login was: 10/26/1985, 1:21:00 AM
 ```ts
 // Invalid API response
 const invalidResponse = {
-  id: "not-a-number",  // Should be a number
-  email: "marty@mcfly.com",
-  name: "Marty McFly",
+  id: 'not-a-number', // Should be a number
+  email: 'marty@mcfly.com',
+  name: 'Marty McFly',
   age: 17,
   address: {
-    street: "123 Main St",
-    city: "San Francisco",
-    country: "USA",
-    postalCode: "94105"
+    street: '123 Main St',
+    city: 'San Francisco',
+    country: 'USA',
+    postalCode: '94105'
   },
-  tags: ["user", "premium"],
+  tags: ['user', 'premium'],
   isActive: true,
-  lastLogin: "1985-10-26T01:21:00Z"
+  lastLogin: '1985-10-26T01:21:00Z'
 };
 
 // Decode the response
