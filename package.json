@@ -21,7 +21,7 @@
     "prebeta": "npm run test && npm run lint",
     "beta": "npm run build && npm publish --tag beta",
     "size-check": "bundlesize",
-    "docs": "typedoc src/index.ts"
+    "docs": "typedoc src/index.ts --out docs --githubPages true --basePath /ts.data.json"
   },
   "bundlesize": [
     {
