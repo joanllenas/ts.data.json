@@ -34,6 +34,7 @@ jobs:
         uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
+          slug: joanllenas/ts.data.json
 
       - name: Build Project
         run: npm run build
