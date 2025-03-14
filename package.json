@@ -22,7 +22,7 @@
     "beta": "npm run build && npm publish --tag beta",
     "size-check": "bundlesize",
     "docs": "typedoc src/index.ts --out docs --githubPages true --basePath /ts.data.json",
-    "postdocs": "mkdir -p docs/.github && cp .github/all-your-json-are-belong-to-us.jpg docs/.github/"
+    "postdocs": "cp assets/all-your-json-are-belong-to-us.jpg docs/assets/"
   },
   "bundlesize": [
     {

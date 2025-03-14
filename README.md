@@ -2,8 +2,8 @@
 
 ![Build](https://github.com/joanllenas/ts.data.json/actions/workflows/main.yml/badge.svg)
 ![codecov](https://codecov.io/gh/joanllenas/ts.data.json/graph/badge.svg?token=LI9KXL4QT0)
-![npm version](https://badge.fury.io/js/ts.data.json.svg)
-![npm downloads](https://img.shields.io/badge/downloads-172K%2Fmonth-blue)
+[![npm version](https://badge.fury.io/js/ts.data.json.svg)](https://www.npmjs.com/package/ts.data.json)
+[![npm downloads](https://img.shields.io/badge/downloads-172K%2Fmonth-blue)](https://www.npmjs.com/package/ts.data.json)
 
 TypeScript type annotations provide compile-time guarantees. However, when data flows into our applications from external sources, many issues can arise at runtime.
 
@@ -11,7 +11,7 @@ JSON decoders validate incoming JSON before it enters our program. This way, if 
 
 <p align="center">
   <a href="https://en.wikipedia.org/wiki/All_your_base_are_belong_to_us">
-    <img src="./.github/all-your-json-are-belong-to-us.jpg">
+    <img src="assets/all-your-json-are-belong-to-us.jpg">
   </a>
 </p>
 
