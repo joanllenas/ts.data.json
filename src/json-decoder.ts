@@ -1017,6 +1017,10 @@ export namespace JsonDecoder {
   }
 }
 
+/**
+ * @internal
+ * Internal namespace for error message formatting.
+ */
 export namespace $JsonDecoderErrors {
   export const primitiveError = (value: any, tag: string): string =>
     `${JSON.stringify(value)} is not a valid ${tag}`;
