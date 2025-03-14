@@ -21,8 +21,7 @@
     "prebeta": "npm run test && npm run lint",
     "beta": "npm run build && npm publish --tag beta",
     "size-check": "bundlesize",
-    "docs": "typedoc --out docs src/index.ts",
-    "docs:check": "typedoc --out docs src/index.ts --json docs.json"
+    "docs": "typedoc src/index.ts"
   },
   "bundlesize": [
     {
