@@ -8,7 +8,12 @@ TypeScript type annotations provide compile-time guarantees. However, when data 
 
 JSON decoders validate incoming JSON before it enters our program. This way, if the data has an unexpected structure, we're immediately alerted.
 
-> If you're new to JSON decoding, consider reading the introductory article [Decoding JSON with TypeScript](https://dev.to/joanllenas/decoding-json-with-typescript-1jjc), which explains why and how to use this library.  
+## Documentation
+
+The [documentation site](https://joanllenas.github.io/ts.data.json/) is auto-generated from TSDoc comments using TypeDoc.  
+
+If you're new to JSON decoding, you may want to read the introductory article [Decoding JSON with TypeScript](https://dev.to/joanllenas/decoding-json-with-typescript-1jjc), which explains why and how to use this library.  
+
 
 [![](./.github/all-your-json-are-belong-to-us.jpg)](https://en.wikipedia.org/wiki/All_your_base_are_belong_to_us)
 
