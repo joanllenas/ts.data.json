@@ -1,14 +1,20 @@
 # ts.data.json
 
-[![Build Status](https://travis-ci.org/joanllenas/ts.data.json.svg?branch=master)](https://travis-ci.org/joanllenas/ts.data.json)
-[![npm version](https://badge.fury.io/js/ts.data.json.svg)](https://www.npmjs.com/package/ts.data.json)
-[![downloads - 33k/week](https://img.shields.io/badge/downloads-33k%2Fweek-45BE1D)](https://www.npmjs.com/package/ts.data.json)
+![Build](https://github.com/joanllenas/ts.data.json/actions/workflows/main.yml/badge.svg)
+[![codecov](https://codecov.io/gh/joanllenas/ts.data.json/graph/badge.svg?token=LI9KXL4QT0)](https://codecov.io/gh/joanllenas/ts.data.json)
+[![npm version](https://badge.fury.io/js/ts.data.json.svg)](https://badge.fury.io/js/ts.data.json)
+![npm downloads](https://img.shields.io/npm/dm/ts.data.json)
 
 TypeScript type annotations provide compile-time guarantees. However, when data flows into our applications from external sources, many issues can arise at runtime.
 
 JSON decoders validate incoming JSON before it enters our program. This way, if the data has an unexpected structure, we're immediately alerted.
 
-> If you're new to JSON decoding, consider reading the introductory article [Decoding JSON with TypeScript](https://dev.to/joanllenas/decoding-json-with-typescript-1jjc), which explains why and how to use this library.  
+## Documentation
+
+The [documentation site](https://joanllenas.github.io/ts.data.json/) is auto-generated from TSDoc comments using TypeDoc.  
+
+If you're new to JSON decoding, you may want to read the introductory article [Decoding JSON with TypeScript](https://dev.to/joanllenas/decoding-json-with-typescript-1jjc), which explains why and how to use this library.  
+
 
 [![](./.github/all-your-json-are-belong-to-us.jpg)](https://en.wikipedia.org/wiki/All_your_base_are_belong_to_us)
 
