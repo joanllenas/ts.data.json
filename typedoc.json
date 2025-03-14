@@ -1,0 +1,22 @@
+{
+  "$schema": "https://typedoc.org/schema.json",
+  "entryPoints": ["src/index.ts"],
+  "out": "docs",
+  "githubPages": true,
+  "basePath": "/ts.data.json",
+  "exclude": ["**/*.spec.ts", "**/*.test.ts"],
+  "excludePrivate": true,
+  "excludeProtected": true,
+  "excludeInternal": true,
+  "includeVersion": true,
+  "theme": "default",
+  "name": "ts.data.json Documentation",
+  "readme": "README.md",
+  "sort": ["source-order"],
+  "visibilityFilters": {
+    "protected": false,
+    "private": false,
+    "inherited": true,
+    "external": true
+  }
+} 
