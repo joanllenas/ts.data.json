@@ -3,21 +3,21 @@ import { Result, err, ok } from './result';
 
 /**
  * Extracts the type parameter T from a JsonDecoder.Decoder<T>.
- * 
+ *
  * This utility type is useful when you want to get the type that a decoder will produce,
  * without having to manually specify it.
- * 
+ *
  * @example
  * ```typescript
  * const userDecoder = JsonDecoder.object({
  *   id: JsonDecoder.number,
  *   name: JsonDecoder.string
  * }, 'User');
- * 
+ *
  * // You can extract the type from the decoder:
  * type User = FromDecoder<typeof userDecoder>;
  * ```
- * 
+ *
  * @typeParam Decoder - A JsonDecoder.Decoder type
  */
 export type FromDecoder<Decoder> =
