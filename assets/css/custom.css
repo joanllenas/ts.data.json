@@ -1,0 +1,11 @@
+footer {
+    display: flex;
+    justify-content: space-between;
+}
+
+.github-img {
+    background-image: url(../media/github-mark.png);
+    width: 24px;
+    height: 24px;
+}
+

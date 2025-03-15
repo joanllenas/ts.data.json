@@ -11,7 +11,7 @@ JSON decoders validate incoming JSON before it enters our program. This way, if 
 
 <p align="center">
   <a href="https://en.wikipedia.org/wiki/All_your_base_are_belong_to_us">
-    <img src="assets/all-your-json-are-belong-to-us.jpg">
+    <img src="assets/media/all-your-json-are-belong-to-us.jpg">
   </a>
 </p>
 

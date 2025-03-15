@@ -1,3 +1,8 @@
+/**
+ * This module contains the JsonDecoder type, which is a type-safe way to handle JSON decoding.
+ * @module json-decoder
+ */
+
 import type { StandardSchemaV1 } from './standard-schema-v1';
 import { Result, err, ok } from './result';
 
@@ -677,6 +682,9 @@ export namespace JsonDecoder {
    *
    * @param decoders Array of decoders to combine
    * @returns A decoder that combines the results of multiple decoders
+   * 
+   * @internal
+   * @deprecated This decoder is not working as expected. Will be removed in the next major version.
    *
    * @example
    * ```ts
@@ -686,7 +694,7 @@ export namespace JsonDecoder {
    *   email: string;
    * }
    *
-   * const userDecoder = JsonDecoder.combine(
+   * const userDecoder = JsonDecoder.allOf(
    *   JsonDecoder.object({name: JsonDecoder.string}, 'User'),
    *   JsonDecoder.object({age: JsonDecoder.number}, 'User'),
    *   JsonDecoder.object({email: JsonDecoder.string}, 'User')
