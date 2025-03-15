@@ -1,6 +1,6 @@
 /**
  * This module contains the JsonDecoder type, which is a type-safe way to handle JSON decoding.
- * @module json-decoder
+ * @module ts-data-json
  */
 
 import type { StandardSchemaV1 } from './standard-schema-v1';
@@ -23,6 +23,7 @@ import { Result, err, ok } from './result';
  * type User = FromDecoder<typeof userDecoder>;
  * ```
  *
+ * @group Type utilities
  * @typeParam Decoder - A JsonDecoder.Decoder type
  */
 export type FromDecoder<Decoder> =
@@ -33,6 +34,7 @@ export type FromDecoder<Decoder> =
  *
  * JSON decoders validate our JSON before it enters our program. This way, if the data has an unexpected structure, we're immediately alerted.
  *
+ * @group JsonDecoder
  * @example
  * ```ts
  * type User = {
@@ -67,6 +69,7 @@ export namespace JsonDecoder {
   /**
    * A decoder that can validate and transform JSON data into strongly typed TypeScript values.
    *
+   * @group types
    * @template a - The type that this decoder will produce when successful
    */
   export class Decoder<a> implements StandardSchemaV1<unknown, a> {
@@ -178,7 +181,6 @@ export namespace JsonDecoder {
     }
 
     /**
-     * TODO: Add documentation in the readme
      * If the decoder has failed, transforms the error into an Ok value
      * @param fn The transformation function
      */
@@ -224,6 +226,7 @@ export namespace JsonDecoder {
   /**
    * Decoder for recursive data structures.
    *
+   * @group data structures
    * @param mkDecoder A function that returns a decoder
    * @returns A decoder that can handle recursive data structures
    *
@@ -252,6 +255,7 @@ export namespace JsonDecoder {
   /**
    * Decoder for `string` values.
    *
+   * @group primitives
    * @returns A decoder that validates and returns string values
    *
    * @example
@@ -271,6 +275,7 @@ export namespace JsonDecoder {
   /**
    * Decoder for `number` values.
    *
+   * @group primitives
    * @returns A decoder that validates and returns number values
    *
    * @example
@@ -290,6 +295,7 @@ export namespace JsonDecoder {
   /**
    * Decoder for `boolean` values.
    *
+   * @group primitives
    * @returns A decoder that validates and returns boolean values
    *
    * @example
@@ -310,6 +316,7 @@ export namespace JsonDecoder {
   /**
    * Decoder for an empty object ({}).
    *
+   * @group data structures
    * @returns A decoder that validates and returns empty objects
    *
    * @example
@@ -337,6 +344,7 @@ export namespace JsonDecoder {
   /**
    * Decoder for `enumeration` values.
    *
+   * @group data structures
    * @param enumObj The enum object to use for decoding. Must not be a const enum.
    * @param decoderName How to display the name of the object being decoded in errors.
    * @returns A decoder that validates and returns enum values
@@ -366,12 +374,20 @@ export namespace JsonDecoder {
     });
   }
 
+  /**
+   * @group types
+   */
   export type DecoderObject<a> = { [p in keyof Required<a>]: Decoder<a[p]> };
+
+  /**
+   * @group types
+   */
   export type DecoderObjectKeyMap<a> = { [p in keyof a]?: string };
 
   /**
    * Decoder for objects with specified field decoders.
    *
+   * @group data structures
    * @param decoders Key/value pairs of decoders for each object field.
    * @param decoderName How to display the name of the object being decoded in errors.
    * @param keyMap Optional map between json field names and user land field names.
@@ -455,6 +471,7 @@ export namespace JsonDecoder {
   /**
    * Decoder for objects with specified field decoders that fails if unknown fields are present.
    *
+   * @group data structures
    * @param decoders Key/value pairs of decoders for each object field.
    * @param decoderName How to display the name of the object being decoded in errors.
    * @returns A decoder that validates and returns objects matching the specified structure, failing if unknown fields are present
@@ -514,6 +531,7 @@ export namespace JsonDecoder {
   /**
    * Decoder that always succeeds with the given value.
    *
+   * @group utils
    * @returns A decoder that always succeeds
    *
    * @example
@@ -529,6 +547,7 @@ export namespace JsonDecoder {
   /**
    * Decoder that always fails with the given error message.
    *
+   * @group utils
    * @param error The error message to return
    * @returns A decoder that always fails with the specified error
    *
@@ -547,6 +566,7 @@ export namespace JsonDecoder {
   /**
    * Decoder that falls back to a default value if the given decoder fails.
    *
+   * @group transformations
    * @param defaultValue The value to return if the decoder fails
    * @param decoder The decoder to try first
    * @returns A decoder that returns the default value if the given decoder fails
@@ -575,6 +595,7 @@ export namespace JsonDecoder {
   /**
    * Decoder that makes a field optional.
    *
+   * @group utils
    * @param decoder The decoder for the field when it is present
    * @returns A decoder that accepts either the decoded value or undefined
    *
@@ -612,6 +633,7 @@ export namespace JsonDecoder {
   /**
    * Decoder that accepts null values.
    *
+   * @group utils
    * @param decoder The decoder for the non-null value
    * @returns A decoder that accepts either the decoded value or null
    *
@@ -646,6 +668,7 @@ export namespace JsonDecoder {
   /**
    * Decoder that tries multiple decoders in sequence until one succeeds.
    *
+   * @group utils
    * @param decoders Array of decoders to try in sequence
    * @param decoderName How to display the name of the object being decoded in errors
    * @returns A decoder that tries each decoder in sequence until one succeeds
@@ -680,28 +703,12 @@ export namespace JsonDecoder {
   /**
    * Decoder that combines multiple decoders into a single decoder.
    *
+   * @group combinators
    * @param decoders Array of decoders to combine
    * @returns A decoder that combines the results of multiple decoders
    * 
    * @internal
-   * @deprecated This decoder is not working as expected. Will be removed in the next major version.
-   *
-   * @example
-   * ```ts
-   * interface User {
-   *   name: string;
-   *   age: number;
-   *   email: string;
-   * }
-   *
-   * const userDecoder = JsonDecoder.allOf(
-   *   JsonDecoder.object({name: JsonDecoder.string}, 'User'),
-   *   JsonDecoder.object({age: JsonDecoder.number}, 'User'),
-   *   JsonDecoder.object({email: JsonDecoder.string}, 'User')
-   * );
-   *
-   * userDecoder.decode({name: 'John', age: 30, email: 'john@example.com'}); // Ok<User>
-   * ```
+   * @deprecated This decoder will be removed in the next major version.
    */
   export function allOf<T extends Array<Decoder<unknown>>, R>(
     ...decoders: [...T, Decoder<R>]
@@ -718,6 +725,7 @@ export namespace JsonDecoder {
   /**
    * Decoder for dictionary/record types with string keys.
    *
+   * @group data structures
    * @param decoder The decoder for the dictionary values
    * @param decoderName How to display the name of the object being decoded in errors
    * @returns A decoder that validates and returns a dictionary with string keys
@@ -765,6 +773,7 @@ export namespace JsonDecoder {
   /**
    * Decoder for arrays.
    *
+   * @group data structures
    * @param decoder The decoder for array elements
    * @param decoderName How to display the name of the object being decoded in errors
    * @returns A decoder that validates and returns arrays
@@ -801,6 +810,9 @@ export namespace JsonDecoder {
     });
   };
 
+  /**
+   * @group types
+   */
   type TupleOfResults<T extends readonly [] | readonly Decoder<any>[]> = {
     [K in keyof T]: T[K] extends Decoder<infer R> ? R : never;
   };
@@ -808,6 +820,7 @@ export namespace JsonDecoder {
   /**
    * Decoder for tuples with fixed length and types.
    *
+   * @group data structures
    * @param decoders Array of decoders for each tuple element
    * @param decoderName How to display the name of the object being decoded in errors
    * @returns A decoder that validates and returns tuples
@@ -862,6 +875,7 @@ export namespace JsonDecoder {
   /**
    * Decoder that accepts null values and returns a default value.
    *
+   * @group transformations
    * @param defaultValue The value to return when null is encountered
    * @returns A decoder that accepts null and returns the default value
    *
@@ -886,6 +900,7 @@ export namespace JsonDecoder {
   /**
    * Decoder that accepts undefined values and returns a default value.
    *
+   * @group transformations
    * @param defaultValue The value to return when undefined is encountered
    * @returns A decoder that accepts undefined and returns the default value
    *
@@ -910,6 +925,7 @@ export namespace JsonDecoder {
   /**
    * Decoder that only accepts a specific constant value.
    *
+   * @group utils
    * @param value The constant value to accept
    * @returns A decoder that only accepts the specified value
    *
@@ -928,6 +944,7 @@ export namespace JsonDecoder {
   /**
    * Decoder that only accepts a specific value.
    *
+   * @group utils
    * @param value The exact value to accept
    * @returns A decoder that only accepts the specified value
    *
@@ -982,25 +999,12 @@ export namespace JsonDecoder {
   /**
    * Combines multiple decoders into a single decoder that merges their results.
    *
+   * @group combinators
    * @param decoders Array of decoders to combine
    * @returns A decoder that combines the results of multiple decoders
    *
-   * @example
-   * ```ts
-   * interface User {
-   *   name: string;
-   *   age: number;
-   *   email: string;
-   * }
-   *
-   * const userDecoder = JsonDecoder.combine(
-   *   JsonDecoder.object({name: JsonDecoder.string}, 'User'),
-   *   JsonDecoder.object({age: JsonDecoder.number}, 'User'),
-   *   JsonDecoder.object({email: JsonDecoder.string}, 'User')
-   * );
-   *
-   * userDecoder.decode({name: 'John', age: 30, email: 'john@example.com'}); // Ok<User>
-   * ```
+   * @internal
+   * @deprecated This decoder will be removed in the next major version.
    */
   export function combine<TS extends { [k: string]: any }[]>(
     ...decoders: { [T in keyof TS]: Decoder<TS[T]> }

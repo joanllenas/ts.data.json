@@ -2,6 +2,7 @@
  * This module contains the Result type, which is a type-safe way to handle success and error cases.
  * 
  * @module result
+ * @mergeModuleWith ts-data-json
  */
 
 /**
@@ -9,6 +10,7 @@
  * The Result type is used throughout the library to handle decoding results.
  * 
  * @typeParam T - The type of the successful value
+ * @group Result
  */
 export class Ok<T> {
   /**
@@ -60,6 +62,7 @@ export class Ok<T> {
  * Represents a failed operation with an error message.
  * 
  * @typeParam T - The type that would have been returned if successful
+ * @group Result
  */
 export class Err<T> {
   /**
@@ -112,6 +115,7 @@ export class Err<T> {
  * This is used throughout the library to handle operations that might fail.
  * 
  * @typeParam T - The type of the successful value
+ * @group Result
  */
 export type Result<T> = Ok<T> | Err<T>;
 
@@ -121,6 +125,7 @@ export type Result<T> = Ok<T> | Err<T>;
  * @typeParam T - The type of the value
  * @param value - The successful value to wrap
  * @returns A Result containing the successful value
+ * @group Result
  * 
  * @example
  * ```typescript
@@ -138,6 +143,7 @@ export function ok<T>(value: T): Result<T> {
  * @typeParam T - The type that would have been returned if successful
  * @param error - The error message describing what went wrong
  * @returns A Result containing the error message
+ * @group Result
  * 
  * @example
  * ```typescript
