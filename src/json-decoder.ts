@@ -705,7 +705,7 @@ export namespace JsonDecoder {
    * @category Combinators
    * @param decoders Array of decoders to combine
    * @returns A decoder that combines the results of multiple decoders
-   * 
+   *
    * @internal
    * @deprecated This decoder will be removed in the next major version.
    */
