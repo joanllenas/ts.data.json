@@ -1,6 +1,7 @@
 /**
  * This module contains the JsonDecoder type, which is a type-safe way to handle JSON decoding.
- * @module ts-data-json
+ * @module json-decoder
+ * @category Api docs
  */
 
 import type { StandardSchemaV1 } from './standard-schema-v1';
@@ -23,7 +24,6 @@ import { Result, err, ok } from './result';
  * type User = FromDecoder<typeof userDecoder>;
  * ```
  *
- * @group Type utilities
  * @typeParam Decoder - A JsonDecoder.Decoder type
  */
 export type FromDecoder<Decoder> =
@@ -34,7 +34,6 @@ export type FromDecoder<Decoder> =
  *
  * JSON decoders validate our JSON before it enters our program. This way, if the data has an unexpected structure, we're immediately alerted.
  *
- * @group JsonDecoder
  * @example
  * ```ts
  * type User = {
@@ -70,6 +69,7 @@ export namespace JsonDecoder {
    * A decoder that can validate and transform JSON data into strongly typed TypeScript values.
    *
    * @template a - The type that this decoder will produce when successful
+   * @category Types
    */
   export class Decoder<a> implements StandardSchemaV1<unknown, a> {
     constructor(private decodeFn: (json: any) => Result<a>) {}
@@ -225,7 +225,7 @@ export namespace JsonDecoder {
   /**
    * Decoder for recursive data structures.
    *
-   * @group Data Structures
+   * @category Data Structures
    * @param mkDecoder A function that returns a decoder
    * @returns A decoder that can handle recursive data structures
    *
@@ -254,7 +254,7 @@ export namespace JsonDecoder {
   /**
    * Decoder for `string` values.
    *
-   * @group Primitives
+   * @category Primitives
    * @returns A decoder that validates and returns string values
    *
    * @example
@@ -274,7 +274,7 @@ export namespace JsonDecoder {
   /**
    * Decoder for `number` values.
    *
-   * @group Primitives
+   * @category Primitives
    * @returns A decoder that validates and returns number values
    *
    * @example
@@ -294,7 +294,7 @@ export namespace JsonDecoder {
   /**
    * Decoder for `boolean` values.
    *
-   * @group Primitives
+   * @category Primitives
    * @returns A decoder that validates and returns boolean values
    *
    * @example
@@ -315,7 +315,7 @@ export namespace JsonDecoder {
   /**
    * Decoder for an empty object ({}).
    *
-   * @group Data Structures
+   * @category Data Structures
    * @returns A decoder that validates and returns empty objects
    *
    * @example
@@ -343,7 +343,7 @@ export namespace JsonDecoder {
   /**
    * Decoder for `enumeration` values.
    *
-   * @group Data Structures
+   * @category Data Structures
    * @param enumObj The enum object to use for decoding. Must not be a const enum.
    * @param decoderName How to display the name of the object being decoded in errors.
    * @returns A decoder that validates and returns enum values
@@ -374,19 +374,19 @@ export namespace JsonDecoder {
   }
 
   /**
-   * @group Types
+   * @category Types
    */
   export type DecoderObject<a> = { [p in keyof Required<a>]: Decoder<a[p]> };
 
   /**
-   * @group Types
+   * @category Types
    */
   export type DecoderObjectKeyMap<a> = { [p in keyof a]?: string };
 
   /**
    * Decoder for objects with specified field decoders.
    *
-   * @group Data Structures
+   * @category Data Structures
    * @param decoders Key/value pairs of decoders for each object field.
    * @param decoderName How to display the name of the object being decoded in errors.
    * @param keyMap Optional map between json field names and user land field names.
@@ -470,7 +470,7 @@ export namespace JsonDecoder {
   /**
    * Decoder for objects with specified field decoders that fails if unknown fields are present.
    *
-   * @group Data Structures
+   * @category Data Structures
    * @param decoders Key/value pairs of decoders for each object field.
    * @param decoderName How to display the name of the object being decoded in errors.
    * @returns A decoder that validates and returns objects matching the specified structure, failing if unknown fields are present
@@ -530,7 +530,7 @@ export namespace JsonDecoder {
   /**
    * Decoder that always succeeds with the given value.
    *
-   * @group Utils
+   * @category Utils
    * @returns A decoder that always succeeds
    *
    * @example
@@ -546,7 +546,7 @@ export namespace JsonDecoder {
   /**
    * Decoder that always fails with the given error message.
    *
-   * @group Utils
+   * @category Utils
    * @param error The error message to return
    * @returns A decoder that always fails with the specified error
    *
@@ -565,7 +565,7 @@ export namespace JsonDecoder {
   /**
    * Decoder that falls back to a default value if the given decoder fails.
    *
-   * @group Transformations
+   * @category Transformations
    * @param defaultValue The value to return if the decoder fails
    * @param decoder The decoder to try first
    * @returns A decoder that returns the default value if the given decoder fails
@@ -594,7 +594,7 @@ export namespace JsonDecoder {
   /**
    * Decoder that makes a field optional.
    *
-   * @group Utils
+   * @category Utils
    * @param decoder The decoder for the field when it is present
    * @returns A decoder that accepts either the decoded value or undefined
    *
@@ -632,7 +632,7 @@ export namespace JsonDecoder {
   /**
    * Decoder that accepts null values.
    *
-   * @group Utils
+   * @category Utils
    * @param decoder The decoder for the non-null value
    * @returns A decoder that accepts either the decoded value or null
    *
@@ -667,7 +667,7 @@ export namespace JsonDecoder {
   /**
    * Decoder that tries multiple decoders in sequence until one succeeds.
    *
-   * @group Utils
+   * @category Utils
    * @param decoders Array of decoders to try in sequence
    * @param decoderName How to display the name of the object being decoded in errors
    * @returns A decoder that tries each decoder in sequence until one succeeds
@@ -702,7 +702,7 @@ export namespace JsonDecoder {
   /**
    * Decoder that combines multiple decoders into a single decoder.
    *
-   * @group Combinators
+   * @category Combinators
    * @param decoders Array of decoders to combine
    * @returns A decoder that combines the results of multiple decoders
    * 
@@ -724,7 +724,7 @@ export namespace JsonDecoder {
   /**
    * Decoder for dictionary/record types with string keys.
    *
-   * @group Data Structures
+   * @category Data Structures
    * @param decoder The decoder for the dictionary values
    * @param decoderName How to display the name of the object being decoded in errors
    * @returns A decoder that validates and returns a dictionary with string keys
@@ -772,7 +772,7 @@ export namespace JsonDecoder {
   /**
    * Decoder for arrays.
    *
-   * @group Data Structures
+   * @category Data Structures
    * @param decoder The decoder for array elements
    * @param decoderName How to display the name of the object being decoded in errors
    * @returns A decoder that validates and returns arrays
@@ -810,7 +810,7 @@ export namespace JsonDecoder {
   };
 
   /**
-   * @group Types
+   * @category Types
    */
   type TupleOfResults<T extends readonly [] | readonly Decoder<any>[]> = {
     [K in keyof T]: T[K] extends Decoder<infer R> ? R : never;
@@ -819,7 +819,7 @@ export namespace JsonDecoder {
   /**
    * Decoder for tuples with fixed length and types.
    *
-   * @group Data Structures
+   * @category Data Structures
    * @param decoders Array of decoders for each tuple element
    * @param decoderName How to display the name of the object being decoded in errors
    * @returns A decoder that validates and returns tuples
@@ -874,7 +874,7 @@ export namespace JsonDecoder {
   /**
    * Decoder that accepts null values and returns a default value.
    *
-   * @group Transformations
+   * @category Transformations
    * @param defaultValue The value to return when null is encountered
    * @returns A decoder that accepts null and returns the default value
    *
@@ -899,7 +899,7 @@ export namespace JsonDecoder {
   /**
    * Decoder that accepts undefined values and returns a default value.
    *
-   * @group Transformations
+   * @category Transformations
    * @param defaultValue The value to return when undefined is encountered
    * @returns A decoder that accepts undefined and returns the default value
    *
@@ -924,7 +924,7 @@ export namespace JsonDecoder {
   /**
    * Decoder that only accepts a specific constant value.
    *
-   * @group Utils
+   * @category Utils
    * @param value The constant value to accept
    * @returns A decoder that only accepts the specified value
    *
@@ -943,7 +943,7 @@ export namespace JsonDecoder {
   /**
    * Decoder that only accepts a specific value.
    *
-   * @group Utils
+   * @category Utils
    * @param value The exact value to accept
    * @returns A decoder that only accepts the specified value
    *
@@ -998,7 +998,7 @@ export namespace JsonDecoder {
   /**
    * Combines multiple decoders into a single decoder that merges their results.
    *
-   * @group Combinators
+   * @category Combinators
    * @param decoders Array of decoders to combine
    * @returns A decoder that combines the results of multiple decoders
    *

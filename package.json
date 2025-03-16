@@ -22,6 +22,7 @@
     "beta": "npm run build && npm publish --tag beta",
     "size-check": "bundlesize",
     "docs": "typedoc",
+    "docs:watch": "typedoc --watch",
     "postdocs": "cp assets/media/github-mark.png docs/media/"
   },
   "bundlesize": [
