@@ -1,11 +1,36 @@
 footer {
-    display: flex;
-    justify-content: space-between;
+  display: flex;
+  justify-content: space-between;
 }
 
 .github-img {
-    background-image: url(../media/github-mark.png);
-    width: 24px;
-    height: 24px;
+  width: 24px;
+  height: 24px;
+  background-size: cover;
 }
 
+body[data-theme='dark'] {
+  .github-img {
+    background-image: url(../media/github-mark-white.png);
+  }
+}
+
+body[data-theme='light'] {
+  .github-img {
+    background-image: url(../media/github-mark.png);
+  }
+}
+
+body[data-theme='os'] {
+  @media (prefers-color-scheme: dark) { 
+    .github-img {
+      background-image: url(../media/github-mark-white.png);
+    }
+  }
+
+  @media (prefers-color-scheme: light) {
+    .github-img {
+      background-image: url(../media/github-mark.png);
+    }
+  }
+}
