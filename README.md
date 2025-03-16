@@ -27,11 +27,11 @@ If you're new to JSON decoding, you may want to read the introductory article [D
 npm install ts.data.json --save
 ```
 
-### Quick Example
+## Quick Example
 
 You can play with this example in [this stackblitz playground](https://stackblitz.com/edit/ts-data-json-decoder-playground?file=src%2Fmain.ts).
 
-#### Define your types
+### Define your types
 
 ```ts
 interface Address {
@@ -42,7 +42,7 @@ interface Address {
 }
 ```
 
-#### Create decoders for each type
+### Create decoders for each type
 
 ```ts
 const addressDecoder = JsonDecoder.object<Address>(
@@ -70,7 +70,7 @@ const userDecoder = JsonDecoder.object(
 );
 ```
 
-#### Infer your types
+### Infer your types
 
 You can also infer the types from its decoders!
 
@@ -78,7 +78,7 @@ You can also infer the types from its decoders!
 type User = FromDecoder<typeof userDecoder>;
 ```
 
-#### Decode a valid API response
+### Decode a valid API response
 
 ```ts
 // Valid API response
@@ -110,14 +110,14 @@ userDecoder
   });
 ```
 
-#### Output:
+### Output:
 
 ```
 Welcome back, Marty McFly!
 Your last login was: 10/26/1985, 1:21:00 AM
 ```
 
-#### Decode an invalid API response
+### Decode an invalid API response
 
 ```ts
 // Invalid API response
@@ -148,7 +148,7 @@ userDecoder
   });
 ```
 
-#### Output:
+### Output:
 
 ```
 Validation failed: <User> decoder failed at key "id" with error: "not-a-number" is not a valid number
