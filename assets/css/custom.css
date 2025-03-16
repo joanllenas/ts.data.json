@@ -9,19 +9,19 @@ footer {
   background-size: cover;
 }
 
-body[data-theme='dark'] {
+html[data-theme='dark'] {
   .github-img {
     background-image: url(../media/github-mark-white.png);
   }
 }
 
-body[data-theme='light'] {
+html[data-theme='light'] {
   .github-img {
     background-image: url(../media/github-mark.png);
   }
 }
 
-body[data-theme='os'] {
+html[data-theme='os'] {
   @media (prefers-color-scheme: dark) { 
     .github-img {
       background-image: url(../media/github-mark-white.png);
