@@ -12,6 +12,24 @@ You can play with this examples in [this stackblitz playground](https://stackbli
 
 ## Custom Decoders
 
+You can easily replicate the string decoder:
+
+```typescript
+const myStringDecoder: JsonDecoder.Decoder<string> = new JsonDecoder.Decoder(
+  (json: unknown) => {
+    if (typeof json === 'string') {
+      return ok(json);
+    } else {
+      return err('Expected a string');
+    }
+  }
+);
+
+console.log(myStringDecoder.decode('Hello!')); // Ok('Hello!)
+console.log(myStringDecoder.decode(123)); // Err('Expected a string')
+```
+
+
 Create custom decoders for complex validation or transformation:
 
 ```typescript

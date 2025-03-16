@@ -72,12 +72,32 @@ export namespace JsonDecoder {
    * @category Types
    */
   export class Decoder<T> implements StandardSchemaV1<unknown, T> {
+    /**
+     * Creates a new decoder that can validate and transform JSON data into strongly typed TypeScript values.
+     *
+     * @param decodeFn - A function that takes a JSON object and returns a Result<T>
+     * @category Constructor
+     *
+     * @example
+     * ```ts
+     * const myStringDecoder: JsonDecoder.Decoder<string> = new JsonDecoder.Decoder(
+     *   (json: unknown) => {
+     *     if (typeof json === 'string') {
+     *       return ok(json);
+     *     } else {
+     *       return err('Expected a string');
+     *     }
+     *   }
+     * );
+     * ```
+     */
     constructor(private decodeFn: (json: any) => Result<T>) {}
 
     /**
      * Decodes a JSON object of type <T> and returns a Result<T>
      * @param json The JSON object to decode
      * @returns A Result containing either the decoded value or an error message
+     * @category Entry Point
      *
      * @example
      * ```ts
@@ -91,6 +111,8 @@ export namespace JsonDecoder {
 
     /**
      * The Standard Schema interface for this decoder.
+     * @link https://standardschema.org/
+     * @category Entry Point
      */
     '~standard': StandardSchemaV1.Props<unknown, T> = {
       version: 1 as const,
@@ -112,6 +134,7 @@ export namespace JsonDecoder {
      * @param onErr function called when the decoder fails
      * @param json The JSON object to decode
      * @returns The result of either onOk or onErr
+     * @category Entry Point
      *
      * @example
      * ```ts
@@ -135,6 +158,7 @@ export namespace JsonDecoder {
      * Decodes a JSON object of type <T> and returns a Promise<T>
      * @param json The JSON object to decode
      * @returns A Promise that resolves with the decoded value or rejects with an error message
+     * @category Entry Point
      *
      * @example
      * ```ts
@@ -157,6 +181,7 @@ export namespace JsonDecoder {
      * If the decoder has succeeded, transforms the decoded value into something else
      * @param fn The transformation function
      * @returns A new decoder that applies the transformation
+     * @category Transformation
      *
      * @example
      * ```ts
@@ -182,6 +207,10 @@ export namespace JsonDecoder {
     /**
      * If the decoder has failed, transforms the error into an Ok value
      * @param fn The transformation function
+     * @returns A new decoder that applies the transformation
+     * @category Transformation
+     * @ignore
+     * ```
      */
     mapError<O>(fn: (error: string) => O): Decoder<T | O> {
       return new Decoder<T | O>((json: any) => {
@@ -198,6 +227,7 @@ export namespace JsonDecoder {
      * Chain decoders that might fail
      * @param fn Function that returns a new decoder
      * @returns A new decoder that chains the current decoder with the result of fn
+     * @category Transformation
      *
      * @example
      * ```ts
