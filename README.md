@@ -3,6 +3,7 @@
 ![Build](https://github.com/joanllenas/ts.data.json/actions/workflows/main.yml/badge.svg)
 ![codecov](https://codecov.io/gh/joanllenas/ts.data.json/graph/badge.svg?token=LI9KXL4QT0)
 [![npm version](https://badge.fury.io/js/ts.data.json.svg)](https://www.npmjs.com/package/ts.data.json)
+[![bundle size](https://badgen.net/bundlephobia/minzip/ts.data.json)](https://bundlephobia.com/package/ts.data.json)
 [![npm downloads](https://img.shields.io/badge/downloads-172K%2Fmonth-blue)](https://www.npmjs.com/package/ts.data.json)
 
 TypeScript type annotations provide compile-time guarantees. However, when data flows into our applications from external sources, many issues can arise at runtime.
