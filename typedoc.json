@@ -1,0 +1,36 @@
+{
+  "$schema": "https://typedoc.org/schema.json",
+  "entryPoints": ["src/json-decoder.ts", "src/result.ts"],
+  "out": "docs",
+  "githubPages": true,
+  "basePath": "/ts.data.json",
+  "exclude": ["**/*.spec.ts", "**/*.test.ts"],
+  "excludePrivate": true,
+  "excludeProtected": true,
+  "excludeInternal": true,
+  "includeVersion": true,
+  "theme": "default",
+  "name": "ts.data.json",
+  "readme": "README.md",
+  "sort": ["alphabetical-ignoring-documents"],
+  "categoryOrder": ["Guides", "Api", "*"],
+  "visibilityFilters": {
+    "protected": false,
+    "private": false,
+    "inherited": false,
+    "external": false
+  },
+  "navigation": {
+    "includeCategories": true,
+    "includeGroups": false,
+    "includeFolders": false
+  },
+  "categorizeByGroup": false,
+  "projectDocuments": ["assets/documents/basic-usage.md", "assets/documents/advanced-usage.md"],
+  "customFooterHtml": "<a href='https://github.com/joanllenas/ts.data.json' title='ts.data.json on GitHub'><img class='github-img' width='24' height='24' /></a>",
+  "customCss": "assets/css/custom.css",
+  "headings": {
+    "readme": false,
+    "document": false
+  }
+} 
