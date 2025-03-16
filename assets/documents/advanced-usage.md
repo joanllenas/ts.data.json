@@ -12,6 +12,8 @@ You can play with this examples in [this stackblitz playground](https://stackbli
 
 ## Custom Decoders
 
+### String Decoder
+
 You can easily replicate the string decoder:
 
 ```typescript
@@ -29,27 +31,32 @@ console.log(myStringDecoder.decode('Hello!')); // Ok('Hello!)
 console.log(myStringDecoder.decode(123)); // Err('Expected a string')
 ```
 
+### Email Decoder
 
-Create custom decoders for complex validation or transformation:
+Leverage built-in decoders and layer other decoders on top by following this pattern with the `chain` function.
 
 ```typescript
-// Email decoder
 const emailDecoder = JsonDecoder.string.chain((email) => {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   return emailRegex.test(email)
     ? JsonDecoder.succeed
     : JsonDecoder.fail(`Invalid email format: ${email}`);
 });
+```
+### Date decoder
 
-// Date decoder
+```typescript
 const dateDecoder = JsonDecoder.string.chain((str) => {
   const date = new Date(str);
   return isNaN(date.getTime())
     ? JsonDecoder.fail(`Invalid date format: ${str}`)
     : JsonDecoder.succeed;
 });
+```
 
-// Range decoder
+### Range decoder
+
+```typescript
 const ageDecoder = JsonDecoder.number.chain((age) => {
   return age >= 0 && age <= 120
     ? JsonDecoder.succeed

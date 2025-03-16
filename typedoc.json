@@ -11,7 +11,7 @@
   "includeVersion": true,
   "theme": "default",
   "name": "ts.data.json",
-  "readme": "README.md",
+  "readme": "assets/documents/basic-usage.md",
   "sort": ["alphabetical-ignoring-documents"],
   "categoryOrder": ["Guides", "Api", "*"],
   "visibilityFilters": {

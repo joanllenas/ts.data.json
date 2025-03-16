@@ -111,7 +111,7 @@ export namespace JsonDecoder {
 
     /**
      * The Standard Schema interface for this decoder.
-     * @link https://standardschema.org/
+     * @see [Standard Schema](https://standardschema.dev)
      * @category Entry Point
      */
     '~standard': StandardSchemaV1.Props<unknown, T> = {
