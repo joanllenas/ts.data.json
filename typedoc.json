@@ -13,7 +13,8 @@
   "name": "ts.data.json",
   "readme": "assets/documents/basic-usage.md",
   "sort": ["alphabetical-ignoring-documents"],
-  "categoryOrder": ["Guides", "Api", "*"],
+  "categoryOrder": ["Guides", "Api docs", "*"],
+  "disableSources": true,
   "visibilityFilters": {
     "protected": false,
     "private": false,

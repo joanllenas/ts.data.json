@@ -24,10 +24,9 @@ import { Result, err, ok } from './result';
  * type User = FromDecoder<typeof userDecoder>;
  * ```
  *
- * @typeParam Decoder - A JsonDecoder.Decoder type
+ * @typeParam D - A JsonDecoder.Decoder type
  */
-export type FromDecoder<Decoder> =
-  Decoder extends JsonDecoder.Decoder<infer T> ? T : never;
+export type FromDecoder<D> = D extends JsonDecoder.Decoder<infer T> ? T : never;
 
 /**
  * TypeScript type annotations provide compile-time guarantees. However, when data flows into our clients from external sources, many things can go wrong at runtime.
