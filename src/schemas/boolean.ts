@@ -16,16 +16,17 @@ import { $JsonDecoderErrors } from '../utils/errors';
  *
  * @example
  * ```ts
- * JsonDecoder.boolean.decode(true); // Ok<boolean>({value: true})
- * JsonDecoder.boolean.decode('true'); // Err({error: 'true is not a valid boolean'})
+ * JsonDecoder.boolean().decode(true); // Ok<boolean>({value: true})
+ * JsonDecoder.boolean().decode('true'); // Err({error: 'true is not a valid boolean'})
  * ```
  */
-export const boolean: Decoder<boolean> = new Decoder<boolean>((json: any) => {
-  if (typeof json === 'boolean') {
-    return Result.ok<boolean>(json);
-  } else {
-    return Result.err<boolean>(
-      $JsonDecoderErrors.primitiveError(json, 'boolean')
-    );
-  }
-});
+export const boolean = (): Decoder<boolean> =>
+  new Decoder<boolean>((json: any) => {
+    if (typeof json === 'boolean') {
+      return Result.ok<boolean>(json);
+    } else {
+      return Result.err<boolean>(
+        $JsonDecoderErrors.primitiveError(json, 'boolean')
+      );
+    }
+  });

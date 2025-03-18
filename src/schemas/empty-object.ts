@@ -17,12 +17,12 @@ type EmptyObject = Record<string, never>;
  *
  * @example
  * ```ts
- * JsonDecoder.emptyObject.decode({}); // Ok<EmptyObject>({value: {}})
- * JsonDecoder.emptyObject.decode({a: 1}); // Err({error: '{a: 1} is not a valid empty object'})
+ * JsonDecoder.emptyObject().decode({}); // Ok<EmptyObject>({value: {}})
+ * JsonDecoder.emptyObject().decode({a: 1}); // Err({error: '{a: 1} is not a valid empty object'})
  * ```
  */
-export const emptyObject: Decoder<EmptyObject> = new Decoder<EmptyObject>(
-  (json: any) => {
+export const emptyObject = (): Decoder<EmptyObject> =>
+  new Decoder<EmptyObject>((json: any) => {
     if (
       json !== null &&
       typeof json === 'object' &&
@@ -34,5 +34,4 @@ export const emptyObject: Decoder<EmptyObject> = new Decoder<EmptyObject>(
         $JsonDecoderErrors.primitiveError(json, 'empty object')
       );
     }
-  }
-);
+  });

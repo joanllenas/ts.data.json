@@ -16,16 +16,17 @@ import { $JsonDecoderErrors } from '../utils/errors';
  *
  * @example
  * ```ts
- * JsonDecoder.number.decode(99); // Ok<number>({value: 99})
- * JsonDecoder.number.decode('hola'); // Err({error: 'hola is not a valid number'})
+ * JsonDecoder.number().decode(99); // Ok<number>({value: 99})
+ * JsonDecoder.number().decode('hola'); // Err({error: 'hola is not a valid number'})
  * ```
  */
-export const number: Decoder<number> = new Decoder<number>((json: any) => {
-  if (typeof json === 'number') {
-    return Result.ok<number>(json);
-  } else {
-    return Result.err<number>(
-      $JsonDecoderErrors.primitiveError(json, 'number')
-    );
-  }
-});
+export const number = (): Decoder<number> =>
+  new Decoder<number>((json: any) => {
+    if (typeof json === 'number') {
+      return Result.ok<number>(json);
+    } else {
+      return Result.err<number>(
+        $JsonDecoderErrors.primitiveError(json, 'number')
+      );
+    }
+  });

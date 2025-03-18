@@ -55,6 +55,7 @@ type DecoderObjectKeyMap<T> = { [P in keyof T]?: string };
 export function object<T>(
   decoders: DecoderObject<T>,
   decoderName: string,
+  // TODO: remove keyMap
   keyMap?: DecoderObjectKeyMap<T>
 ): Decoder<T> {
   return new Decoder<T>((json: any) => {

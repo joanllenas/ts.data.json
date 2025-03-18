@@ -17,7 +17,7 @@ import * as Result from '../utils/result';
  *
  * @example
  * ```ts
- * const oneDecoder = JsonDecoder.isExactly(1);
+ * const oneDecoder = JsonDecoder.literal(1);
  *
  * oneDecoder.decode(1); // Ok<number>({value: 1})
  * oneDecoder.decode(2); // Err({error: '2 is not exactly 1'})

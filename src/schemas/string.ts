@@ -16,16 +16,17 @@ import { $JsonDecoderErrors } from '../utils/errors';
  *
  * @example
  * ```ts
- * JsonDecoder.string.decode('hi'); // Ok<string>({value: 'hi'})
- * JsonDecoder.string.decode(5); // Err({error: '5 is not a valid string'})
+ * JsonDecoder.string().decode('hi'); // Ok<string>({value: 'hi'})
+ * JsonDecoder.string().decode(5); // Err({error: '5 is not a valid string'})
  * ```
  */
-export const string: Decoder<string> = new Decoder<string>((json: any) => {
-  if (typeof json === 'string') {
-    return Result.ok<string>(json);
-  } else {
-    return Result.err<string>(
-      $JsonDecoderErrors.primitiveError(json, 'string')
-    );
-  }
-});
+export const string = (): Decoder<string> =>
+  new Decoder<string>((json: any) => {
+    if (typeof json === 'string') {
+      return Result.ok<string>(json);
+    } else {
+      return Result.err<string>(
+        $JsonDecoderErrors.primitiveError(json, 'string')
+      );
+    }
+  });
