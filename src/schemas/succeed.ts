@@ -19,7 +19,8 @@ import * as Result from '../utils/result';
  * JsonDecoder.succeed().decode(34); // Ok<any>({value: 34});
  * ```
  */
-export const succeed = (): Decoder<any> =>
-  new Decoder<any>((json: any) => {
+export function succeed(): Decoder<any> {
+  return new Decoder<any>((json: any) => {
     return Result.ok<any>(json);
   });
+}

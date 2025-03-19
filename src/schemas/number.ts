@@ -20,8 +20,8 @@ import { $JsonDecoderErrors } from '../utils/errors';
  * JsonDecoder.number().decode('hola'); // Err({error: 'hola is not a valid number'})
  * ```
  */
-export const number = (): Decoder<number> =>
-  new Decoder<number>((json: any) => {
+export function number(): Decoder<number> {
+  return new Decoder<number>((json: any) => {
     if (typeof json === 'number') {
       return Result.ok<number>(json);
     } else {
@@ -30,3 +30,4 @@ export const number = (): Decoder<number> =>
       );
     }
   });
+}

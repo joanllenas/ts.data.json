@@ -45,10 +45,10 @@ export type TupleOfResults<T extends readonly [] | readonly Decoder<any>[]> = {
  * pointDecoder.decode([1, 2, 3]); // Err({error: '<Point> tuple decoder failed because it received a tuple of length 3 but expected 2'})
  * ```
  */
-export const tuple = <T extends readonly [] | readonly Decoder<any>[]>(
+export function tuple<T extends readonly [] | readonly Decoder<any>[]>(
   decoders: T,
   decoderName: string
-): Decoder<TupleOfResults<T>> => {
+): Decoder<TupleOfResults<T>> {
   return new Decoder<TupleOfResults<T>>(json => {
     if (json instanceof Array) {
       const arr = [];
@@ -79,4 +79,4 @@ export const tuple = <T extends readonly [] | readonly Decoder<any>[]>(
       );
     }
   });
-};
+}

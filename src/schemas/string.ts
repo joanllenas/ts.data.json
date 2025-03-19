@@ -20,8 +20,8 @@ import { $JsonDecoderErrors } from '../utils/errors';
  * JsonDecoder.string().decode(5); // Err({error: '5 is not a valid string'})
  * ```
  */
-export const string = (): Decoder<string> =>
-  new Decoder<string>((json: any) => {
+export function string(): Decoder<string> {
+  return new Decoder<string>((json: any) => {
     if (typeof json === 'string') {
       return Result.ok<string>(json);
     } else {
@@ -30,3 +30,4 @@ export const string = (): Decoder<string> =>
       );
     }
   });
+}

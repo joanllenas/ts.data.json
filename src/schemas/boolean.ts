@@ -20,8 +20,8 @@ import { $JsonDecoderErrors } from '../utils/errors';
  * JsonDecoder.boolean().decode('true'); // Err({error: 'true is not a valid boolean'})
  * ```
  */
-export const boolean = (): Decoder<boolean> =>
-  new Decoder<boolean>((json: any) => {
+export function boolean(): Decoder<boolean> {
+  return new Decoder<boolean>((json: any) => {
     if (typeof json === 'boolean') {
       return Result.ok<boolean>(json);
     } else {
@@ -30,3 +30,4 @@ export const boolean = (): Decoder<boolean> =>
       );
     }
   });
+}

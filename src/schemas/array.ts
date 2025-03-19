@@ -24,10 +24,10 @@ import * as Result from '../utils/result';
  * numberArray.decode([1, '2', 3]); // Err({error: '<NumberArray> decoder failed at index "1" with error: "2" is not a valid number'})
  * ```
  */
-export const array = <T>(
+export function array<T>(
   decoder: Decoder<T>,
   decoderName: string
-): Decoder<Array<T>> => {
+): Decoder<Array<T>> {
   return new Decoder<Array<T>>(json => {
     if (json instanceof Array) {
       const arr: Array<T> = [];
@@ -48,4 +48,4 @@ export const array = <T>(
       );
     }
   });
-};
+}

@@ -23,6 +23,6 @@ import * as Result from '../utils/result';
  * trueDecoder.decode("hello"); // Ok<boolean>({value: "true"})
  * ```
  */
-export const constant = <T>(value: T): Decoder<T> => {
+export function constant<T>(value: T): Decoder<T> {
   return new Decoder<T>(() => Result.ok(value));
-};
+}

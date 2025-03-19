@@ -27,8 +27,8 @@ export type EmptyObject = Record<string, never>;
  * JsonDecoder.emptyObject().decode({a: 1}); // Err({error: '{a: 1} is not a valid empty object'})
  * ```
  */
-export const emptyObject = (): Decoder<EmptyObject> =>
-  new Decoder<EmptyObject>((json: any) => {
+export function emptyObject(): Decoder<EmptyObject> {
+  return new Decoder<EmptyObject>((json: any) => {
     if (
       json !== null &&
       typeof json === 'object' &&
@@ -41,3 +41,4 @@ export const emptyObject = (): Decoder<EmptyObject> =>
       );
     }
   });
+}
