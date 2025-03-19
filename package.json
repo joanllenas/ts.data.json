@@ -1,13 +1,27 @@
 {
   "name": "ts.data.json",
-  "version": "3.0.0-beta.1",
+  "version": "3.0.0-beta.5",
   "description": "A JSON decoding library for Typescript",
-  "main": "./dist/cjs/index.js",
-  "module": "./dist/esm/index.js",
+  "type": "module",
+  "main": "./dist/cjs/index.min.js",
+  "module": "./dist/esm/index.min.js",
   "types": "./dist/esm/index.d.ts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/esm/index.d.ts",
+        "default": "./dist/esm/index.min.js"
+      },
+      "require": {
+        "types": "./dist/cjs/index.d.ts",
+        "default": "./dist/cjs/index.min.js"
+      }
+    }
+  },
   "files": [
     "dist/"
   ],
+  "sideEffects": false,
   "scripts": {
     "build:tsc": "tsc -p tsconfig.json && tsc -p tsconfig-cjs.json",
     "build:esbuild": "node build.js",
