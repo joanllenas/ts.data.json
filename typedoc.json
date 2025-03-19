@@ -1,6 +1,6 @@
 {
   "$schema": "https://typedoc.org/schema.json",
-  "entryPoints": ["src/core.ts", "src/schemas", "src/result.ts"],
+  "entryPoints": ["src/core.ts", "src/schemas/index.ts", "src/utils/result.ts"],
   "out": "docs/latest",
   "githubPages": true,
   "basePath": "/ts.data.json",

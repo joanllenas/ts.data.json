@@ -1,6 +1,6 @@
 /**
  * @module
- * @mergeModuleWith json-decoder
+ * @mergeModuleWith decoders
  * @category Api docs
  */
 
@@ -8,7 +8,20 @@ import { Decoder } from '../core';
 import { $JsonDecoderErrors } from '../utils/errors';
 import * as Result from '../utils/result';
 
-type TupleOfResults<T extends readonly [] | readonly Decoder<any>[]> = {
+/**
+ * Type-level helper that extracts the type parameters from an array of decoders.
+ *
+ * Given an array of decoders, this type will produce a tuple type where each element
+ * corresponds to the type that each decoder produces.
+ *
+ * @typeParam T - An array of decoders
+ *
+ * @example
+ * ```typescript
+ * type Point = TupleOfResults<[Decoder<number>, Decoder<number>]>; // [number, number]
+ * ```
+ */
+export type TupleOfResults<T extends readonly [] | readonly Decoder<any>[]> = {
   [K in keyof T]: T[K] extends Decoder<infer R> ? R : never;
 };
 

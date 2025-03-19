@@ -1,6 +1,6 @@
 /**
  * This module contains the Decoder type, which is a type-safe way to handle JSON decoding.
- * @module json-decoder
+ * @module core
  * @category Api docs
  */
 
@@ -32,7 +32,6 @@ export type FromDecoder<D> = D extends Decoder<infer T> ? T : never;
  * A decoder that can validate and transform JSON data into strongly typed TypeScript values.
  *
  * @template T - The type that this decoder will produce when successful
- * @category Types
  */
 export class Decoder<T> implements StandardSchemaV1<unknown, T> {
   /**

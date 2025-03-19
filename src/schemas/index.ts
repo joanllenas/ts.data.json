@@ -1,3 +1,9 @@
+/**
+ * This module contains all the decoders that are available in ts.data.json.
+ * @module decoders
+ * @category Api docs
+ */
+
 export * from './array';
 export * from './boolean';
 export * from './constant';

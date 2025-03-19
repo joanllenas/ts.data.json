@@ -1,6 +1,6 @@
 /**
  * @module
- * @mergeModuleWith json-decoder
+ * @mergeModuleWith decoders
  * @category Api docs
  */
 
