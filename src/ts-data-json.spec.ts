@@ -491,46 +491,6 @@ describe('json-decoder', () => {
       );
     });
 
-    describe('with JSON key mappings', () => {
-      const userDecoderWithKeyMap = JsonDecoder.object<User>(
-        {
-          firstname: JsonDecoder.string(),
-          lastname: JsonDecoder.string()
-        },
-        'User',
-        {
-          firstname: 'fName',
-          lastname: 'lName'
-        }
-      );
-      it('should decode a User object with JSON key mappings', () => {
-        const json = {
-          fName: 'John',
-          lName: 'Doe'
-        };
-        expectOkWithValue(userDecoderWithKeyMap.decode(json), {
-          firstname: 'John',
-          lastname: 'Doe'
-        });
-      });
-      it('should fail to denode a User object with JSON key mappings any of its decoders fails', () => {
-        const json = {
-          fName: 5,
-          lName: 'Doe'
-        };
-
-        expectErrWithMsg(
-          userDecoderWithKeyMap.decode(json),
-          $JsonDecoderErrors.objectJsonKeyError(
-            'User',
-            'firstname',
-            'fName',
-            $JsonDecoderErrors.primitiveError(5, 'string')
-          )
-        );
-      });
-    });
-
     describe('objectStrict', () => {
       const strictUserDecoder = JsonDecoder.objectStrict<User>(
         {

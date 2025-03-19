@@ -16,13 +16,6 @@ import { $JsonDecoderErrors } from '../utils/errors';
 export type DecoderObject<T> = { [P in keyof Required<T>]: Decoder<T[P]> };
 
 /**
- * Represents an optional map between json field names and user land field names.
- *
- * @category Internal Types
- */
-export type DecoderObjectKeyMap<T> = { [P in keyof T]?: string };
-
-/**
  * Decoder for objects with specified field decoders.
  *
  * @category Data Structures
@@ -46,16 +39,12 @@ export type DecoderObjectKeyMap<T> = { [P in keyof T]?: string };
  *     lastName: JsonDecoder.string(),
  *     age: JsonDecoder.number()
  *   },
- *   'User',
- *   {
- *     firstName: 'first_name',
- *     lastName: 'last_name'
- *   }
+ *   'User'
  * );
  *
  * const json = {
- *   first_name: 'John',
- *   last_name: 'Doe',
+ *   firstName: 'John',
+ *   lastName: 'Doe',
  *   age: 30
  * };
  *
@@ -64,39 +53,20 @@ export type DecoderObjectKeyMap<T> = { [P in keyof T]?: string };
  */
 export function object<T>(
   decoders: DecoderObject<T>,
-  decoderName: string,
-  // TODO: remove keyMap
-  keyMap?: DecoderObjectKeyMap<T>
+  decoderName: string
 ): Decoder<T> {
   return new Decoder<T>((json: any) => {
     if (json !== null && typeof json === 'object') {
       const result: any = {};
       for (const key in decoders) {
         if (Object.prototype.hasOwnProperty.call(decoders, key)) {
-          if (keyMap && key in keyMap) {
-            const jsonKey = keyMap[key] as string;
-            const r = decoders[key].decode(json[jsonKey]);
-            if (r.isOk()) {
-              result[key] = r.value;
-            } else {
-              return Result.err<T>(
-                $JsonDecoderErrors.objectJsonKeyError(
-                  decoderName,
-                  key,
-                  jsonKey,
-                  r.error
-                )
-              );
-            }
+          const r = decoders[key].decode(json[key]);
+          if (r.isOk()) {
+            result[key] = r.value;
           } else {
-            const r = decoders[key].decode(json[key]);
-            if (r.isOk()) {
-              result[key] = r.value;
-            } else {
-              return Result.err<T>(
-                $JsonDecoderErrors.objectError(decoderName, key, r.error)
-              );
-            }
+            return Result.err<T>(
+              $JsonDecoderErrors.objectError(decoderName, key, r.error)
+            );
           }
         }
       }

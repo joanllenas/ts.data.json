@@ -47,14 +47,6 @@ export namespace $JsonDecoderErrors {
   ): string =>
     `<${decoderName}> decoder failed at index "${index}" with error: ${error}`;
 
-  export const objectJsonKeyError = (
-    decoderName: string,
-    key: string,
-    jsonKey: string,
-    error: string
-  ): string =>
-    `<${decoderName}> decoder failed at key "${key}" (mapped from the JSON key "${jsonKey}") with error: ${error}`;
-
   export const objectStrictUnknownKeyError = (
     decoderName: string,
     key: string
