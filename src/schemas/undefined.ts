@@ -9,7 +9,18 @@ import { $JsonDecoderErrors } from '../utils/errors';
 import * as Result from '../utils/result';
 
 /**
- * TODO: docs
+ * Decoder for `undefined` values.
+ *
+ * @category Primitives
+ * @returns A decoder that only accepts `undefined` values
+ *
+ * @example
+ * ```ts
+ * const undefinedDecoder = JsonDecoder.undefined();
+ * undefinedDecoder.decode(undefined); // Ok<undefined>({value: undefined})
+ * undefinedDecoder.decode(123); // Err({error: '123 is not a valid undefined'})
+ * undefinedDecoder.decode(null); // Err({error: 'null is not a valid undefined'})
+ * ```
  * @category Primitives
  */
 function undefined_(): Decoder<undefined> {

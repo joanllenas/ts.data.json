@@ -18,7 +18,7 @@ import * as Result from '../utils/result';
  *
  * @example
  * ```ts
- * const numberArray = JsonDecoder.array(JsonDecoder.number, 'NumberArray');
+ * const numberArray = JsonDecoder.array(JsonDecoder.number(), 'NumberArray');
  *
  * numberArray.decode([1, 2, 3]); // Ok<number[]>
  * numberArray.decode([1, '2', 3]); // Err({error: '<NumberArray> decoder failed at index "1" with error: "2" is not a valid number'})

@@ -16,12 +16,12 @@ import type { StandardSchemaV1 } from './utils/standard-schema-v1';
  * @example
  * ```typescript
  * const userDecoder = JsonDecoder.object({
- *   id: JsonDecoder.number,
- *   name: JsonDecoder.string
+ *   id: JsonDecoder.number(),
+ *   name: JsonDecoder.string()
  * }, 'User');
  *
  * // You can extract the type from the decoder:
- * type User = FromDecoder<typeof userDecoder>;
+ * type User = JsonDecoder.FromDecoder<typeof userDecoder>;
  * ```
  *
  * @typeParam D - A JsonDecoder.Decoder type
@@ -37,9 +37,9 @@ export type FromDecoder<D> = D extends Decoder<infer T> ? T : never;
  * const myStringDecoder = (): JsonDecoder.Decoder<string> => new JsonDecoder.Decoder(
  *   (json: unknown) => {
  *     if (typeof json === 'string') {
- *       return ok(json);
+ *       return JsonDecoder.ok(json);
  *     } else {
- *       return err('Expected a string');
+ *       return JsonDecoder.err('Expected a string');
  *     }
  *   }
  * );
@@ -66,8 +66,8 @@ export class Decoder<T> implements StandardSchemaV1<unknown, T> {
    *
    * @example
    * ```ts
-   * JsonDecoder.string.decode('hi'); // Ok<string>({value: 'hi'})
-   * JsonDecoder.string.decode(5); // Err({error: '5 is not a valid string'})
+   * JsonDecoder.string().decode('hi'); // Ok<string>({value: 'hi'})
+   * JsonDecoder.string().decode(5); // Err({error: '5 is not a valid string'})
    * ```
    */
   decode(json: any): Result.Result<T> {
@@ -100,8 +100,8 @@ export class Decoder<T> implements StandardSchemaV1<unknown, T> {
    *
    * @example
    * ```ts
-   * JsonDecoder.string.decodePromise('hola').then(res => console.log(res)); // 'hola'
-   * JsonDecoder.string.decodePromise(2).catch(err => console.log(err)); // '2 is not a valid string'
+   * JsonDecoder.string().decodePromise('hola').then(res => console.log(res)); // 'hola'
+   * JsonDecoder.string().decodePromise(2).catch(err => console.log(err)); // '2 is not a valid string'
    * ```
    */
   decodePromise(json: any): Promise<T> {
@@ -131,7 +131,7 @@ export class Decoder<T> implements StandardSchemaV1<unknown, T> {
    * @example
    * ```ts
    * // Decode a string, then transform it into a Date
-   * const dateDecoder = JsonDecoder.string.map(stringDate => new Date(stringDate));
+   * const dateDecoder = JsonDecoder.string().map(stringDate => new Date(stringDate));
    * // Ok scenario
    * dateDecoder.decode('2018-12-21T18:22:25.490Z'); // Ok<Date>({value: Date(......)})
    * // Err scenario
@@ -157,9 +157,9 @@ export class Decoder<T> implements StandardSchemaV1<unknown, T> {
    *
    * @example
    * ```ts
-   * const adultDecoder = JsonDecoder.number.flatMap(age =>
+   * const adultDecoder = JsonDecoder.number().flatMap(age =>
    *   age >= 18
-   *     ? JsonDecoder.succeed
+   *     ? JsonDecoder.succeed()
    *     : JsonDecoder.fail(`Age ${age} is less than 18`)
    * );
    * adultDecoder.decode(18); // Ok<number>({value: 18})

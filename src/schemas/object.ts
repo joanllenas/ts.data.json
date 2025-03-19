@@ -29,7 +29,7 @@ export type DecoderObjectKeyMap<T> = { [P in keyof T]?: string };
  * @param decoders Key/value pairs of decoders for each object field.
  * @param decoderName How to display the name of the object being decoded in errors.
  * @param keyMap Optional map between json field names and user land field names.
- *               Useful when the client model does not match with what the server sends.
+ *               Useful when the client model does not match with the input JSON structure.
  * @returns A decoder that validates and returns objects matching the specified structure
  *
  * @example
@@ -42,9 +42,9 @@ export type DecoderObjectKeyMap<T> = { [P in keyof T]?: string };
  *
  * const userDecoder = JsonDecoder.object<User>(
  *   {
- *     firstName: JsonDecoder.string,
- *     lastName: JsonDecoder.string,
- *     age: JsonDecoder.number
+ *     firstName: JsonDecoder.string(),
+ *     lastName: JsonDecoder.string(),
+ *     age: JsonDecoder.number()
  *   },
  *   'User',
  *   {

@@ -37,7 +37,7 @@ export type TupleOfResults<T extends readonly [] | readonly Decoder<any>[]> = {
  * @example
  * ```ts
  * const pointDecoder = JsonDecoder.tuple(
- *   [JsonDecoder.number, JsonDecoder.number],
+ *   [JsonDecoder.number(), JsonDecoder.number()],
  *   'Point'
  * );
  *

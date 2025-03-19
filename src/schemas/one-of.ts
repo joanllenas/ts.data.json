@@ -19,7 +19,7 @@ import * as Result from '../utils/result';
  * @example
  * ```ts
  * const stringOrNumber = JsonDecoder.oneOf<string | number>(
- *   [JsonDecoder.string, JsonDecoder.number],
+ *   [JsonDecoder.string(), JsonDecoder.number()],
  *   'StringOrNumber'
  * );
  *

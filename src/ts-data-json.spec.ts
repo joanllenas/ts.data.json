@@ -98,6 +98,40 @@ describe('json-decoder', () => {
     });
   });
 
+  // null
+  describe('null', () => {
+    it('should decode null', () => {
+      expectOkWithValue(JsonDecoder.null().decode(null), null);
+    });
+    it('should fail if not null', () => {
+      expectErrWithMsg(
+        JsonDecoder.null().decode(1),
+        $JsonDecoderErrors.nullError(1)
+      );
+      expectErrWithMsg(
+        JsonDecoder.null().decode(undefined),
+        $JsonDecoderErrors.nullError(undefined)
+      );
+    });
+  });
+
+  // undefined
+  describe('undefined', () => {
+    it('should decode undefined', () => {
+      expectOkWithValue(JsonDecoder.undefined().decode(undefined), undefined);
+    });
+    it('should fail if not undefined', () => {
+      expectErrWithMsg(
+        JsonDecoder.undefined().decode(1),
+        $JsonDecoderErrors.undefinedError(1)
+      );
+      expectErrWithMsg(
+        JsonDecoder.undefined().decode(null),
+        $JsonDecoderErrors.undefinedError(null)
+      );
+    });
+  });
+
   // enumeration
   describe('enumeration', () => {
     enum IntEnum {

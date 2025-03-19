@@ -23,7 +23,7 @@ import { Decoder } from '../core';
  * const treeDecoder = JsonDecoder.lazy(() =>
  *   JsonDecoder.object<Tree>(
  *     {
- *       value: JsonDecoder.number,
+ *       value: JsonDecoder.number(),
  *       children: JsonDecoder.optional(JsonDecoder.array(treeDecoder))
  *     },
  *     'Tree'

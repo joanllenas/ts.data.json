@@ -23,8 +23,8 @@ import * as Result from '../utils/result';
  *
  * const userDecoder = JsonDecoder.object<User>(
  *   {
- *     name: JsonDecoder.string,
- *     age: JsonDecoder.nullable(JsonDecoder.number)
+ *     name: JsonDecoder.string(),
+ *     age: JsonDecoder.nullable(JsonDecoder.number())
  *   },
  *   'User'
  * );

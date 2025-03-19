@@ -18,7 +18,7 @@ import * as Result from '../utils/result';
  *
  * @example
  * ```ts
- * const numberRecord = JsonDecoder.record(JsonDecoder.number, 'NumberRecord');
+ * const numberRecord = JsonDecoder.record(JsonDecoder.number(), 'NumberRecord');
  *
  * numberRecord.decode({a: 1, b: 2}); // Ok<Record<string, number>>
  * numberRecord.decode({a: '1', b: 2}); // Err({error: '<NumberRecord> record decoder failed at key "a" with error: "1" is not a valid number'})

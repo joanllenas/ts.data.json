@@ -34,8 +34,8 @@ export type DecoderObjectStrict<T> = {
  *
  * const userDecoder = JsonDecoder.objectStrict<User>(
  *   {
- *     name: JsonDecoder.string,
- *     age: JsonDecoder.number
+ *     name: JsonDecoder.string(),
+ *     age: JsonDecoder.number()
  *   },
  *   'User'
  * );

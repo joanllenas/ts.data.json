@@ -125,7 +125,7 @@ export type Result<T> = Ok<T> | Err<T>;
  *
  * @example
  * ```typescript
- * const result = ok(42);
+ * const result = JsonDecoder.ok(42);
  * // result = Ok(42)
  * ```
  */
@@ -142,7 +142,7 @@ export function ok<T>(value: T): Result<T> {
  *
  * @example
  * ```typescript
- * const result = err<number>("Invalid number");
+ * const result = JsonDecoder.err<number>("Invalid number");
  * // result = Err("Invalid number")
  * ```
  */

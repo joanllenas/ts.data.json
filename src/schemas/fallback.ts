@@ -17,7 +17,7 @@ import * as Result from '../utils/result';
  *
  * @example
  * ```ts
- * const numberOrZero = JsonDecoder.fallback(0, JsonDecoder.number);
+ * const numberOrZero = JsonDecoder.fallback(0, JsonDecoder.number());
  * numberOrZero.decode(42); // Ok<number>({value: 42})
  * numberOrZero.decode('not a number'); // Ok<number>({value: 0})
  * ```
