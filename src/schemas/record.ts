@@ -57,5 +57,6 @@ export const record = <V>(
  *
  * @category Data Structures
  * @deprecated Use `record` directly instead.
+ * @ignore
  */
 export const dictionary = record;

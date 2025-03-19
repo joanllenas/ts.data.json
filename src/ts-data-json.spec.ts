@@ -1063,34 +1063,15 @@ describe('json-decoder', () => {
   });
 
   describe('Decoder<a>', () => {
-    describe('fold', () => {
-      it('should take the onErr() route when the decoder fails', () => {
-        const numberToStringWithDefault = JsonDecoder.number().fold(
-          (value: number) => value.toString(16),
-          () => '0',
-          false
-        );
-        expect(numberToStringWithDefault).toEqual('0');
-      });
-      it('should take the onOk() route when the decoder succeeds', () => {
-        const stringToNumber = JsonDecoder.string().fold(
-          (value: string) => parseInt(value, 10),
-          () => 0,
-          '000000000001'
-        );
-        expect(stringToNumber).toEqual(1);
-      });
-    });
-
-    describe('decodeToPromise', () => {
+    describe('decodePromise', () => {
       it('should resolve when decoding succeeds', async () => {
-        expect(await JsonDecoder.string().decodeToPromise('hola')).toEqual(
+        expect(await JsonDecoder.string().decodePromise('hola')).toEqual(
           'hola'
         );
       });
       it('should reject when decoding fails', () => {
         JsonDecoder.string()
-          .decodeToPromise(2)
+          .decodePromise(2)
           .catch(error => {
             expect(error).toEqual(
               $JsonDecoderErrors.primitiveError(2, 'string')
@@ -1121,7 +1102,7 @@ describe('json-decoder', () => {
       });
     });
 
-    describe('chain', () => {
+    describe('flatMap', () => {
       type SquareProps = { side: number };
       type RectangleProps = { width: number; height: number };
       type Shape<T> = {
@@ -1164,7 +1145,7 @@ describe('json-decoder', () => {
           properties: JsonDecoder.succeed()
         },
         'Shape'
-      ).chain(value => {
+      ).flatMap(value => {
         switch (value.type) {
           case 'square':
             return squareDecoder;
@@ -1238,11 +1219,11 @@ describe('json-decoder', () => {
           });
         const decoder = JsonDecoder.array(JsonDecoder.number(), 'latLang')
           .map(arr => arr.slice(2))
-          .chain(hasLength(8))
+          .flatMap(hasLength(8))
           .map(arr => arr.slice(2))
-          .chain(hasLength(6))
+          .flatMap(hasLength(6))
           .map(arr => arr.slice(2))
-          .chain(hasLength(4));
+          .flatMap(hasLength(4));
         expectOkWithValue(
           decoder.decode([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]),
           [7, 8, 9, 10]
@@ -1250,40 +1231,13 @@ describe('json-decoder', () => {
       });
 
       it('should chain age decoder', () => {
-        const adultDecoder = JsonDecoder.number().chain(age =>
+        const adultDecoder = JsonDecoder.number().flatMap(age =>
           age >= 18
             ? JsonDecoder.succeed()
             : JsonDecoder.fail(`Age ${age} is less than 18`)
         );
         expectOkWithValue(adultDecoder.decode(18), 18);
         expectErrWithMsg(adultDecoder.decode(17), 'Age 17 is less than 18');
-      });
-    });
-
-    describe('mapError', () => {
-      const numberWithMapErrorToNull = JsonDecoder.number().mapError(
-        () => null
-      );
-      const numberWithMapErrorToErrorMessage = JsonDecoder.number().mapError(
-        error => error
-      );
-
-      it('should decode successfully', () => {
-        expectOkWithValue(numberWithMapErrorToNull.decode(9), 9);
-      });
-
-      it('should transform the value when decoding fails', () => {
-        expectOkWithValue(
-          numberWithMapErrorToNull.decode('not a number'),
-          null
-        );
-      });
-
-      it('should provide the callback function with the error message', () => {
-        expectOkWithValue(
-          numberWithMapErrorToErrorMessage.decode('not a number'),
-          '"not a number" is not a valid number'
-        );
       });
     });
   });
@@ -1360,7 +1314,7 @@ describe('json-decoder', () => {
         firstname: 'Damien',
         lastname: 'Jurado'
       };
-      await expect(userDecoder.decodeToPromise(jsonObjectOk)).resolves.toEqual({
+      await expect(userDecoder.decodePromise(jsonObjectOk)).resolves.toEqual({
         firstname: 'Damien',
         lastname: 'Jurado'
       });
@@ -1371,7 +1325,7 @@ describe('json-decoder', () => {
         firstname: 'Erik',
         lastname: null
       };
-      await expect(userDecoder.decodeToPromise(jsonObjectKo)).rejects.toThrow();
+      await expect(userDecoder.decodePromise(jsonObjectKo)).rejects.toThrow();
     });
   });
 });

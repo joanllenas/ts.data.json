@@ -38,5 +38,6 @@ export function fallback<T>(defaultValue: T, decoder: Decoder<T>): Decoder<T> {
  *
  * @category Transformations
  * @deprecated Use `fallback` directly instead.
+ * @ignore
  */
 export const failover = fallback;

@@ -31,6 +31,22 @@ export type FromDecoder<D> = D extends Decoder<infer T> ? T : never;
 /**
  * A decoder that can validate and transform JSON data into strongly typed TypeScript values.
  *
+ * @example
+ * Let's replicate the string decoder:
+ * ```ts
+ * const myStringDecoder = (): JsonDecoder.Decoder<string> => new JsonDecoder.Decoder(
+ *   (json: unknown) => {
+ *     if (typeof json === 'string') {
+ *       return ok(json);
+ *     } else {
+ *       return err('Expected a string');
+ *     }
+ *   }
+ * );
+ * myStringDecoder().decode('hello'); // Ok<string>({value: 'hello'})
+ * myStringDecoder().decode(123); // Err({error: 'Expected a string'})
+ * ```
+ *
  * @template T - The type that this decoder will produce when successful
  */
 export class Decoder<T> implements StandardSchemaV1<unknown, T> {
@@ -39,19 +55,6 @@ export class Decoder<T> implements StandardSchemaV1<unknown, T> {
    *
    * @param decodeFn - A function that takes a JSON object and returns a Result<T>
    * @category Constructor
-   *
-   * @example
-   * ```ts
-   * const myStringDecoder: JsonDecoder.Decoder<string> = new JsonDecoder.Decoder(
-   *   (json: unknown) => {
-   *     if (typeof json === 'string') {
-   *       return ok(json);
-   *     } else {
-   *       return err('Expected a string');
-   *     }
-   *   }
-   * );
-   * ```
    */
   constructor(private decodeFn: (json: any) => Result.Result<T>) {}
 
@@ -90,33 +93,6 @@ export class Decoder<T> implements StandardSchemaV1<unknown, T> {
   };
 
   /**
-   * Decodes a JSON object of type <T> and calls onOk() on success or onErr() on failure, both return <O>
-   *
-   * @param onOk function called when the decoder succeeds
-   * @param onErr function called when the decoder fails
-   * @param json The JSON object to decode
-   * @returns The result of either onOk or onErr
-   * @category Entry Point
-   *
-   * @example
-   * ```ts
-   * JsonDecoder.string.fold(
-   *   (value: string) => parseInt(value, 10),
-   *   (error: string) => 0,
-   *   '000000000001'
-   * ); // 1
-   * ```
-   */
-  fold<O>(onOk: (result: T) => O, onErr: (error: string) => O, json: any): O {
-    const result = this.decode(json);
-    if (result.isOk()) {
-      return onOk(result.value);
-    } else {
-      return onErr(result.error);
-    }
-  }
-
-  /**
    * Decodes a JSON object of type <T> and returns a Promise<T>
    * @param json The JSON object to decode
    * @returns A Promise that resolves with the decoded value or rejects with an error message
@@ -124,11 +100,11 @@ export class Decoder<T> implements StandardSchemaV1<unknown, T> {
    *
    * @example
    * ```ts
-   * JsonDecoder.string.decodeToPromise('hola').then(res => console.log(res)); // 'hola'
-   * JsonDecoder.string.decodeToPromise(2).catch(err => console.log(err)); // '2 is not a valid string'
+   * JsonDecoder.string.decodePromise('hola').then(res => console.log(res)); // 'hola'
+   * JsonDecoder.string.decodePromise(2).catch(err => console.log(err)); // '2 is not a valid string'
    * ```
    */
-  decodeToPromise(json: any): Promise<T> {
+  decodePromise(json: any): Promise<T> {
     return new Promise((resolve, reject) => {
       const result = this.decode(json);
       if (result.isOk()) {
@@ -138,6 +114,13 @@ export class Decoder<T> implements StandardSchemaV1<unknown, T> {
       }
     });
   }
+
+  /**
+   * Alias for decodePromise
+   * @deprecated Use decodePromise instead
+   * @ignore
+   */
+  decodeToPromise = this.decodePromise;
 
   /**
    * If the decoder has succeeded, transforms the decoded value into something else
@@ -167,33 +150,14 @@ export class Decoder<T> implements StandardSchemaV1<unknown, T> {
   }
 
   /**
-   * If the decoder has failed, transforms the error into an Ok value
-   * @param fn The transformation function
-   * @returns A new decoder that applies the transformation
-   * @category Transformation
-   * @ignore
-   * ```
-   */
-  mapError<O>(fn: (error: string) => O): Decoder<T | O> {
-    return new Decoder<T | O>((json: any) => {
-      const result = this.decodeFn(json);
-      if (result.isOk()) {
-        return Result.ok<T>(result.value);
-      } else {
-        return Result.ok<O>(fn(result.error));
-      }
-    });
-  }
-
-  /**
-   * Chain decoders that might fail
+   * Chain together a sequence of decoders that may fail.
    * @param fn Function that returns a new decoder
    * @returns A new decoder that chains the current decoder with the result of fn
    * @category Transformation
    *
    * @example
    * ```ts
-   * const adultDecoder = JsonDecoder.number.chain(age =>
+   * const adultDecoder = JsonDecoder.number.flatMap(age =>
    *   age >= 18
    *     ? JsonDecoder.succeed
    *     : JsonDecoder.fail(`Age ${age} is less than 18`)
@@ -202,7 +166,7 @@ export class Decoder<T> implements StandardSchemaV1<unknown, T> {
    * adultDecoder.decode(17); // Err({error: 'Age 17 is less than 18'})
    * ```
    */
-  chain<O>(fn: (value: T) => Decoder<O>): Decoder<O> {
+  flatMap<O>(fn: (value: T) => Decoder<O>): Decoder<O> {
     return new Decoder<O>((json: any) => {
       const result = this.decodeFn(json);
       if (result.isOk()) {
@@ -212,4 +176,11 @@ export class Decoder<T> implements StandardSchemaV1<unknown, T> {
       }
     });
   }
+
+  /**
+   * Alias for flatMap
+   * @deprecated Use flatMap instead
+   * @ignore
+   */
+  chain = this.flatMap;
 }

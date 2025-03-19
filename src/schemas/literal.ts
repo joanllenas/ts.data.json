@@ -37,5 +37,6 @@ export function literal<T>(value: T): Decoder<T> {
  * Alias for the `literal` function.
  * @category Utils
  * @deprecated Use `literal` directly instead.
+ * @ignore
  */
 export const isExactly = literal;
