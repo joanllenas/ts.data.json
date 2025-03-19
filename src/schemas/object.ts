@@ -8,9 +8,19 @@ import { Decoder } from '../core';
 import * as Result from '../utils/result';
 import { $JsonDecoderErrors } from '../utils/errors';
 
-type DecoderObject<T> = { [P in keyof Required<T>]: Decoder<T[P]> };
+/**
+ * Represents an object with specified field decoders.
+ *
+ * @category Internal Types
+ */
+export type DecoderObject<T> = { [P in keyof Required<T>]: Decoder<T[P]> };
 
-type DecoderObjectKeyMap<T> = { [P in keyof T]?: string };
+/**
+ * Represents an optional map between json field names and user land field names.
+ *
+ * @category Internal Types
+ */
+export type DecoderObjectKeyMap<T> = { [P in keyof T]?: string };
 
 /**
  * Decoder for objects with specified field decoders.

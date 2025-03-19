@@ -8,7 +8,14 @@ import { Decoder } from '../core';
 import * as Result from '../utils/result';
 import { $JsonDecoderErrors } from '../utils/errors';
 
-type DecoderObject<T> = { [P in keyof Required<T>]: Decoder<T[P]> };
+/**
+ * Represents an object with specified field decoders that fails if unknown fields are present.
+ *
+ * @category Internal Types
+ */
+export type DecoderObjectStrict<T> = {
+  [P in keyof Required<T>]: Decoder<T[P]>;
+};
 
 /**
  * Decoder for objects with specified field decoders that fails if unknown fields are present.
@@ -38,7 +45,7 @@ type DecoderObject<T> = { [P in keyof Required<T>]: Decoder<T[P]> };
  * ```
  */
 export function objectStrict<T>(
-  decoders: DecoderObject<T>,
+  decoders: DecoderObjectStrict<T>,
   decoderName: string
 ): Decoder<T> {
   return new Decoder<T>((json: any) => {

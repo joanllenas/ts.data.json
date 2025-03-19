@@ -15,6 +15,7 @@ import * as Result from '../utils/result';
  * corresponds to the type that each decoder produces.
  *
  * @typeParam T - An array of decoders
+ * @category Internal Types
  *
  * @example
  * ```typescript

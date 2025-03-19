@@ -8,7 +8,13 @@ import { Decoder } from '../core';
 import * as Result from '../utils/result';
 import { $JsonDecoderErrors } from '../utils/errors';
 
-type EmptyObject = Record<string, never>;
+/**
+ * Represents an empty object.
+ *
+ * @category Internal Types
+ */
+export type EmptyObject = Record<string, never>;
+
 /**
  * Decoder for an empty object ({}).
  *
