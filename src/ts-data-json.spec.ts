@@ -172,25 +172,25 @@ describe('json-decoder', () => {
     });
   });
 
-  // failover
-  describe('failover (on failure provide a default value)', () => {
+  // fallback
+  describe('fallback (on failure provide a default value)', () => {
     it('should decode a value when value is provided', () => {
       expectOkWithValue(
-        JsonDecoder.failover('', JsonDecoder.string()).decode('algo'),
+        JsonDecoder.fallback('', JsonDecoder.string()).decode('algo'),
         'algo'
       );
     });
     it('should return the failoverValue when value is not provided', () => {
       expectOkWithValue(
-        JsonDecoder.failover('failover value', JsonDecoder.string()).decode(44),
-        'failover value'
+        JsonDecoder.fallback('fallback value', JsonDecoder.string()).decode(44),
+        'fallback value'
       );
       expectOkWithValue(
-        JsonDecoder.failover(2.1, JsonDecoder.number()).decode(null),
+        JsonDecoder.fallback(2.1, JsonDecoder.number()).decode(null),
         2.1
       );
       expectOkWithValue(
-        JsonDecoder.failover(false, JsonDecoder.boolean()).decode(undefined),
+        JsonDecoder.fallback(false, JsonDecoder.boolean()).decode(undefined),
         false
       );
     });
@@ -558,8 +558,8 @@ describe('json-decoder', () => {
     });
   });
 
-  // dictionary
-  describe('dictionary (key / value pairs)', () => {
+  // record
+  describe('record (key / value pairs)', () => {
     type User = {
       firstname: string;
       lastname: string;
@@ -581,7 +581,7 @@ describe('json-decoder', () => {
       },
       'User'
     );
-    const groupOfUsersDecoder = JsonDecoder.dictionary<User>(
+    const groupOfUsersDecoder = JsonDecoder.record<User>(
       userDecoder,
       'Dict<User>'
     );
@@ -593,7 +593,7 @@ describe('json-decoder', () => {
       'Group'
     );
 
-    it('should decode a homogeneous dictionary', () => {
+    it('should decode a homogeneous record', () => {
       const group = {
         id: 2,
         users: {
@@ -623,9 +623,9 @@ describe('json-decoder', () => {
       });
     });
 
-    it('should fail to decode a primitive dictionary with an invalid value', () => {
+    it('should fail to decode a primitive record with an invalid value', () => {
       expectErrWithMsg(
-        JsonDecoder.dictionary(JsonDecoder.number(), 'Dict<number>').decode({
+        JsonDecoder.record(JsonDecoder.number(), 'Dict<number>').decode({
           a: 1,
           b: 2,
           c: null
@@ -638,7 +638,7 @@ describe('json-decoder', () => {
       );
     });
 
-    it('should fail to decode a dictionary with a partial key/value pair object value', () => {
+    it('should fail to decode a record with a partial key/value pair object value', () => {
       const group = {
         id: 2,
         users: {
@@ -911,19 +911,19 @@ describe('json-decoder', () => {
     });
   });
 
-  // isExactly
-  describe('isExactly (only succeed decoding when json is exactly like the provided value)', () => {
+  // literal
+  describe('literal (only succeed decoding when json is exactly like the provided value)', () => {
     it('should decode only if json is exactly some given value', () => {
-      expectOkWithValue(JsonDecoder.isExactly(3.1).decode(3.1), 3.1);
-      expectOkWithValue(JsonDecoder.isExactly(null).decode(null), null);
+      expectOkWithValue(JsonDecoder.literal(3.1).decode(3.1), 3.1);
+      expectOkWithValue(JsonDecoder.literal(null).decode(null), null);
       expectOkWithValue(
-        JsonDecoder.isExactly(undefined).decode(undefined),
+        JsonDecoder.literal(undefined).decode(undefined),
         undefined
       );
     });
     it('should fail to decode when json is not exactly the given value', () => {
       expectErrWithMsg(
-        JsonDecoder.isExactly(3.1).decode(3),
+        JsonDecoder.literal(3.1).decode(3),
         $JsonDecoderErrors.exactlyError(3, 3.1)
       );
     });
@@ -1024,7 +1024,7 @@ describe('json-decoder', () => {
           {
             iban: JsonDecoder.string(),
             valid: JsonDecoder.boolean(),
-            account_holder: JsonDecoder.failover<undefined | User>(
+            account_holder: JsonDecoder.fallback<undefined | User>(
               undefined,
               JsonDecoder.object<User>(
                 {

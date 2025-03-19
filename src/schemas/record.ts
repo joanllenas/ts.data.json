@@ -24,10 +24,10 @@ import * as Result from '../utils/result';
  * numberRecord.decode({a: '1', b: 2}); // Err({error: '<NumberRecord> record decoder failed at key "a" with error: "1" is not a valid number'})
  * ```
  */
-export const record = <V>(
+export function record<V>(
   decoder: Decoder<V>,
   decoderName: string
-): Decoder<{ [K: string]: V }> => {
+): Decoder<{ [K: string]: V }> {
   return new Decoder<{ [K: string]: V }>(json => {
     if (json !== null && typeof json === 'object') {
       const obj: { [K: string]: V } = {};
@@ -50,7 +50,7 @@ export const record = <V>(
       );
     }
   });
-};
+}
 
 /**
  * Alias for the `record` function.
@@ -59,4 +59,9 @@ export const record = <V>(
  * @deprecated Use `record` directly instead.
  * @ignore
  */
-export const dictionary = record;
+export function dictionary<V>(
+  decoder: Decoder<V>,
+  decoderName: string
+): Decoder<{ [K: string]: V }> {
+  return record(decoder, decoderName);
+}

@@ -40,4 +40,6 @@ export function fallback<T>(defaultValue: T, decoder: Decoder<T>): Decoder<T> {
  * @deprecated Use `fallback` directly instead.
  * @ignore
  */
-export const failover = fallback;
+export function failover<T>(defaultValue: T, decoder: Decoder<T>): Decoder<T> {
+  return fallback(defaultValue, decoder);
+}
