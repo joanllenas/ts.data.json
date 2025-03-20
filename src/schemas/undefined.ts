@@ -5,7 +5,7 @@
  */
 
 import { Decoder } from '../core';
-import { $JsonDecoderErrors } from '../utils/errors';
+import { undefinedError } from '../errors/undefined-error';
 import * as Result from '../utils/result';
 
 /**
@@ -28,7 +28,7 @@ function undefined_(): Decoder<undefined> {
     if (json === undefined) {
       return Result.ok<undefined>(undefined);
     } else {
-      return Result.err<undefined>($JsonDecoderErrors.undefinedError(json));
+      return Result.err<undefined>(undefinedError(json));
     }
   });
 }

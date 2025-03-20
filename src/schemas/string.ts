@@ -6,7 +6,7 @@
 
 import { Decoder } from '../core';
 import * as Result from '../utils/result';
-import { $JsonDecoderErrors } from '../utils/errors';
+import { primitiveError } from '../errors/primitive-error';
 
 /**
  * Decoder for `string` values.
@@ -25,9 +25,7 @@ export function string(): Decoder<string> {
     if (typeof json === 'string') {
       return Result.ok<string>(json);
     } else {
-      return Result.err<string>(
-        $JsonDecoderErrors.primitiveError(json, 'string')
-      );
+      return Result.err<string>(primitiveError(json, 'string'));
     }
   });
 }

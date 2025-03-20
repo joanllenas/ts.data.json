@@ -5,7 +5,7 @@
  */
 
 import { Decoder } from '../core';
-import { $JsonDecoderErrors } from '../utils/errors';
+import { nullError } from '../errors/null-error';
 import * as Result from '../utils/result';
 
 /**
@@ -28,7 +28,7 @@ function null_(): Decoder<null> {
     if (json === null) {
       return Result.ok<null>(null);
     } else {
-      return Result.err<null>($JsonDecoderErrors.nullError(json));
+      return Result.err<null>(nullError(json));
     }
   });
 }

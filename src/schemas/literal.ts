@@ -5,7 +5,7 @@
  */
 
 import { Decoder } from '../core';
-import { $JsonDecoderErrors } from '../utils/errors';
+import { exactlyError } from '../errors/exactly-error';
 import * as Result from '../utils/result';
 
 /**
@@ -28,7 +28,7 @@ export function literal<T>(value: T): Decoder<T> {
     if (json === value) {
       return Result.ok<T>(value);
     } else {
-      return Result.err<T>($JsonDecoderErrors.exactlyError(json, value));
+      return Result.err<T>(exactlyError(json, value));
     }
   });
 }

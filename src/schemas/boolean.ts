@@ -6,7 +6,7 @@
 
 import { Decoder } from '../core';
 import * as Result from '../utils/result';
-import { $JsonDecoderErrors } from '../utils/errors';
+import { primitiveError } from '../errors/primitive-error';
 
 /**
  * Decoder for `boolean` values.
@@ -25,9 +25,7 @@ export function boolean(): Decoder<boolean> {
     if (typeof json === 'boolean') {
       return Result.ok<boolean>(json);
     } else {
-      return Result.err<boolean>(
-        $JsonDecoderErrors.primitiveError(json, 'boolean')
-      );
+      return Result.err<boolean>(primitiveError(json, 'boolean'));
     }
   });
 }

@@ -15,22 +15,22 @@ You can play with this examples in [this stackblitz playground](https://stackbli
 Let's start with the basics. Here's how to decode simple JSON values:
 
 ```typescript
-import * from JsonDecoder from 'ts.data.json';
+import * as JsonDecoder from 'ts.data.json';
 
 // String decoder
 const nameDecoder = JsonDecoder.string();
-nameDecoder.decode("John"); // Ok("John")
+nameDecoder.decode('John'); // Ok("John")
 nameDecoder.decode(123); // Err("123 is not a valid string")
 
 // Number decoder
 const ageDecoder = JsonDecoder.number();
 ageDecoder.decode(25); // Ok(25)
-ageDecoder.decode("25"); // Err("\"25\" is not a valid number")
+ageDecoder.decode('25'); // Err("\"25\" is not a valid number")
 
 // Boolean decoder
 const isActiveDecoder = JsonDecoder.boolean();
 isActiveDecoder.decode(true); // Ok(true)
-isActiveDecoder.decode("true"); // Err("\"true\" is not a valid boolean")
+isActiveDecoder.decode('true'); // Err("\"true\" is not a valid boolean")
 ```
 
 ## Object Decoding

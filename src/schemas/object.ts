@@ -6,7 +6,8 @@
 
 import { Decoder } from '../core';
 import * as Result from '../utils/result';
-import { $JsonDecoderErrors } from '../utils/errors';
+import { objectError } from '../errors/object-error';
+import { primitiveError } from '../errors/primitive-error';
 
 /**
  * Represents an object with specified field decoders.
@@ -64,17 +65,13 @@ export function object<T>(
           if (r.isOk()) {
             result[key] = r.value;
           } else {
-            return Result.err<T>(
-              $JsonDecoderErrors.objectError(decoderName, key, r.error)
-            );
+            return Result.err<T>(objectError(decoderName, key, r.error));
           }
         }
       }
       return Result.ok<T>(result);
     } else {
-      return Result.err<T>(
-        $JsonDecoderErrors.primitiveError(json, decoderName)
-      );
+      return Result.err<T>(primitiveError(json, decoderName));
     }
   });
 }

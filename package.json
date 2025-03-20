@@ -1,6 +1,6 @@
 {
   "name": "ts.data.json",
-  "version": "3.0.0-beta.5",
+  "version": "3.0.0-beta.6",
   "description": "A JSON decoding library for Typescript",
   "type": "module",
   "main": "./dist/cjs/index.min.js",
@@ -30,8 +30,8 @@
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
     "lint": "eslint ./src --ext .ts",
-    "format": "prettier ./src --write",
-    "format:check": "prettier ./src --check",
+    "format": "prettier ./src --write && prettier ./assets/documents --write",
+    "format:check": "prettier ./src --check && prettier ./assets/documents --check",
     "prebeta": "npm run test && npm run lint",
     "beta": "npm run build && npm publish --tag beta",
     "size-check": "bundlesize",

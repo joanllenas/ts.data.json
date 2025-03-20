@@ -5,8 +5,8 @@
  */
 
 import { Decoder } from '../core';
+import { primitiveError } from '../errors/primitive-error';
 import * as Result from '../utils/result';
-import { $JsonDecoderErrors } from '../utils/errors';
 
 /**
  * Represents an empty object.
@@ -36,9 +36,7 @@ export function emptyObject(): Decoder<EmptyObject> {
     ) {
       return Result.ok<EmptyObject>(json);
     } else {
-      return Result.err<EmptyObject>(
-        $JsonDecoderErrors.primitiveError(json, 'empty object')
-      );
+      return Result.err<EmptyObject>(primitiveError(json, 'empty object'));
     }
   });
 }

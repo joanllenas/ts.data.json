@@ -6,7 +6,9 @@
 
 import { Decoder } from '../core';
 import * as Result from '../utils/result';
-import { $JsonDecoderErrors } from '../utils/errors';
+import { objectStrictUnknownKeyError } from '../errors/object-strict-unknown-key-error';
+import { primitiveError } from '../errors/primitive-error';
+import { objectError } from '../errors/object-error';
 
 /**
  * Represents an object with specified field decoders that fails if unknown fields are present.
@@ -52,9 +54,7 @@ export function objectStrict<T>(
     if (json !== null && typeof json === 'object') {
       for (const key in json) {
         if (!Object.prototype.hasOwnProperty.call(decoders, key)) {
-          return Result.err<T>(
-            $JsonDecoderErrors.objectStrictUnknownKeyError(decoderName, key)
-          );
+          return Result.err<T>(objectStrictUnknownKeyError(decoderName, key));
         }
       }
       const result: any = {};
@@ -64,17 +64,13 @@ export function objectStrict<T>(
           if (r.isOk()) {
             result[key] = r.value;
           } else {
-            return Result.err<T>(
-              $JsonDecoderErrors.objectError(decoderName, key, r.error)
-            );
+            return Result.err<T>(objectError(decoderName, key, r.error));
           }
         }
       }
       return Result.ok<T>(result);
     } else {
-      return Result.err<T>(
-        $JsonDecoderErrors.primitiveError(json, decoderName)
-      );
+      return Result.err<T>(primitiveError(json, decoderName));
     }
   });
 }

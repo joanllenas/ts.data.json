@@ -6,7 +6,7 @@
 
 import { Decoder } from '../core';
 import * as Result from '../utils/result';
-import { $JsonDecoderErrors } from '../utils/errors';
+import { enumValueError } from '../errors/enum-value-error';
 
 /**
  * Decoder for `enumeration` values.
@@ -37,6 +37,6 @@ export function enumeration<E>(
     if (enumValue !== undefined) {
       return Result.ok<E>(enumValue);
     }
-    return Result.err<E>($JsonDecoderErrors.enumValueError(decoderName, json));
+    return Result.err<E>(enumValueError(decoderName, json));
   });
 }

@@ -1,10 +1,20 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { describe, expect, it } from 'vitest';
-import { $JsonDecoderErrors } from './utils/errors';
 import { FromDecoder, Decoder } from './core';
 import * as JsonDecoder from './schemas';
 import { Err, err, Ok, ok, Result } from './utils/result';
 import type { StandardSchemaV1 } from './utils/standard-schema-v1';
+import { primitiveError } from './errors/primitive-error';
+import { nullError } from './errors/null-error';
+import { undefinedError } from './errors/undefined-error';
+import { enumValueError } from './errors/enum-value-error';
+import { oneOfError } from './errors/one-of-error';
+import { objectError } from './errors/object-error';
+import { objectStrictUnknownKeyError } from './errors/object-strict-unknown-key-error';
+import { arrayError } from './errors/array-error';
+import { recordError } from './errors/record-error';
+import { exactlyError } from './errors/exactly-error';
+import { tupleLengthMismatchError } from './errors/tuple-length-mismatch-error';
 
 // Test utils
 const expectOkWithValue = <a>(result: Result<a>, expectedValue: a) => {
@@ -39,15 +49,15 @@ describe('json-decoder', () => {
     it('should fail if not a string', () => {
       expectErrWithMsg(
         JsonDecoder.string().decode(true),
-        $JsonDecoderErrors.primitiveError(true, tag)
+        primitiveError(true, tag)
       );
       expectErrWithMsg(
         JsonDecoder.string().decode(undefined),
-        $JsonDecoderErrors.primitiveError(undefined, tag)
+        primitiveError(undefined, tag)
       );
       expectErrWithMsg(
         JsonDecoder.string().decode(null),
-        $JsonDecoderErrors.primitiveError(null, tag)
+        primitiveError(null, tag)
       );
     });
   });
@@ -62,15 +72,15 @@ describe('json-decoder', () => {
     it('should fail if not a number', () => {
       expectErrWithMsg(
         JsonDecoder.number().decode('33'),
-        $JsonDecoderErrors.primitiveError('33', tag)
+        primitiveError('33', tag)
       );
       expectErrWithMsg(
         JsonDecoder.number().decode(null),
-        $JsonDecoderErrors.primitiveError(null, tag)
+        primitiveError(null, tag)
       );
       expectErrWithMsg(
         JsonDecoder.number().decode(undefined),
-        $JsonDecoderErrors.primitiveError(undefined, tag)
+        primitiveError(undefined, tag)
       );
     });
   });
@@ -85,15 +95,15 @@ describe('json-decoder', () => {
     it('should fail if not a boolean', () => {
       expectErrWithMsg(
         JsonDecoder.boolean().decode('1'),
-        $JsonDecoderErrors.primitiveError('1', tag)
+        primitiveError('1', tag)
       );
       expectErrWithMsg(
         JsonDecoder.boolean().decode(null),
-        $JsonDecoderErrors.primitiveError(null, tag)
+        primitiveError(null, tag)
       );
       expectErrWithMsg(
         JsonDecoder.boolean().decode(undefined),
-        $JsonDecoderErrors.primitiveError(undefined, tag)
+        primitiveError(undefined, tag)
       );
     });
   });
@@ -104,13 +114,10 @@ describe('json-decoder', () => {
       expectOkWithValue(JsonDecoder.null().decode(null), null);
     });
     it('should fail if not null', () => {
-      expectErrWithMsg(
-        JsonDecoder.null().decode(1),
-        $JsonDecoderErrors.nullError(1)
-      );
+      expectErrWithMsg(JsonDecoder.null().decode(1), nullError(1));
       expectErrWithMsg(
         JsonDecoder.null().decode(undefined),
-        $JsonDecoderErrors.nullError(undefined)
+        nullError(undefined)
       );
     });
   });
@@ -121,13 +128,10 @@ describe('json-decoder', () => {
       expectOkWithValue(JsonDecoder.undefined().decode(undefined), undefined);
     });
     it('should fail if not undefined', () => {
-      expectErrWithMsg(
-        JsonDecoder.undefined().decode(1),
-        $JsonDecoderErrors.undefinedError(1)
-      );
+      expectErrWithMsg(JsonDecoder.undefined().decode(1), undefinedError(1));
       expectErrWithMsg(
         JsonDecoder.undefined().decode(null),
-        $JsonDecoderErrors.undefinedError(null)
+        undefinedError(null)
       );
     });
   });
@@ -187,21 +191,21 @@ describe('json-decoder', () => {
     it('should fail when the value is not in the enum', () => {
       expectErrWithMsg(
         JsonDecoder.enumeration<IntEnum>(IntEnum, 'IntEnum').decode(3),
-        $JsonDecoderErrors.enumValueError('IntEnum', 3)
+        enumValueError('IntEnum', 3)
       );
       expectErrWithMsg(
         JsonDecoder.enumeration<IntEnum>(
           OddlyOrderedIntEnum,
           'OddlyOrderedIntEnum'
         ).decode(3),
-        $JsonDecoderErrors.enumValueError('OddlyOrderedIntEnum', 3)
+        enumValueError('OddlyOrderedIntEnum', 3)
       );
       expectErrWithMsg(
         JsonDecoder.enumeration<HeterogeneousEnum>(
           HeterogeneousEnum,
           'HeterogeneousEnum'
         ).decode(0),
-        $JsonDecoderErrors.enumValueError('HeterogeneousEnum', 0)
+        enumValueError('HeterogeneousEnum', 0)
       );
     });
   });
@@ -290,7 +294,7 @@ describe('json-decoder', () => {
     it('should not decode a null value', () => {
       expectErrWithMsg(
         JsonDecoder.optional(userDecoder).decode(null),
-        $JsonDecoderErrors.primitiveError(null, 'User')
+        primitiveError(null, 'User')
       );
     });
 
@@ -376,7 +380,7 @@ describe('json-decoder', () => {
           [JsonDecoder.string(), JsonDecoder.number()],
           'string | number'
         ).decode(true),
-        $JsonDecoderErrors.oneOfError('string | number', true)
+        oneOfError('string | number', true)
       );
     });
   });
@@ -467,28 +471,17 @@ describe('json-decoder', () => {
       };
       expectErrWithMsg(
         userDecoder.decode(user),
-        $JsonDecoderErrors.objectError(
-          'User',
-          'firstname',
-          $JsonDecoderErrors.primitiveError(2, 'string')
-        )
+        objectError('User', 'firstname', primitiveError(2, 'string'))
       );
 
       expectStandardErrWithMsg(
         userDecoder['~standard'].validate(user),
-        $JsonDecoderErrors.objectError(
-          'User',
-          'firstname',
-          $JsonDecoderErrors.primitiveError(2, 'string')
-        )
+        objectError('User', 'firstname', primitiveError(2, 'string'))
       );
     });
 
     it('should fail decoding when json is not an object', () => {
-      expectErrWithMsg(
-        userDecoder.decode(5),
-        $JsonDecoderErrors.primitiveError(5, 'User')
-      );
+      expectErrWithMsg(userDecoder.decode(5), primitiveError(5, 'User'));
     });
 
     describe('objectStrict', () => {
@@ -517,7 +510,7 @@ describe('json-decoder', () => {
         };
         expectErrWithMsg(
           strictUserDecoder.decode(user),
-          $JsonDecoderErrors.objectStrictUnknownKeyError('User', 'email')
+          objectStrictUnknownKeyError('User', 'email')
         );
       });
     });
@@ -533,21 +526,21 @@ describe('json-decoder', () => {
       const json = { a: 1 };
       expectErrWithMsg(
         JsonDecoder.emptyObject().decode(json),
-        $JsonDecoderErrors.primitiveError(json, 'empty object')
+        primitiveError(json, 'empty object')
       );
     });
     it('should fail to decode a non-object', () => {
       expectErrWithMsg(
         JsonDecoder.emptyObject().decode('hello'),
-        $JsonDecoderErrors.primitiveError('hello', 'empty object')
+        primitiveError('hello', 'empty object')
       );
       expectErrWithMsg(
         JsonDecoder.emptyObject().decode(undefined),
-        $JsonDecoderErrors.primitiveError(undefined, 'empty object')
+        primitiveError(undefined, 'empty object')
       );
       expectErrWithMsg(
         JsonDecoder.emptyObject().decode(null),
-        $JsonDecoderErrors.primitiveError(null, 'empty object')
+        primitiveError(null, 'empty object')
       );
     });
   });
@@ -624,11 +617,7 @@ describe('json-decoder', () => {
           b: 2,
           c: null
         }),
-        $JsonDecoderErrors.recordError(
-          'Dict<number>',
-          'c',
-          $JsonDecoderErrors.primitiveError(null, 'number')
-        )
+        recordError('Dict<number>', 'c', primitiveError(null, 'number'))
       );
     });
 
@@ -648,17 +637,13 @@ describe('json-decoder', () => {
 
       expectErrWithMsg(
         groupDecoder.decode(group),
-        $JsonDecoderErrors.objectError(
+        objectError(
           'Group',
           'users',
-          $JsonDecoderErrors.recordError(
+          recordError(
             'Dict<User>',
             'KJH764',
-            $JsonDecoderErrors.objectError(
-              'User',
-              'lastname',
-              $JsonDecoderErrors.primitiveError(undefined, 'string')
-            )
+            objectError('User', 'lastname', primitiveError(undefined, 'string'))
           )
         )
       );
@@ -715,7 +700,7 @@ describe('json-decoder', () => {
         JsonDecoder.array<number>(JsonDecoder.number(), 'number[]').decode(
           'hola'
         ),
-        $JsonDecoderErrors.primitiveError('hola', 'array')
+        primitiveError('hola', 'array')
       );
     });
     it('should fail to decode null or undefined', () => {
@@ -723,13 +708,13 @@ describe('json-decoder', () => {
         JsonDecoder.array<number>(JsonDecoder.number(), 'number[]').decode(
           null
         ),
-        $JsonDecoderErrors.primitiveError(null, 'array')
+        primitiveError(null, 'array')
       );
       expectErrWithMsg(
         JsonDecoder.array<number>(JsonDecoder.number(), 'number[]').decode(
           undefined
         ),
-        $JsonDecoderErrors.primitiveError(undefined, 'array')
+        primitiveError(undefined, 'array')
       );
     });
     it('should fail to decode a mixed array', () => {
@@ -738,17 +723,13 @@ describe('json-decoder', () => {
           1,
           '2'
         ]),
-        $JsonDecoderErrors.arrayError(
-          'number[]',
-          1,
-          $JsonDecoderErrors.primitiveError('2', 'number')
-        )
+        arrayError('number[]', 1, primitiveError('2', 'number'))
       );
       expectErrWithMsg(
         JsonDecoder.array<number>(JsonDecoder.number(), 'number[]').decode(
           undefined
         ),
-        $JsonDecoderErrors.primitiveError(undefined, 'array')
+        primitiveError(undefined, 'array')
       );
     });
   });
@@ -790,11 +771,7 @@ describe('json-decoder', () => {
       );
       expectErrWithMsg(
         decoder.decode([2, 'foo', [3, 4, 5]]),
-        $JsonDecoderErrors.tupleLengthMismatchError(
-          '[number, number[]]',
-          [0, 1, 2],
-          [0, 1]
-        )
+        tupleLengthMismatchError('[number, number[]]', [0, 1, 2], [0, 1])
       );
     });
   });
@@ -874,11 +851,11 @@ describe('json-decoder', () => {
     it('should fail to decode a recursive tree data structure if the value is null or undefined', () => {
       expectErrWithMsg(
         treeDecoder.decode(null),
-        $JsonDecoderErrors.primitiveError(null, 'Node<string>')
+        primitiveError(null, 'Node<string>')
       );
       expectErrWithMsg(
         treeDecoder.decode(undefined),
-        $JsonDecoderErrors.primitiveError(undefined, 'Node<string>')
+        primitiveError(undefined, 'Node<string>')
       );
     });
   });
@@ -918,7 +895,7 @@ describe('json-decoder', () => {
     it('should fail to decode when json is not exactly the given value', () => {
       expectErrWithMsg(
         JsonDecoder.literal(3.1).decode(3),
-        $JsonDecoderErrors.exactlyError(3, 3.1)
+        exactlyError(3, 3.1)
       );
     });
   });
@@ -1067,9 +1044,7 @@ describe('json-decoder', () => {
         JsonDecoder.string()
           .decodePromise(2)
           .catch(error => {
-            expect(error).toEqual(
-              $JsonDecoderErrors.primitiveError(2, 'string')
-            );
+            expect(error).toEqual(primitiveError(2, 'string'));
           });
       });
     });

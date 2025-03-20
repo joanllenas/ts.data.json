@@ -6,7 +6,7 @@
 
 import { Decoder } from '../core';
 import * as Result from '../utils/result';
-import { $JsonDecoderErrors } from '../utils/errors';
+import { primitiveError } from '../errors/primitive-error';
 
 /**
  * Decoder for `number` values.
@@ -25,9 +25,7 @@ export function number(): Decoder<number> {
     if (typeof json === 'number') {
       return Result.ok<number>(json);
     } else {
-      return Result.err<number>(
-        $JsonDecoderErrors.primitiveError(json, 'number')
-      );
+      return Result.err<number>(primitiveError(json, 'number'));
     }
   });
 }

@@ -5,8 +5,8 @@
  */
 
 import { Decoder } from '../core';
-import { $JsonDecoderErrors } from '../utils/errors';
 import * as Result from '../utils/result';
+import { oneOfError } from '../errors/one-of-error';
 
 /**
  * Decoder that tries multiple decoders in sequence until one succeeds.
@@ -39,6 +39,6 @@ export function oneOf<T>(
         return result;
       }
     }
-    return Result.err<T>($JsonDecoderErrors.oneOfError(decoderName, json));
+    return Result.err<T>(oneOfError(decoderName, json));
   });
 }

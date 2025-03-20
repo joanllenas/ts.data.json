@@ -5,7 +5,8 @@
  */
 
 import { Decoder } from '../core';
-import { $JsonDecoderErrors } from '../utils/errors';
+import { arrayError } from '../errors/array-error';
+import { primitiveError } from '../errors/primitive-error';
 import * as Result from '../utils/result';
 
 /**
@@ -36,16 +37,12 @@ export function array<T>(
         if (result.isOk()) {
           arr.push(result.value);
         } else {
-          return Result.err<Array<T>>(
-            $JsonDecoderErrors.arrayError(decoderName, i, result.error)
-          );
+          return Result.err<Array<T>>(arrayError(decoderName, i, result.error));
         }
       }
       return Result.ok<Array<T>>(arr);
     } else {
-      return Result.err<Array<T>>(
-        $JsonDecoderErrors.primitiveError(json, 'array')
-      );
+      return Result.err<Array<T>>(primitiveError(json, 'array'));
     }
   });
 }

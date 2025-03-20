@@ -5,8 +5,9 @@
  */
 
 import { Decoder } from '../core';
-import { $JsonDecoderErrors } from '../utils/errors';
 import * as Result from '../utils/result';
+import { recordError } from '../errors/record-error';
+import { primitiveError } from '../errors/primitive-error';
 
 /**
  * Decoder for record types with string keys.
@@ -38,16 +39,14 @@ export function record<V>(
             obj[key] = result.value;
           } else {
             return Result.err<{ [K: string]: V }>(
-              $JsonDecoderErrors.recordError(decoderName, key, result.error)
+              recordError(decoderName, key, result.error)
             );
           }
         }
       }
       return Result.ok<{ [K: string]: V }>(obj);
     } else {
-      return Result.err<{ [K: string]: V }>(
-        $JsonDecoderErrors.primitiveError(json, 'record')
-      );
+      return Result.err<{ [K: string]: V }>(primitiveError(json, decoderName));
     }
   });
 }

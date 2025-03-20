@@ -5,7 +5,9 @@
  */
 
 import { Decoder } from '../core';
-import { $JsonDecoderErrors } from '../utils/errors';
+import { arrayError } from '../errors/array-error';
+import { primitiveError } from '../errors/primitive-error';
+import { tupleLengthMismatchError } from '../errors/tuple-length-mismatch-error';
 import * as Result from '../utils/result';
 
 /**
@@ -54,11 +56,7 @@ export function tuple<T extends readonly [] | readonly Decoder<any>[]>(
       const arr = [];
       if (json.length !== decoders.length) {
         return Result.err<TupleOfResults<T>>(
-          $JsonDecoderErrors.tupleLengthMismatchError(
-            decoderName,
-            json,
-            decoders
-          )
+          tupleLengthMismatchError(decoderName, json, decoders)
         );
       }
       for (let i = 0; i < json.length; i++) {
@@ -67,16 +65,14 @@ export function tuple<T extends readonly [] | readonly Decoder<any>[]>(
           arr.push(result.value);
         } else {
           return Result.err<TupleOfResults<T>>(
-            $JsonDecoderErrors.arrayError(decoderName, i, result.error)
+            arrayError(decoderName, i, result.error)
           );
         }
       }
       // Cast to a tuple of the right type.
       return Result.ok<TupleOfResults<T>>(arr as unknown as TupleOfResults<T>);
     } else {
-      return Result.err<TupleOfResults<T>>(
-        $JsonDecoderErrors.primitiveError(json, 'array')
-      );
+      return Result.err<TupleOfResults<T>>(primitiveError(json, decoderName));
     }
   });
 }
