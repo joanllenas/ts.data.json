@@ -18,7 +18,7 @@ JSON decoders validate incoming JSON before it enters our program. This way, if 
 
 ## Documentation
 
-The [documentation site](https://joanllenas.github.io/ts.data.json/) is auto-generated from TSDoc comments using TypeDoc.
+The [documentation site](https://joanllenas.github.io/ts.data.json/) is auto-generated from TSDoc comments using TypeDoc. You'll find documentation for both v2.3.1 and v3, as well as a migration guide to v3.
 
 If you're new to JSON decoding, you may want to read the introductory article [Decoding JSON with TypeScript](https://dev.to/joanllenas/decoding-json-with-typescript-1jjc), which explains why and how to use this library.
 
