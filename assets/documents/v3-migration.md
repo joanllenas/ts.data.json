@@ -51,6 +51,15 @@ JsonDecoder.undefined().decode(null); // Err({error: 'null is not a valid undefi
 ## Deprecations
 
 You'll notice a few deprecations. Some functions have been renamed, while their old names remain as aliases with deprecation warnings.
+Here’s a list of deprecated functions and their new names:
+
+| Deprecated Function             | New Name                  |
+| ------------------------------- | ------------------------- |
+| ~~`Decoder.decodeToPromise()`~~ | `Decoder.decodePromise()` |
+| ~~`Decoder.chain()`~~           | `Decoder.flatMap()`       |
+| ~~`JsonDecoder.failover()`~~    | `JsonDecoder.fallback()`  |
+| ~~`JsonDecoder.isExactly()`~~   | `JsonDecoder.literal()`   |
+| ~~`JsonDecoder.dictionary()`~~  | `JsonDecoder.record()`    |
 
 ## Breaking Changes
 
