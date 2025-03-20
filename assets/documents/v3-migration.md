@@ -6,14 +6,27 @@ group: Documents
 
 # Migrating from v2.3.1 to v3
 
-Version 3 of `ts.data.json` includes several breaking changes to improve the developer experience and reduce the library’s footprint. This guide will help you migrate your codebase.
+Version 3 of `ts.data.json` introduces several breaking changes to enhance the developer experience and reduce the library’s footprint. This guide will help you migrate your codebase.
+
+## Table of Contents
+
+- [New Features](#new-features)
+  - [Tree-shaking](#tree-shaking)
+  - [New decoders](#new-decoders)
+    - [null()](#null)
+    - [undefined()](#undefined)
+- [Deprecations](#deprecations)
+- [Breaking Changes](#breaking-changes)
+  - [1. All decoders are functions](#1-all-decoders-are-functions)
+  - [2. Removed items](#2-removed-items)
+  - [3. Behaviour change](#3-behavior-change)
 
 ## New Features
 
-### Tree shaking
+### Tree-shaking
 
-In v3 all schema and error functions are tree shakeable, meaning that you only bundle what you use.
-The final weight of an app using only the `string()` decoder is just a few bytes.
+In v3, all schema and error functions are tree-shakeable, meaning you only bundle what you use.  
+An app that only uses the `string()` decoder has a final size of just a few bytes.
 
 ### New decoders
 
@@ -37,14 +50,14 @@ JsonDecoder.undefined().decode(null); // Err({error: 'null is not a valid undefi
 
 ## Deprecations
 
-You'll notice that there are a few deprecations. Basically some functions have a new name and the old name has been kept as an alias of the new function with a deprecation message.
+You'll notice a few deprecations. Some functions have been renamed, while their old names remain as aliases with deprecation warnings.
 
 ## Breaking Changes
 
 ### 1. All decoders are functions
 
-In v2, some decoders were variables and some were functions. In v3 all are functions.
-Here's the list of the ones that have changed:
+In v2, some decoders were variables, while others were functions. In v3, all are functions.  
+Here’s a list of the ones that have changed:
 
 | v2 Decoder                            | v3 Decoder                              |
 | ------------------------------------- | --------------------------------------- |
@@ -54,11 +67,11 @@ Here's the list of the ones that have changed:
 | `JsonDecoder.emptyObject.decode(...)` | `JsonDecoder.emptyObject().decode(...)` |
 | `JsonDecoder.succeed.decode(...)`     | `JsonDecoder.succeed().decode(...)`     |
 
-### 2. Removed stuff
+### 2. Removed items
 
-In v3 some decoders have been removed either because they are redundant or don't work as expected.
-There are also a few of the Decoder class metods that have been removed because they were either redundant or didn't work as expected.
-Here's a list of the removed things and the recommended way of achieving the same result (if applicable):
+In v3, some decoders have been removed either due to redundancy or unexpected behavior.  
+Some methods of the `Decoder` class have also been removed for similar reasons.  
+Here’s a list of the removed items and their recommended replacements (if applicable):
 
 | v2                                                           | v3                                                                   |
 | ------------------------------------------------------------ | -------------------------------------------------------------------- |
@@ -69,21 +82,19 @@ Here's a list of the removed things and the recommended way of achieving the sam
 | `myDecoder.fold(onOk, onErr)`                                | `myDecoder.decodePromise().then().catch()`                           |
 | `myDecoder.mapError(()=>'something')`                        | `JsonDecoder.fallback('something', myDecoder)`                       |
 
-### 2. Behaviour change
+### 3. Behavior change
 
-In v3 the `optional()` decoder only works with `undefined` values.
-To replicate the same behaviour you can wither create your own optional decoder replica or combine existing decoders to achieve the same:
+In v3, the `optional()` decoder now only works with `undefined` values.  
+To replicate the previous behavior, you can either create your own optional decoder or combine existing decoders.
 
-Write your own optional decoder from scratch:
+#### Write your own optional decoder from scratch:
 
 ```ts
 import { Decoder, ok, string } from 'ts.data.json';
 
 function v3Optional<T>(decoder: Decoder<T>): Decoder<T | undefined> {
   return new Decoder<T | undefined>((json: any) => {
-    if (json === undefined) {
-      return ok<undefined>(undefined);
-    } else if (json === null) {
+    if (json === undefined || json === null) {
       return ok<undefined>(undefined);
     } else {
       return decoder.decode(json);
@@ -93,11 +104,17 @@ function v3Optional<T>(decoder: Decoder<T>): Decoder<T | undefined> {
 
 v3Optional(string()).decode(null); // Ok(undefined)
 v3Optional(string()).decode(undefined); // Ok(undefined)
-v3Optional(string()).decode('hello'); // Ok('hello)
+v3Optional(string()).decode('hello'); // Ok('hello')
 ```
 
-Write your own optional decoder using existing decoders:
+#### Write your own optional decoder using existing decoders:
 
 ```ts
-const v3Optional = JsonDecoder.oneOf([JsonDecoder.string(), JsonDecoder.null().map(() => undefined), JsonDecoder.undefined()], 'optional string');
+import * as JsonDecoder from 'ts.data.json';
+
+function v3Optional<T>(decoder: JsonDecoder.Decoder<T>) {
+  return JsonDecoder.oneOf([decoder, JsonDecoder.null().map(() => undefined), JsonDecoder.undefined()], 'optional');
+}
+
+v3Optional(JsonDecoder.string()).decode(undefined); // Ok(undefined)
 ```
