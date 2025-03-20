@@ -6,9 +6,9 @@
 [![bundle size](https://badgen.net/bundlephobia/minzip/ts.data.json)](https://bundlephobia.com/package/ts.data.json)
 [![npm downloads](https://img.shields.io/badge/downloads-172K%2Fmonth-blue)](https://www.npmjs.com/package/ts.data.json)
 
-TypeScript type annotations provide compile-time guarantees. However, when data flows into our applications from external sources, many issues can arise at runtime.
+TypeScript type annotations offer compile-time guarantees. However, when data flows into our applications from external sources, various issues can still occur at runtime.
 
-JSON decoders validate incoming JSON before it enters our program. This way, if the data has an unexpected structure, we're immediately alerted.
+JSON decoders validate incoming JSON before it enters the application. This way, if the data has an unexpected structure, we're immediately alerted.
 
 <p align="center">
   <a href="https://en.wikipedia.org/wiki/All_your_base_are_belong_to_us">
@@ -18,7 +18,8 @@ JSON decoders validate incoming JSON before it enters our program. This way, if 
 
 ## Documentation
 
-The [documentation site](https://joanllenas.github.io/ts.data.json/) is auto-generated from TSDoc comments using TypeDoc. You'll find documentation for both v2.3.1 and v3, as well as a migration guide to v3.
+The [documentation site](https://joanllenas.github.io/ts.data.json/) is auto-generated from TSDoc comments using TypeDoc.
+You'll find documentation for both v2.3.1 and v3, as well as a [migration guide to v3](https://joanllenas.github.io/ts.data.json/latest/documents/Migrating_to_v3.html).
 
 If you're new to JSON decoding, you may want to read the introductory article [Decoding JSON with TypeScript](https://dev.to/joanllenas/decoding-json-with-typescript-1jjc), which explains why and how to use this library.
 
