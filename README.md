@@ -18,7 +18,7 @@ JSON decoders validate incoming JSON before it enters our program. This way, if 
 
 ## Documentation
 
-The [documentation site](https://joanllenas.github.io/ts.data.json/) is auto-generated from TSDoc comments using TypeDoc.
+The [documentation site](https://joanllenas.github.io/ts.data.json/) is auto-generated from TSDoc comments using TypeDoc. You'll find documentation for both v2.3.1 and v3, as well as a migration guide to v3.
 
 If you're new to JSON decoding, you may want to read the introductory article [Decoding JSON with TypeScript](https://dev.to/joanllenas/decoding-json-with-typescript-1jjc), which explains why and how to use this library.
 
@@ -30,7 +30,13 @@ npm install ts.data.json --save
 
 ## Quick Example
 
-You can play with this example in [this stackblitz playground](https://stackblitz.com/edit/ts-data-json-decoder-playground?file=src%2Fmain.ts).
+You can play with this example in [this stackblitz playground](https://stackblitz.com/edit/ts-data-json-decoder-playground-cg13tmki?file=src%2Fmain.ts).
+
+### One import to rule them all
+
+```ts
+import * as JsonDecoder from 'ts.data.json';
+```
 
 ### Define your types
 
@@ -48,24 +54,24 @@ interface Address {
 ```ts
 const addressDecoder = JsonDecoder.object<Address>(
   {
-    street: JsonDecoder.string,
-    city: JsonDecoder.string,
-    country: JsonDecoder.string,
-    postalCode: JsonDecoder.string
+    street: JsonDecoder.string(),
+    city: JsonDecoder.string(),
+    country: JsonDecoder.string(),
+    postalCode: JsonDecoder.string()
   },
   'Address'
 );
 
 const userDecoder = JsonDecoder.object(
   {
-    id: JsonDecoder.number,
-    email: JsonDecoder.string,
-    name: JsonDecoder.string,
-    age: JsonDecoder.optional(JsonDecoder.number),
+    id: JsonDecoder.number(),
+    email: JsonDecoder.string(),
+    name: JsonDecoder.string(),
+    age: JsonDecoder.optional(JsonDecoder.number()),
     address: addressDecoder,
-    tags: JsonDecoder.array(JsonDecoder.string, 'string[]'),
-    isActive: JsonDecoder.boolean,
-    lastLogin: JsonDecoder.nullable(JsonDecoder.string.map(str => new Date(str)))
+    tags: JsonDecoder.array(JsonDecoder.string(), 'string[]'),
+    isActive: JsonDecoder.boolean(),
+    lastLogin: JsonDecoder.nullable(JsonDecoder.string().map(str => new Date(str)))
   },
   'User'
 );
@@ -76,7 +82,7 @@ const userDecoder = JsonDecoder.object(
 You can also infer the types from its decoders!
 
 ```ts
-type User = FromDecoder<typeof userDecoder>;
+type User = JsonDecoder.FromDecoder<typeof userDecoder>;
 ```
 
 ### Decode a valid API response
@@ -101,10 +107,10 @@ const apiResponse = {
 
 // Decode the response
 userDecoder
-  .decodeToPromise(apiResponse)
+  .decodePromise(apiResponse)
   .then((user: User) => {
-    console.log(`Welcome back, ${user.name}!`);
-    console.log(`Your last login was: ${user.lastLogin?.toLocaleString()}`);
+    log(`Welcome back, ${user.name}!`);
+    log(`Your last login was: ${user.lastLogin?.toLocaleString()}`);
   })
   .catch(error => {
     console.error('Failed to decode user data:', error);
@@ -140,12 +146,12 @@ const invalidResponse = {
 
 // Decode the response
 userDecoder
-  .decodeToPromise(invalidResponse)
-  .then(user => {
-    console.log('User decoded successfully');
+  .decodePromise(invalidResponse)
+  .then(() => {
+    log('User decoded successfully');
   })
   .catch(error => {
-    console.error('Validation failed:', error);
+    log(`Validation failed: ${error}`, true);
   });
 ```
 

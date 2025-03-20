@@ -1,8 +1,20 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { describe, expect, it } from 'vitest';
-import { $JsonDecoderErrors, FromDecoder, JsonDecoder } from './json-decoder';
-import { Err, err, Ok, ok, Result } from './result';
-import type { StandardSchemaV1 } from './standard-schema-v1';
+import { FromDecoder, Decoder } from './core';
+import * as JsonDecoder from './schemas';
+import { Err, err, Ok, ok, Result } from './utils/result';
+import type { StandardSchemaV1 } from './utils/standard-schema-v1';
+import { primitiveError } from './errors/primitive-error';
+import { nullError } from './errors/null-error';
+import { undefinedError } from './errors/undefined-error';
+import { enumValueError } from './errors/enum-value-error';
+import { oneOfError } from './errors/one-of-error';
+import { objectError } from './errors/object-error';
+import { objectStrictUnknownKeyError } from './errors/object-strict-unknown-key-error';
+import { arrayError } from './errors/array-error';
+import { recordError } from './errors/record-error';
+import { exactlyError } from './errors/exactly-error';
+import { tupleLengthMismatchError } from './errors/tuple-length-mismatch-error';
 
 // Test utils
 const expectOkWithValue = <a>(result: Result<a>, expectedValue: a) => {
@@ -29,23 +41,23 @@ describe('json-decoder', () => {
   describe('string', () => {
     const tag = 'string';
     it('should decode a string', () => {
-      expectOkWithValue(JsonDecoder.string.decode('hi'), 'hi');
+      expectOkWithValue(JsonDecoder.string().decode('hi'), 'hi');
     });
     it('should decode an empty string', () => {
-      expectOkWithValue(JsonDecoder.string.decode(''), '');
+      expectOkWithValue(JsonDecoder.string().decode(''), '');
     });
     it('should fail if not a string', () => {
       expectErrWithMsg(
-        JsonDecoder.string.decode(true),
-        $JsonDecoderErrors.primitiveError(true, tag)
+        JsonDecoder.string().decode(true),
+        primitiveError(true, tag)
       );
       expectErrWithMsg(
-        JsonDecoder.string.decode(undefined),
-        $JsonDecoderErrors.primitiveError(undefined, tag)
+        JsonDecoder.string().decode(undefined),
+        primitiveError(undefined, tag)
       );
       expectErrWithMsg(
-        JsonDecoder.string.decode(null),
-        $JsonDecoderErrors.primitiveError(null, tag)
+        JsonDecoder.string().decode(null),
+        primitiveError(null, tag)
       );
     });
   });
@@ -54,21 +66,21 @@ describe('json-decoder', () => {
   describe('number', () => {
     const tag = 'number';
     it('should decode a number', () => {
-      expectOkWithValue(JsonDecoder.number.decode(33), 33);
-      expectOkWithValue(JsonDecoder.number.decode(3.3), 3.3);
+      expectOkWithValue(JsonDecoder.number().decode(33), 33);
+      expectOkWithValue(JsonDecoder.number().decode(3.3), 3.3);
     });
     it('should fail if not a number', () => {
       expectErrWithMsg(
-        JsonDecoder.number.decode('33'),
-        $JsonDecoderErrors.primitiveError('33', tag)
+        JsonDecoder.number().decode('33'),
+        primitiveError('33', tag)
       );
       expectErrWithMsg(
-        JsonDecoder.number.decode(null),
-        $JsonDecoderErrors.primitiveError(null, tag)
+        JsonDecoder.number().decode(null),
+        primitiveError(null, tag)
       );
       expectErrWithMsg(
-        JsonDecoder.number.decode(undefined),
-        $JsonDecoderErrors.primitiveError(undefined, tag)
+        JsonDecoder.number().decode(undefined),
+        primitiveError(undefined, tag)
       );
     });
   });
@@ -77,21 +89,49 @@ describe('json-decoder', () => {
   describe('boolean', () => {
     const tag = 'boolean';
     it('should decode a boolean', () => {
-      expectOkWithValue(JsonDecoder.boolean.decode(true), true);
-      expectOkWithValue(JsonDecoder.boolean.decode(false), false);
+      expectOkWithValue(JsonDecoder.boolean().decode(true), true);
+      expectOkWithValue(JsonDecoder.boolean().decode(false), false);
     });
     it('should fail if not a boolean', () => {
       expectErrWithMsg(
-        JsonDecoder.boolean.decode('1'),
-        $JsonDecoderErrors.primitiveError('1', tag)
+        JsonDecoder.boolean().decode('1'),
+        primitiveError('1', tag)
       );
       expectErrWithMsg(
-        JsonDecoder.boolean.decode(null),
-        $JsonDecoderErrors.primitiveError(null, tag)
+        JsonDecoder.boolean().decode(null),
+        primitiveError(null, tag)
       );
       expectErrWithMsg(
-        JsonDecoder.boolean.decode(undefined),
-        $JsonDecoderErrors.primitiveError(undefined, tag)
+        JsonDecoder.boolean().decode(undefined),
+        primitiveError(undefined, tag)
+      );
+    });
+  });
+
+  // null
+  describe('null', () => {
+    it('should decode null', () => {
+      expectOkWithValue(JsonDecoder.null().decode(null), null);
+    });
+    it('should fail if not null', () => {
+      expectErrWithMsg(JsonDecoder.null().decode(1), nullError(1));
+      expectErrWithMsg(
+        JsonDecoder.null().decode(undefined),
+        nullError(undefined)
+      );
+    });
+  });
+
+  // undefined
+  describe('undefined', () => {
+    it('should decode undefined', () => {
+      expectOkWithValue(JsonDecoder.undefined().decode(undefined), undefined);
+    });
+    it('should fail if not undefined', () => {
+      expectErrWithMsg(JsonDecoder.undefined().decode(1), undefinedError(1));
+      expectErrWithMsg(
+        JsonDecoder.undefined().decode(null),
+        undefinedError(null)
       );
     });
   });
@@ -151,44 +191,44 @@ describe('json-decoder', () => {
     it('should fail when the value is not in the enum', () => {
       expectErrWithMsg(
         JsonDecoder.enumeration<IntEnum>(IntEnum, 'IntEnum').decode(3),
-        $JsonDecoderErrors.enumValueError('IntEnum', 3)
+        enumValueError('IntEnum', 3)
       );
       expectErrWithMsg(
         JsonDecoder.enumeration<IntEnum>(
           OddlyOrderedIntEnum,
           'OddlyOrderedIntEnum'
         ).decode(3),
-        $JsonDecoderErrors.enumValueError('OddlyOrderedIntEnum', 3)
+        enumValueError('OddlyOrderedIntEnum', 3)
       );
       expectErrWithMsg(
         JsonDecoder.enumeration<HeterogeneousEnum>(
           HeterogeneousEnum,
           'HeterogeneousEnum'
         ).decode(0),
-        $JsonDecoderErrors.enumValueError('HeterogeneousEnum', 0)
+        enumValueError('HeterogeneousEnum', 0)
       );
     });
   });
 
-  // failover
-  describe('failover (on failure provide a default value)', () => {
+  // fallback
+  describe('fallback (on failure provide a default value)', () => {
     it('should decode a value when value is provided', () => {
       expectOkWithValue(
-        JsonDecoder.failover('', JsonDecoder.string).decode('algo'),
+        JsonDecoder.fallback('', JsonDecoder.string()).decode('algo'),
         'algo'
       );
     });
     it('should return the failoverValue when value is not provided', () => {
       expectOkWithValue(
-        JsonDecoder.failover('failover value', JsonDecoder.string).decode(44),
-        'failover value'
+        JsonDecoder.fallback('fallback value', JsonDecoder.string()).decode(44),
+        'fallback value'
       );
       expectOkWithValue(
-        JsonDecoder.failover(2.1, JsonDecoder.number).decode(null),
+        JsonDecoder.fallback(2.1, JsonDecoder.number()).decode(null),
         2.1
       );
       expectOkWithValue(
-        JsonDecoder.failover(false, JsonDecoder.boolean).decode(undefined),
+        JsonDecoder.fallback(false, JsonDecoder.boolean()).decode(undefined),
         false
       );
     });
@@ -202,7 +242,7 @@ describe('json-decoder', () => {
         meta: any;
       };
       const someDataDecoder = JsonDecoder.object<SomeData>(
-        { name: JsonDecoder.string, meta: JsonDecoder.succeed },
+        { name: JsonDecoder.string(), meta: JsonDecoder.succeed() },
         'SomeData'
       );
       const data = {
@@ -230,9 +270,9 @@ describe('json-decoder', () => {
 
     const userDecoder = JsonDecoder.object<User>(
       {
-        firstname: JsonDecoder.string,
-        lastname: JsonDecoder.string,
-        email: JsonDecoder.optional(JsonDecoder.string)
+        firstname: JsonDecoder.string(),
+        lastname: JsonDecoder.string(),
+        email: JsonDecoder.optional(JsonDecoder.string())
       },
       'User'
     );
@@ -251,10 +291,10 @@ describe('json-decoder', () => {
       lastname: 'Doe'
     };
 
-    it('should decode a null value', () => {
-      expectOkWithValue(
+    it('should not decode a null value', () => {
+      expectErrWithMsg(
         JsonDecoder.optional(userDecoder).decode(null),
-        undefined
+        primitiveError(null, 'User')
       );
     });
 
@@ -289,7 +329,7 @@ describe('json-decoder', () => {
 
   // nullable
   describe('nullable', () => {
-    const nullableStringDecoder = JsonDecoder.nullable(JsonDecoder.string);
+    const nullableStringDecoder = JsonDecoder.nullable(JsonDecoder.string());
 
     it('should decode a null value', () => {
       expectOkWithValue(nullableStringDecoder.decode(null), null);
@@ -300,14 +340,14 @@ describe('json-decoder', () => {
     });
 
     it('should fail on undefined value', () => {
-      const expectedErrorResult = JsonDecoder.string.decode(undefined);
+      const expectedErrorResult = JsonDecoder.string().decode(undefined);
       const result = nullableStringDecoder.decode(undefined);
 
       expect(result).toEqual(expectedErrorResult);
     });
 
     it('should fail with message from wrapped decoder when unable to decode object', () => {
-      const expectedErrorResult = JsonDecoder.string.decode(1);
+      const expectedErrorResult = JsonDecoder.string().decode(1);
       const result = nullableStringDecoder.decode(1);
 
       expect(result).toEqual(expectedErrorResult);
@@ -319,7 +359,7 @@ describe('json-decoder', () => {
     it('should pick the number decoder', () => {
       expectOkWithValue(
         JsonDecoder.oneOf<string | number>(
-          [JsonDecoder.string, JsonDecoder.number],
+          [JsonDecoder.string(), JsonDecoder.number()],
           'string | number'
         ).decode(1),
         1
@@ -328,7 +368,7 @@ describe('json-decoder', () => {
     it('should pick the string decoder', () => {
       expectOkWithValue(
         JsonDecoder.oneOf<string | number>(
-          [JsonDecoder.string, JsonDecoder.number],
+          [JsonDecoder.string(), JsonDecoder.number()],
           'string | number'
         ).decode('hola'),
         'hola'
@@ -337,41 +377,10 @@ describe('json-decoder', () => {
     it('should fail when no matching decoders are found', () => {
       expectErrWithMsg(
         JsonDecoder.oneOf<string | number>(
-          [JsonDecoder.string, JsonDecoder.number],
+          [JsonDecoder.string(), JsonDecoder.number()],
           'string | number'
         ).decode(true),
-        $JsonDecoderErrors.oneOfError('string | number', true)
-      );
-    });
-  });
-
-  // allOf
-  describe('allOf', () => {
-    it('should be equivalent to the string decoder', () => {
-      expectOkWithValue(
-        JsonDecoder.allOf(JsonDecoder.string).decode('hola'),
-        'hola'
-      );
-    });
-    it('should return output from the last decoder', () => {
-      expectOkWithValue(
-        JsonDecoder.allOf(
-          JsonDecoder.string,
-          JsonDecoder.failover(10, JsonDecoder.number)
-        ).decode('hola'),
-        10
-      );
-    });
-    it('should fail if the first decoder fails', () => {
-      expectErrWithMsg(
-        JsonDecoder.allOf(JsonDecoder.string, JsonDecoder.number).decode(10),
-        $JsonDecoderErrors.primitiveError(10, 'string')
-      );
-    });
-    it('should fail if the last decoder fails', () => {
-      expectErrWithMsg(
-        JsonDecoder.allOf(JsonDecoder.string, JsonDecoder.number).decode('10'),
-        $JsonDecoderErrors.primitiveError('10', 'number')
+        oneOfError('string | number', true)
       );
     });
   });
@@ -391,8 +400,8 @@ describe('json-decoder', () => {
 
     const userDecoder = JsonDecoder.object<User>(
       {
-        firstname: JsonDecoder.string,
-        lastname: JsonDecoder.string
+        firstname: JsonDecoder.string(),
+        lastname: JsonDecoder.string()
       },
       'User'
     );
@@ -410,8 +419,8 @@ describe('json-decoder', () => {
 
     const paymentDecoder = JsonDecoder.object<Payment>(
       {
-        iban: JsonDecoder.string,
-        valid: JsonDecoder.boolean,
+        iban: JsonDecoder.string(),
+        valid: JsonDecoder.boolean(),
         account_holder: userDecoder
       },
       'Payment'
@@ -462,75 +471,24 @@ describe('json-decoder', () => {
       };
       expectErrWithMsg(
         userDecoder.decode(user),
-        $JsonDecoderErrors.objectError(
-          'User',
-          'firstname',
-          $JsonDecoderErrors.primitiveError(2, 'string')
-        )
+        objectError('User', 'firstname', primitiveError(2, 'string'))
       );
 
       expectStandardErrWithMsg(
         userDecoder['~standard'].validate(user),
-        $JsonDecoderErrors.objectError(
-          'User',
-          'firstname',
-          $JsonDecoderErrors.primitiveError(2, 'string')
-        )
+        objectError('User', 'firstname', primitiveError(2, 'string'))
       );
     });
 
     it('should fail decoding when json is not an object', () => {
-      expectErrWithMsg(
-        userDecoder.decode(5),
-        $JsonDecoderErrors.primitiveError(5, 'User')
-      );
-    });
-
-    describe('with JSON key mappings', () => {
-      const userDecoderWithKeyMap = JsonDecoder.object<User>(
-        {
-          firstname: JsonDecoder.string,
-          lastname: JsonDecoder.string
-        },
-        'User',
-        {
-          firstname: 'fName',
-          lastname: 'lName'
-        }
-      );
-      it('should decode a User object with JSON key mappings', () => {
-        const json = {
-          fName: 'John',
-          lName: 'Doe'
-        };
-        expectOkWithValue(userDecoderWithKeyMap.decode(json), {
-          firstname: 'John',
-          lastname: 'Doe'
-        });
-      });
-      it('should fail to denode a User object with JSON key mappings any of its decoders fails', () => {
-        const json = {
-          fName: 5,
-          lName: 'Doe'
-        };
-
-        expectErrWithMsg(
-          userDecoderWithKeyMap.decode(json),
-          $JsonDecoderErrors.objectJsonKeyError(
-            'User',
-            'firstname',
-            'fName',
-            $JsonDecoderErrors.primitiveError(5, 'string')
-          )
-        );
-      });
+      expectErrWithMsg(userDecoder.decode(5), primitiveError(5, 'User'));
     });
 
     describe('objectStrict', () => {
       const strictUserDecoder = JsonDecoder.objectStrict<User>(
         {
-          firstname: JsonDecoder.string,
-          lastname: JsonDecoder.string
+          firstname: JsonDecoder.string(),
+          lastname: JsonDecoder.string()
         },
         'User'
       );
@@ -552,7 +510,7 @@ describe('json-decoder', () => {
         };
         expectErrWithMsg(
           strictUserDecoder.decode(user),
-          $JsonDecoderErrors.objectStrictUnknownKeyError('User', 'email')
+          objectStrictUnknownKeyError('User', 'email')
         );
       });
     });
@@ -562,33 +520,33 @@ describe('json-decoder', () => {
   describe('empty object', () => {
     it('should decode an empty object', () => {
       const json = {};
-      expectOkWithValue(JsonDecoder.emptyObject.decode(json), {});
+      expectOkWithValue(JsonDecoder.emptyObject().decode(json), {});
     });
     it('should fail to decode an object with properties', () => {
       const json = { a: 1 };
       expectErrWithMsg(
-        JsonDecoder.emptyObject.decode(json),
-        $JsonDecoderErrors.primitiveError(json, 'empty object')
+        JsonDecoder.emptyObject().decode(json),
+        primitiveError(json, 'empty object')
       );
     });
     it('should fail to decode a non-object', () => {
       expectErrWithMsg(
-        JsonDecoder.emptyObject.decode('hello'),
-        $JsonDecoderErrors.primitiveError('hello', 'empty object')
+        JsonDecoder.emptyObject().decode('hello'),
+        primitiveError('hello', 'empty object')
       );
       expectErrWithMsg(
-        JsonDecoder.emptyObject.decode(undefined),
-        $JsonDecoderErrors.primitiveError(undefined, 'empty object')
+        JsonDecoder.emptyObject().decode(undefined),
+        primitiveError(undefined, 'empty object')
       );
       expectErrWithMsg(
-        JsonDecoder.emptyObject.decode(null),
-        $JsonDecoderErrors.primitiveError(null, 'empty object')
+        JsonDecoder.emptyObject().decode(null),
+        primitiveError(null, 'empty object')
       );
     });
   });
 
-  // dictionary
-  describe('dictionary (key / value pairs)', () => {
+  // record
+  describe('record (key / value pairs)', () => {
     type User = {
       firstname: string;
       lastname: string;
@@ -605,24 +563,24 @@ describe('json-decoder', () => {
 
     const userDecoder = JsonDecoder.object<User>(
       {
-        firstname: JsonDecoder.string,
-        lastname: JsonDecoder.string
+        firstname: JsonDecoder.string(),
+        lastname: JsonDecoder.string()
       },
       'User'
     );
-    const groupOfUsersDecoder = JsonDecoder.dictionary<User>(
+    const groupOfUsersDecoder = JsonDecoder.record<User>(
       userDecoder,
       'Dict<User>'
     );
     const groupDecoder = JsonDecoder.object<Group>(
       {
-        id: JsonDecoder.number,
+        id: JsonDecoder.number(),
         users: groupOfUsersDecoder
       },
       'Group'
     );
 
-    it('should decode a homogeneous dictionary', () => {
+    it('should decode a homogeneous record', () => {
       const group = {
         id: 2,
         users: {
@@ -652,22 +610,18 @@ describe('json-decoder', () => {
       });
     });
 
-    it('should fail to decode a primitive dictionary with an invalid value', () => {
+    it('should fail to decode a primitive record with an invalid value', () => {
       expectErrWithMsg(
-        JsonDecoder.dictionary(JsonDecoder.number, 'Dict<number>').decode({
+        JsonDecoder.record(JsonDecoder.number(), 'Dict<number>').decode({
           a: 1,
           b: 2,
           c: null
         }),
-        $JsonDecoderErrors.dictionaryError(
-          'Dict<number>',
-          'c',
-          $JsonDecoderErrors.primitiveError(null, 'number')
-        )
+        recordError('Dict<number>', 'c', primitiveError(null, 'number'))
       );
     });
 
-    it('should fail to decode a dictionary with a partial key/value pair object value', () => {
+    it('should fail to decode a record with a partial key/value pair object value', () => {
       const group = {
         id: 2,
         users: {
@@ -683,17 +637,13 @@ describe('json-decoder', () => {
 
       expectErrWithMsg(
         groupDecoder.decode(group),
-        $JsonDecoderErrors.objectError(
+        objectError(
           'Group',
           'users',
-          $JsonDecoderErrors.dictionaryError(
+          recordError(
             'Dict<User>',
             'KJH764',
-            $JsonDecoderErrors.objectError(
-              'User',
-              'lastname',
-              $JsonDecoderErrors.primitiveError(undefined, 'string')
-            )
+            objectError('User', 'lastname', primitiveError(undefined, 'string'))
           )
         )
       );
@@ -704,7 +654,7 @@ describe('json-decoder', () => {
   describe('array', () => {
     it('should decode a filled array', () => {
       expectOkWithValue(
-        JsonDecoder.array<number>(JsonDecoder.number, 'number[]').decode([
+        JsonDecoder.array<number>(JsonDecoder.number(), 'number[]').decode([
           1, 2, 3
         ]),
         [1, 2, 3]
@@ -717,8 +667,8 @@ describe('json-decoder', () => {
       };
       const userDecoder = JsonDecoder.object<User>(
         {
-          firstname: JsonDecoder.string,
-          lastname: JsonDecoder.string
+          firstname: JsonDecoder.string(),
+          lastname: JsonDecoder.string()
         },
         'User'
       );
@@ -741,47 +691,45 @@ describe('json-decoder', () => {
     });
     it('should decode an empty array', () => {
       expectOkWithValue(
-        JsonDecoder.array<number>(JsonDecoder.number, 'number[]').decode([]),
+        JsonDecoder.array<number>(JsonDecoder.number(), 'number[]').decode([]),
         []
       );
     });
     it('should fail to decode something other than an array', () => {
       expectErrWithMsg(
-        JsonDecoder.array<number>(JsonDecoder.number, 'number[]').decode(
+        JsonDecoder.array<number>(JsonDecoder.number(), 'number[]').decode(
           'hola'
         ),
-        $JsonDecoderErrors.primitiveError('hola', 'array')
+        primitiveError('hola', 'array')
       );
     });
     it('should fail to decode null or undefined', () => {
       expectErrWithMsg(
-        JsonDecoder.array<number>(JsonDecoder.number, 'number[]').decode(null),
-        $JsonDecoderErrors.primitiveError(null, 'array')
+        JsonDecoder.array<number>(JsonDecoder.number(), 'number[]').decode(
+          null
+        ),
+        primitiveError(null, 'array')
       );
       expectErrWithMsg(
-        JsonDecoder.array<number>(JsonDecoder.number, 'number[]').decode(
+        JsonDecoder.array<number>(JsonDecoder.number(), 'number[]').decode(
           undefined
         ),
-        $JsonDecoderErrors.primitiveError(undefined, 'array')
+        primitiveError(undefined, 'array')
       );
     });
     it('should fail to decode a mixed array', () => {
       expectErrWithMsg(
-        JsonDecoder.array<number>(JsonDecoder.number, 'number[]').decode([
+        JsonDecoder.array<number>(JsonDecoder.number(), 'number[]').decode([
           1,
           '2'
         ]),
-        $JsonDecoderErrors.arrayError(
-          'number[]',
-          1,
-          $JsonDecoderErrors.primitiveError('2', 'number')
-        )
+        arrayError('number[]', 1, primitiveError('2', 'number'))
       );
       expectErrWithMsg(
-        JsonDecoder.array<number>(JsonDecoder.number, 'number[]').decode(
+        JsonDecoder.array<number>(JsonDecoder.number(), 'number[]').decode(
           undefined
         ),
-        $JsonDecoderErrors.primitiveError(undefined, 'array')
+        primitiveError(undefined, 'array')
       );
     });
   });
@@ -792,22 +740,21 @@ describe('json-decoder', () => {
       expectOkWithValue(JsonDecoder.tuple([], '[]').decode([]), []);
     });
     it('should decode a [number, number] tuple', () => {
-      const decoder: JsonDecoder.Decoder<[number, number]> = JsonDecoder.tuple(
-        [JsonDecoder.number, JsonDecoder.number],
+      const decoder: Decoder<[number, number]> = JsonDecoder.tuple(
+        [JsonDecoder.number(), JsonDecoder.number()],
         '[number, number]'
       );
       expectOkWithValue(decoder.decode([2, 3]), [2, 3]);
     });
     it('should decode a [number, string, number[]] tuple', () => {
-      const decoder: JsonDecoder.Decoder<[number, string, number[]]> =
-        JsonDecoder.tuple(
-          [
-            JsonDecoder.number,
-            JsonDecoder.string,
-            JsonDecoder.array<number>(JsonDecoder.number, 'number[]')
-          ],
-          '[number, string, number[]]'
-        );
+      const decoder: Decoder<[number, string, number[]]> = JsonDecoder.tuple(
+        [
+          JsonDecoder.number(),
+          JsonDecoder.string(),
+          JsonDecoder.array<number>(JsonDecoder.number(), 'number[]')
+        ],
+        '[number, string, number[]]'
+      );
       expectOkWithValue(decoder.decode([2, 'foo', [3, 4, 5]]), [
         2,
         'foo',
@@ -815,21 +762,16 @@ describe('json-decoder', () => {
       ]);
     });
     it('should decode throw a length mismatch error', () => {
-      const decoder: JsonDecoder.Decoder<[number, number[]]> =
-        JsonDecoder.tuple(
-          [
-            JsonDecoder.number,
-            JsonDecoder.array<number>(JsonDecoder.number, 'number[]')
-          ],
-          '[number, number[]]'
-        );
+      const decoder: Decoder<[number, number[]]> = JsonDecoder.tuple(
+        [
+          JsonDecoder.number(),
+          JsonDecoder.array<number>(JsonDecoder.number(), 'number[]')
+        ],
+        '[number, number[]]'
+      );
       expectErrWithMsg(
         decoder.decode([2, 'foo', [3, 4, 5]]),
-        $JsonDecoderErrors.tupleLengthMismatchError(
-          '[number, number[]]',
-          [0, 1, 2],
-          [0, 1]
-        )
+        tupleLengthMismatchError('[number, number[]]', [0, 1, 2], [0, 1])
       );
     });
   });
@@ -840,15 +782,13 @@ describe('json-decoder', () => {
       value: a;
       children?: Node<a>[];
     };
-    const treeDecoder: JsonDecoder.Decoder<Node<string>> = JsonDecoder.object<
-      Node<string>
-    >(
+    const treeDecoder: Decoder<Node<string>> = JsonDecoder.object<Node<string>>(
       {
-        value: JsonDecoder.string,
+        value: JsonDecoder.string(),
         children: JsonDecoder.oneOf<Node<string>[]>(
           [
             JsonDecoder.lazy(() => JsonDecoder.array(treeDecoder, 'Node<a>[]')),
-            JsonDecoder.isUndefined([])
+            JsonDecoder.undefined().map(() => [])
           ],
           'Node<string>[] | isUndefined'
         )
@@ -911,43 +851,11 @@ describe('json-decoder', () => {
     it('should fail to decode a recursive tree data structure if the value is null or undefined', () => {
       expectErrWithMsg(
         treeDecoder.decode(null),
-        $JsonDecoderErrors.primitiveError(null, 'Node<string>')
+        primitiveError(null, 'Node<string>')
       );
       expectErrWithMsg(
         treeDecoder.decode(undefined),
-        $JsonDecoderErrors.primitiveError(undefined, 'Node<string>')
-      );
-    });
-  });
-
-  // isNull
-  describe('isNull (only allow null values to succeed decoding)', () => {
-    it('should decode a null value into a default value', () => {
-      expectOkWithValue(
-        JsonDecoder.isNull('default value').decode(null),
-        'default value'
-      );
-    });
-    it('should fail to decode a non null value', () => {
-      expectErrWithMsg(
-        JsonDecoder.isNull('default value').decode('hola'),
-        $JsonDecoderErrors.nullError('hola')
-      );
-    });
-  });
-
-  // isUndefined
-  describe('isUndefined (only allow undefined values to succeed decoding)', () => {
-    it('should decode an undefined value into a default value', () => {
-      expectOkWithValue(
-        JsonDecoder.isUndefined('default value').decode(undefined),
-        'default value'
-      );
-    });
-    it('should fail to decode a non undefined value', () => {
-      expectErrWithMsg(
-        JsonDecoder.isUndefined('default value').decode('hola'),
-        $JsonDecoderErrors.undefinedError('hola')
+        primitiveError(undefined, 'Node<string>')
       );
     });
   });
@@ -974,55 +882,20 @@ describe('json-decoder', () => {
     });
   });
 
-  // isExactly
-  describe('isExactly (only succeed decoding when json is exactly like the provided value)', () => {
+  // literal
+  describe('literal (only succeed decoding when json is exactly like the provided value)', () => {
     it('should decode only if json is exactly some given value', () => {
-      expectOkWithValue(JsonDecoder.isExactly(3.1).decode(3.1), 3.1);
-      expectOkWithValue(JsonDecoder.isExactly(null).decode(null), null);
+      expectOkWithValue(JsonDecoder.literal(3.1).decode(3.1), 3.1);
+      expectOkWithValue(JsonDecoder.literal(null).decode(null), null);
       expectOkWithValue(
-        JsonDecoder.isExactly(undefined).decode(undefined),
+        JsonDecoder.literal(undefined).decode(undefined),
         undefined
       );
     });
     it('should fail to decode when json is not exactly the given value', () => {
       expectErrWithMsg(
-        JsonDecoder.isExactly(3.1).decode(3),
-        $JsonDecoderErrors.exactlyError(3, 3.1)
-      );
-    });
-  });
-
-  // combine
-  describe('combine', () => {
-    type WithName = { name: string };
-    type WithAge = { age: number };
-
-    const nameDecoder = JsonDecoder.object<WithName>(
-      { name: JsonDecoder.string },
-      'WithName'
-    );
-
-    const ageDecoder = JsonDecoder.object<WithAge>(
-      { age: JsonDecoder.number },
-      'WithAge'
-    );
-
-    const combinedDecoder = JsonDecoder.combine(nameDecoder, ageDecoder);
-
-    it('creates decoder that succeeds when both decoders succeed', () => {
-      const data = { name: 'Alice', age: 30 };
-      expectOkWithValue(combinedDecoder.decode(data), data);
-    });
-
-    it('creates decoder that fails when at least of of the decoders failed', () => {
-      expectErrWithMsg(
-        combinedDecoder.decode({ age: 30 }),
-        `<WithName> decoder failed at key "name" with error: undefined is not a valid string`
-      );
-
-      expectErrWithMsg(
-        combinedDecoder.decode({ name: 'Alice' }),
-        `<WithAge> decoder failed at key "age" with error: undefined is not a valid number`
+        JsonDecoder.literal(3.1).decode(3),
+        exactlyError(3, 3.1)
       );
     });
   });
@@ -1109,44 +982,43 @@ describe('json-decoder', () => {
     };
     const userDecoder = JsonDecoder.object<User>(
       {
-        firstname: JsonDecoder.string,
-        lastname: JsonDecoder.string
+        firstname: JsonDecoder.string(),
+        lastname: JsonDecoder.string()
       },
       'User'
     );
-    const decodeSession: JsonDecoder.Decoder<Session> =
-      JsonDecoder.object<Session>(
-        {
-          id: JsonDecoder.string,
-          name: userDecoder,
-          payment: JsonDecoder.object<Payment>(
-            {
-              iban: JsonDecoder.string,
-              valid: JsonDecoder.boolean,
-              account_holder: JsonDecoder.failover<undefined | User>(
-                undefined,
-                JsonDecoder.object<User>(
-                  {
-                    firstname: JsonDecoder.string,
-                    lastname: JsonDecoder.string
-                  },
-                  'User'
-                )
+    const decodeSession: Decoder<Session> = JsonDecoder.object<Session>(
+      {
+        id: JsonDecoder.string(),
+        name: userDecoder,
+        payment: JsonDecoder.object<Payment>(
+          {
+            iban: JsonDecoder.string(),
+            valid: JsonDecoder.boolean(),
+            account_holder: JsonDecoder.fallback<undefined | User>(
+              undefined,
+              JsonDecoder.object<User>(
+                {
+                  firstname: JsonDecoder.string(),
+                  lastname: JsonDecoder.string()
+                },
+                'User'
               )
-            },
-            'Payment'
-          ),
-          tracking: JsonDecoder.object<Tracking>(
-            {
-              uid: JsonDecoder.string,
-              ga: JsonDecoder.string
-            },
-            'Tracking'
-          ),
-          addons: JsonDecoder.array(JsonDecoder.string, 'string[]')
-        },
-        'Session'
-      );
+            )
+          },
+          'Payment'
+        ),
+        tracking: JsonDecoder.object<Tracking>(
+          {
+            uid: JsonDecoder.string(),
+            ga: JsonDecoder.string()
+          },
+          'Tracking'
+        ),
+        addons: JsonDecoder.array(JsonDecoder.string(), 'string[]')
+      },
+      'Session'
+    );
 
     it('should work', () => {
       expect(decodeSession.decode(session_json)).toBeInstanceOf(Ok);
@@ -1162,41 +1034,24 @@ describe('json-decoder', () => {
   });
 
   describe('Decoder<a>', () => {
-    describe('fold', () => {
-      it('should take the onErr() route when the decoder fails', () => {
-        const numberToStringWithDefault = JsonDecoder.number.fold(
-          (value: number) => value.toString(16),
-          () => '0',
-          false
-        );
-        expect(numberToStringWithDefault).toEqual('0');
-      });
-      it('should take the onOk() route when the decoder succeeds', () => {
-        const stringToNumber = JsonDecoder.string.fold(
-          (value: string) => parseInt(value, 10),
-          () => 0,
-          '000000000001'
-        );
-        expect(stringToNumber).toEqual(1);
-      });
-    });
-
-    describe('decodeToPromise', () => {
+    describe('decodePromise', () => {
       it('should resolve when decoding succeeds', async () => {
-        expect(await JsonDecoder.string.decodeToPromise('hola')).toEqual(
+        expect(await JsonDecoder.string().decodePromise('hola')).toEqual(
           'hola'
         );
       });
       it('should reject when decoding fails', () => {
-        JsonDecoder.string.decodeToPromise(2).catch(error => {
-          expect(error).toEqual($JsonDecoderErrors.primitiveError(2, 'string'));
-        });
+        JsonDecoder.string()
+          .decodePromise(2)
+          .catch(error => {
+            expect(error).toEqual(primitiveError(2, 'string'));
+          });
       });
     });
 
     describe('map', () => {
       it('should transform a string date into a Date', () => {
-        const stringToDateDecoder = JsonDecoder.string.map(
+        const stringToDateDecoder = JsonDecoder.string().map(
           stringDate => new Date(stringDate)
         );
         expect(
@@ -1205,7 +1060,7 @@ describe('json-decoder', () => {
         ).toBeInstanceOf(Date);
       });
       it('should keep transforming based on the previous transformation value', () => {
-        const decoder = JsonDecoder.array(JsonDecoder.number, 'latLang')
+        const decoder = JsonDecoder.array(JsonDecoder.number(), 'latLang')
           .map(arr => arr.slice(2))
           .map(arr => arr.slice(2))
           .map(arr => arr.slice(2));
@@ -1216,7 +1071,7 @@ describe('json-decoder', () => {
       });
     });
 
-    describe('chain', () => {
+    describe('flatMap', () => {
       type SquareProps = { side: number };
       type RectangleProps = { width: number; height: number };
       type Shape<T> = {
@@ -1226,10 +1081,10 @@ describe('json-decoder', () => {
 
       const squareDecoder = JsonDecoder.object<Shape<SquareProps>>(
         {
-          type: JsonDecoder.string,
+          type: JsonDecoder.string(),
           properties: JsonDecoder.object(
             {
-              side: JsonDecoder.number
+              side: JsonDecoder.number()
             },
             'SquareProps'
           )
@@ -1239,11 +1094,11 @@ describe('json-decoder', () => {
 
       const rectangleDecoder = JsonDecoder.object<Shape<RectangleProps>>(
         {
-          type: JsonDecoder.string,
+          type: JsonDecoder.string(),
           properties: JsonDecoder.object(
             {
-              width: JsonDecoder.number,
-              height: JsonDecoder.number
+              width: JsonDecoder.number(),
+              height: JsonDecoder.number()
             },
             'RectangleProps'
           )
@@ -1255,11 +1110,11 @@ describe('json-decoder', () => {
         Shape<SquareProps | RectangleProps>
       >(
         {
-          type: JsonDecoder.string,
-          properties: JsonDecoder.succeed
+          type: JsonDecoder.string(),
+          properties: JsonDecoder.succeed()
         },
         'Shape'
-      ).chain(value => {
+      ).flatMap(value => {
         switch (value.type) {
           case 'square':
             return squareDecoder;
@@ -1322,7 +1177,7 @@ describe('json-decoder', () => {
 
       it('should chain decoders based on previous value', () => {
         const hasLength = (len: number) => (json: any[]) =>
-          new JsonDecoder.Decoder(_ => {
+          new Decoder(_ => {
             if ((json as any[]).length === len) {
               return ok<any[]>(json);
             } else {
@@ -1331,13 +1186,13 @@ describe('json-decoder', () => {
               );
             }
           });
-        const decoder = JsonDecoder.array(JsonDecoder.number, 'latLang')
+        const decoder = JsonDecoder.array(JsonDecoder.number(), 'latLang')
           .map(arr => arr.slice(2))
-          .chain(hasLength(8))
+          .flatMap(hasLength(8))
           .map(arr => arr.slice(2))
-          .chain(hasLength(6))
+          .flatMap(hasLength(6))
           .map(arr => arr.slice(2))
-          .chain(hasLength(4));
+          .flatMap(hasLength(4));
         expectOkWithValue(
           decoder.decode([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]),
           [7, 8, 9, 10]
@@ -1345,38 +1200,13 @@ describe('json-decoder', () => {
       });
 
       it('should chain age decoder', () => {
-        const adultDecoder = JsonDecoder.number.chain(age =>
+        const adultDecoder = JsonDecoder.number().flatMap(age =>
           age >= 18
-            ? JsonDecoder.succeed
+            ? JsonDecoder.succeed()
             : JsonDecoder.fail(`Age ${age} is less than 18`)
         );
         expectOkWithValue(adultDecoder.decode(18), 18);
         expectErrWithMsg(adultDecoder.decode(17), 'Age 17 is less than 18');
-      });
-    });
-
-    describe('mapError', () => {
-      const numberWithMapErrorToNull = JsonDecoder.number.mapError(() => null);
-      const numberWithMapErrorToErrorMessage = JsonDecoder.number.mapError(
-        error => error
-      );
-
-      it('should decode successfully', () => {
-        expectOkWithValue(numberWithMapErrorToNull.decode(9), 9);
-      });
-
-      it('should transform the value when decoding fails', () => {
-        expectOkWithValue(
-          numberWithMapErrorToNull.decode('not a number'),
-          null
-        );
-      });
-
-      it('should provide the callback function with the error message', () => {
-        expectOkWithValue(
-          numberWithMapErrorToErrorMessage.decode('not a number'),
-          '"not a number" is not a valid number'
-        );
       });
     });
   });
@@ -1384,13 +1214,13 @@ describe('json-decoder', () => {
   // type checker tests
   describe('FromDecoder<D>', () => {
     it('should infer the primitive types', () => {
-      type Str = FromDecoder<typeof JsonDecoder.string>;
+      type Str = FromDecoder<ReturnType<typeof JsonDecoder.string>>;
       type StrTest = Expect<Equal<Str, string>>;
 
-      type Num = FromDecoder<typeof JsonDecoder.number>;
+      type Num = FromDecoder<ReturnType<typeof JsonDecoder.number>>;
       type NumTest = Expect<Equal<Num, number>>;
 
-      type Bool = FromDecoder<typeof JsonDecoder.boolean>;
+      type Bool = FromDecoder<ReturnType<typeof JsonDecoder.boolean>>;
       type BoolTest = Expect<Equal<Bool, boolean>>;
 
       expect(true).eql(true);
@@ -1399,8 +1229,8 @@ describe('json-decoder', () => {
     it('should infer object', () => {
       const userDecoder = JsonDecoder.object(
         {
-          name: JsonDecoder.string,
-          age: JsonDecoder.number
+          name: JsonDecoder.string(),
+          age: JsonDecoder.number()
         },
         'User'
       );
@@ -1428,7 +1258,7 @@ describe('json-decoder', () => {
     }
 
     it('should integrate with standard schema', async () => {
-      const res = await standardValidate(JsonDecoder.string, 'hello');
+      const res = await standardValidate(JsonDecoder.string(), 'hello');
       type TestType = Expect<Equal<typeof res, string>>;
       expect(res).equal('hello');
     });
@@ -1442,8 +1272,8 @@ describe('json-decoder', () => {
 
     const userDecoder = JsonDecoder.object<User>(
       {
-        firstname: JsonDecoder.string,
-        lastname: JsonDecoder.string
+        firstname: JsonDecoder.string(),
+        lastname: JsonDecoder.string()
       },
       'User'
     );
@@ -1453,7 +1283,7 @@ describe('json-decoder', () => {
         firstname: 'Damien',
         lastname: 'Jurado'
       };
-      await expect(userDecoder.decodeToPromise(jsonObjectOk)).resolves.toEqual({
+      await expect(userDecoder.decodePromise(jsonObjectOk)).resolves.toEqual({
         firstname: 'Damien',
         lastname: 'Jurado'
       });
@@ -1464,7 +1294,7 @@ describe('json-decoder', () => {
         firstname: 'Erik',
         lastname: null
       };
-      await expect(userDecoder.decodeToPromise(jsonObjectKo)).rejects.toThrow();
+      await expect(userDecoder.decodePromise(jsonObjectKo)).rejects.toThrow();
     });
   });
 });

@@ -1,7 +1,7 @@
 {
   "$schema": "https://typedoc.org/schema.json",
-  "entryPoints": ["src/json-decoder.ts", "src/result.ts"],
-  "out": "docs",
+  "entryPoints": ["src/core.ts", "src/schemas/index.ts", "src/utils/result.ts"],
+  "out": "docs/latest",
   "githubPages": true,
   "basePath": "/ts.data.json",
   "exclude": ["**/*.spec.ts", "**/*.test.ts"],
@@ -27,11 +27,15 @@
     "includeFolders": false
   },
   "categorizeByGroup": false,
-  "projectDocuments": ["assets/documents/basic-usage.md", "assets/documents/advanced-usage.md"],
+  "projectDocuments": [
+    "assets/documents/basic-usage.md",
+    "assets/documents/advanced-usage.md",
+    "assets/documents/v3-migration.md"
+  ],
   "customFooterHtml": "<a href='https://github.com/joanllenas/ts.data.json' title='ts.data.json on GitHub'><img class='github-img' width='24' height='24' /></a>",
   "customCss": "assets/css/custom.css",
   "headings": {
     "readme": false,
     "document": false
   }
-} 
+}
