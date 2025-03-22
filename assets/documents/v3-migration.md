@@ -93,15 +93,17 @@ Here’s a list of the removed items and their recommended replacements (if appl
 
 ### 3. Behavior change
 
+#### optional()
+
 In v3, the `optional()` decoder now only works with `undefined` values.  
 To replicate the previous behavior, you can either create your own optional decoder or combine existing decoders.
 
-#### Write your own optional decoder from scratch:
+- Write your own optional decoder from scratch:
 
 ```ts
 import { Decoder, ok, string } from 'ts.data.json';
 
-function v3Optional<T>(decoder: Decoder<T>): Decoder<T | undefined> {
+function v2Optional<T>(decoder: Decoder<T>): Decoder<T | undefined> {
   return new Decoder<T | undefined>((json: any) => {
     if (json === undefined || json === null) {
       return ok<undefined>(undefined);
@@ -111,19 +113,42 @@ function v3Optional<T>(decoder: Decoder<T>): Decoder<T | undefined> {
   });
 }
 
-v3Optional(string()).decode(null); // Ok(undefined)
-v3Optional(string()).decode(undefined); // Ok(undefined)
-v3Optional(string()).decode('hello'); // Ok('hello')
+v2Optional(string()).decode(null); // Ok(undefined)
+v2Optional(string()).decode(undefined); // Ok(undefined)
+v2Optional(string()).decode('hello'); // Ok('hello')
 ```
 
-#### Write your own optional decoder using existing decoders:
+- Write your own optional decoder using existing decoders:
 
 ```ts
 import * as JsonDecoder from 'ts.data.json';
 
-function v3Optional<T>(decoder: JsonDecoder.Decoder<T>) {
+function v2Optional<T>(decoder: JsonDecoder.Decoder<T>) {
   return JsonDecoder.oneOf([decoder, JsonDecoder.null().map(() => undefined), JsonDecoder.undefined()], 'optional');
 }
 
-v3Optional(JsonDecoder.string()).decode(undefined); // Ok(undefined)
+v2Optional(JsonDecoder.string()).decode(undefined); // Ok(undefined)
+```
+
+#### object()
+
+In v3, the `object()` decoder function doesn't take the optional second parameter ~~`keyMap`~~ that was used to map incoming keys names to something different ([see 2.3.1 docs](https://joanllenas.github.io/ts.data.json/v2.3.1/functions/json-decoder.JsonDecoder.object.html)).
+
+To replicate the previous behavior, you can use `map()` instead:
+
+```ts
+import * as JsonDecoder from 'ts.data.json';
+
+const userDecoder = JsonDecoder.object(
+  {
+    user_name: JsonDecoder.string(),
+    email: JsonDecoder.string()
+  },
+  'User'
+).map(({ user_name, email }) => ({ userName: user_name, email }));
+
+const decodedUser = userDecoder.decode({
+  user_name: 'someuser',
+  email: 'someuser@user.com'
+}); // Ok({userName: 'someuser', email: 'someuser@user.com'})
 ```
