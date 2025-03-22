@@ -8,19 +8,6 @@ group: Documents
 
 Version 3 of `ts.data.json` introduces several breaking changes to enhance the developer experience and reduce the library’s footprint. This guide will help you migrate your codebase.
 
-## Table of Contents
-
-- [New Features](#new-features)
-  - [Tree-shaking](#tree-shaking)
-  - [New decoders](#new-decoders)
-    - [null()](#null)
-    - [undefined()](#undefined)
-- [Deprecations](#deprecations)
-- [Breaking Changes](#breaking-changes)
-  - [1. All decoders are functions](#1-all-decoders-are-functions)
-  - [2. Removed items](#2-removed-items)
-  - [3. Behaviour change](#3-behavior-change)
-
 ## New Features
 
 ### Tree-shaking
