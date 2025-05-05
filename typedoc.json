@@ -29,8 +29,7 @@
   "categorizeByGroup": false,
   "projectDocuments": [
     "assets/documents/basic-usage.md",
-    "assets/documents/advanced-usage.md",
-    "assets/documents/v3-migration.md"
+    "assets/documents/advanced-usage.md"
   ],
   "customFooterHtml": "<a href='https://github.com/joanllenas/ts.data.json' title='ts.data.json on GitHub'><img class='github-img' width='24' height='24' /></a>",
   "customCss": "assets/css/custom.css",

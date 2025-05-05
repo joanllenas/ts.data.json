@@ -1,20 +1,21 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { describe, expect, it } from 'vitest';
-import { FromDecoder, Decoder } from './core';
+import { Decoder, FromDecoder } from './core';
+import { allOfError } from './errors/all-of-error';
+import { arrayError } from './errors/array-error';
+import { enumValueError } from './errors/enum-value-error';
+import { exactlyError } from './errors/exactly-error';
+import { nullError } from './errors/null-error';
+import { objectError } from './errors/object-error';
+import { objectStrictUnknownKeyError } from './errors/object-strict-unknown-key-error';
+import { oneOfError } from './errors/one-of-error';
+import { primitiveError } from './errors/primitive-error';
+import { recordError } from './errors/record-error';
+import { tupleLengthMismatchError } from './errors/tuple-length-mismatch-error';
+import { undefinedError } from './errors/undefined-error';
 import * as JsonDecoder from './schemas';
 import { Err, err, Ok, ok, Result } from './utils/result';
 import type { StandardSchemaV1 } from './utils/standard-schema-v1';
-import { primitiveError } from './errors/primitive-error';
-import { nullError } from './errors/null-error';
-import { undefinedError } from './errors/undefined-error';
-import { enumValueError } from './errors/enum-value-error';
-import { oneOfError } from './errors/one-of-error';
-import { objectError } from './errors/object-error';
-import { objectStrictUnknownKeyError } from './errors/object-strict-unknown-key-error';
-import { arrayError } from './errors/array-error';
-import { recordError } from './errors/record-error';
-import { exactlyError } from './errors/exactly-error';
-import { tupleLengthMismatchError } from './errors/tuple-length-mismatch-error';
 
 // Test utils
 const expectOkWithValue = <a>(result: Result<a>, expectedValue: a) => {
@@ -381,6 +382,52 @@ describe('json-decoder', () => {
           'string | number'
         ).decode(true),
         oneOfError('string | number', true)
+      );
+    });
+  });
+
+  // allOf
+  describe('allOf', () => {
+    type User = { firstname: string; lastname: string; role: 'admin' | 'user' };
+    const firstnameDecoder = JsonDecoder.object(
+      { firstname: JsonDecoder.string() },
+      '{firstname: string}'
+    );
+    const lastnameDecoder = JsonDecoder.object(
+      { lastname: JsonDecoder.string() },
+      '{lastname: string}'
+    );
+    const roleDecoder = JsonDecoder.oneOf(
+      [JsonDecoder.literal('admin'), JsonDecoder.literal('user')],
+      'admin | user'
+    );
+    const userDecoder: Decoder<User> = JsonDecoder.allOf(
+      [
+        firstnameDecoder,
+        lastnameDecoder,
+        JsonDecoder.object({ role: roleDecoder }, 'role')
+      ],
+      'User'
+    );
+    it('should validate all decoders to get a user', () => {
+      expectOkWithValue(
+        userDecoder.decode({
+          firstname: 'John',
+          lastname: 'Doe',
+          role: 'admin'
+        }),
+        { firstname: 'John', lastname: 'Doe', role: 'admin' }
+      );
+    });
+
+    it('should fail when any of the provided decoders fail', () => {
+      expectErrWithMsg(
+        userDecoder.decode({ firstname: 'John' }),
+        allOfError(
+          'User',
+          1,
+          `<{lastname: string}> decoder failed at key "lastname" with error: undefined is not a valid string`
+        )
       );
     });
   });

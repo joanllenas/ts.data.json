@@ -4,6 +4,7 @@
  * @category Api docs
  */
 
+export * from './all-of';
 export * from './array';
 export * from './boolean';
 export * from './constant';
@@ -16,8 +17,8 @@ export * from './literal';
 export * from './null';
 export * from './nullable';
 export * from './number';
-export * from './object-strict';
 export * from './object';
+export * from './object-strict';
 export * from './one-of';
 export * from './optional';
 export * from './record';

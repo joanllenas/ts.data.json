@@ -18,10 +18,11 @@ JSON decoders validate incoming JSON before it enters the application. This way,
 
 ## Documentation
 
-The [documentation site](https://joanllenas.github.io/ts.data.json/) is auto-generated from TSDoc comments using TypeDoc.
-You'll find documentation for both v2.3.1 and v3, as well as a [migration guide to v3](https://joanllenas.github.io/ts.data.json/latest/documents/Migrating_to_v3.html).
+The [documentation site](https://joanllenas.github.io/ts.data.json/) is auto-generated with TSDoc comments using TypeDoc. You'll find documentation for v2.3.1, v3 and later.
 
-If you're new to JSON decoding, you may want to read the introductory article [Decoding JSON with TypeScript](https://dev.to/joanllenas/decoding-json-with-typescript-1jjc), which explains why and how to use this library.
+Planning to migrate to v3? Be sure to read the [v3 migration guide](https://joanllenas.github.io/ts.data.json/v3.0.0/documents/Migrating_to_v3.html).
+
+If you're new to JSON decoding, you should read the introductory article [Decoding JSON with TypeScript](https://dev.to/joanllenas/decoding-json-with-typescript-1jjc), which, although somewhat dated, clearly explains how and why to use this library.
 
 ## Installation
 
@@ -118,9 +119,9 @@ userDecoder
   });
 ```
 
-### Output:
+### Output
 
-```
+```txt
 Welcome back, Marty McFly!
 Your last login was: 10/26/1985, 1:21:00 AM
 ```
@@ -156,9 +157,9 @@ userDecoder
   });
 ```
 
-### Output:
+### Output
 
-```
+```txt
 Validation failed: <User> decoder failed at key "id" with error: "not-a-number" is not a valid number
 ```
 

@@ -5,9 +5,9 @@
  */
 
 import { Decoder } from '../core';
-import * as Result from '../utils/result';
 import { objectError } from '../errors/object-error';
 import { primitiveError } from '../errors/primitive-error';
+import * as Result from '../utils/result';
 
 /**
  * Represents an object with specified field decoders.
@@ -22,8 +22,6 @@ export type DecoderObject<T> = { [P in keyof Required<T>]: Decoder<T[P]> };
  * @category Data Structures
  * @param decoders Key/value pairs of decoders for each object field.
  * @param decoderName How to display the name of the object being decoded in errors.
- * @param keyMap Optional map between json field names and user land field names.
- *               Useful when the client model does not match with the input JSON structure.
  * @returns A decoder that validates and returns objects matching the specified structure
  *
  * @example
