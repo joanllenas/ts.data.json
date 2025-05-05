@@ -6,5 +6,9 @@
  * @returns Formatted error message
  * @internal
  */
-export const allOfError = (decoderName: string, index: number, error: string): string =>
+export const allOfError = (
+  decoderName: string,
+  index: number,
+  error: string
+): string =>
   `<${decoderName}> allOf decoder failed at index #${index} with "${error}"`;
