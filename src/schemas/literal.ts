@@ -19,11 +19,11 @@ import * as Result from '../utils/result';
  * ```ts
  * const oneDecoder = JsonDecoder.literal(1);
  *
- * oneDecoder.decode(1); // Ok<number>({value: 1})
+ * oneDecoder.decode(1); // Ok<1>({value: 1})
  * oneDecoder.decode(2); // Err({error: '2 is not exactly 1'})
  * ```
  */
-export function literal<T>(value: T): Decoder<T> {
+export function literal<const T>(value: T): Decoder<T> {
   return new Decoder((json: any) => {
     if (json === value) {
       return Result.ok<T>(value);
@@ -39,6 +39,6 @@ export function literal<T>(value: T): Decoder<T> {
  * @deprecated Use `literal` directly instead.
  * @ignore
  */
-export function isExactly<T>(value: T): Decoder<T> {
+export function isExactly<const T>(value: T): Decoder<T> {
   return literal(value);
 }
