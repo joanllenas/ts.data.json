@@ -8,17 +8,31 @@ import { Decoder } from '../core';
 import { allOfError } from '../errors/all-of-error';
 import * as Result from '../utils/result';
 
-type DecoderOutput<D> = D extends Decoder<infer T> ? T : never;
+/**
+ * Infers the decoder output type.
+ *
+ * @category Internal Types
+ */
+export type DecoderOutput<D> = D extends Decoder<infer T> ? T : never;
 
-type UnionToIntersection<U> = (U extends any ? (x: U) => any : never) extends (
-  x: infer I
-) => any
+/**
+ * Union to intersection inference.
+ *
+ * @category Internal Types
+ */
+export type UnionToIntersection<U> = (
+  U extends any ? (x: U) => any : never
+) extends (x: infer I) => any
   ? I
   : never;
 
-type AllOfOutput<T extends readonly Decoder<any>[]> = UnionToIntersection<
-  DecoderOutput<T[number]>
->;
+/**
+ * Merges allOf types into one.
+ *
+ * @category Internal Types
+ */
+export type AllOfOutput<T extends readonly Decoder<any>[]> =
+  UnionToIntersection<DecoderOutput<T[number]>>;
 
 /**
  * A decoder that succeeds only if all provided decoders succeed.
