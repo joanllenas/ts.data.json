@@ -10,7 +10,7 @@ import * as Result from '../utils/result';
 /**
  * Decoder that falls back to a default value if the given decoder fails.
  *
- * @category Transformations
+ * @category Utils
  * @param defaultValue The value to return if the decoder fails
  * @param decoder The decoder to try first
  * @returns A decoder that returns the default value if the given decoder fails
