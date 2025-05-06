@@ -430,6 +430,42 @@ describe('json-decoder', () => {
         )
       );
     });
+
+    it('should accumulate the changes of previous decoders', () => {
+      const accumulatorDeocder = JsonDecoder.allOf(
+        [
+          JsonDecoder.object({ a: JsonDecoder.number() }, 'a').map(obj => ({
+            a: obj.a + 1
+          })),
+          JsonDecoder.object({ a: JsonDecoder.number() }, 'a').map(obj => ({
+            a: obj.a + 1
+          }))
+        ],
+        'PreviousChanges'
+      );
+      expectOkWithValue(accumulatorDeocder.decode({ a: 0 }), { a: 2 });
+    });
+
+    it('should not accumulate the changes of previous decoders with arrays', () => {
+      const accumulatorDeocder = JsonDecoder.allOf(
+        [
+          JsonDecoder.array(
+            JsonDecoder.object({ a: JsonDecoder.number() }, 'a').map(obj => ({
+              a: obj.a + 1
+            })),
+            '{a}[]'
+          ),
+          JsonDecoder.array(
+            JsonDecoder.object({ a: JsonDecoder.number() }, 'a').map(obj => ({
+              a: obj.a + 1
+            })),
+            '{a}[]'
+          )
+        ],
+        'PreviousChanges'
+      );
+      expectOkWithValue(accumulatorDeocder.decode([{ a: 0 }]), [{ a: 0 }]);
+    });
   });
 
   // object

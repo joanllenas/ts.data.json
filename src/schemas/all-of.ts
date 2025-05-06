@@ -61,12 +61,65 @@ export function allOf<T extends readonly Decoder<any>[]>(
   decoderName: string
 ): Decoder<AllOfOutput<T>> {
   return new Decoder((json: any) => {
+    const isObj = isPlainObject(json);
+    let lastJson = json;
     for (let i = 0; i < decoders.length; i++) {
-      const result = decoders[i].decode(json);
-      if (!result.isOk()) {
+      const result = decoders[i].decode(lastJson);
+      if (result.isOk()) {
+        if (isObj) {
+          lastJson = deepMerge({ target: lastJson, source: result.value });
+        }
+      } else {
         return Result.err<T>(allOfError(decoderName, i, result.error));
       }
     }
-    return Result.ok(json);
+    return Result.ok(lastJson);
   });
+}
+
+/**
+ * Deeply merges two plain objects into one.
+ * Arrays are not merged.
+ *
+ * @param target is the base object you are updating.
+ * @param source contains new values that override or extend the target.
+ *
+ * @example
+ * ```ts
+ * const target = { a: 1, b: { x: 10, y: 20 } };
+ * const source = { b: { y: 99, z: 42 }, c: 3 };
+ * const result = deepMerge(target, source);
+ * console.log(result);
+ * // Output:
+ * // { a: 1, b: { x: 10, y: 99, z: 42 }, c: 3 }
+ * ```
+ */
+function deepMerge<
+  T extends Record<string, any>,
+  U extends Record<string, any>
+>({ target, source }: { target: T; source: U }): T & U {
+  const result: Record<string, any> = { ...target };
+
+  for (const key in source) {
+    if (Object.prototype.hasOwnProperty.call(source, key)) {
+      const sourceValue = source[key];
+      const targetValue = target[key];
+
+      if (isPlainObject(sourceValue) && isPlainObject(targetValue)) {
+        result[key] = deepMerge({ target: targetValue, source: sourceValue });
+      } else {
+        result[key] = sourceValue;
+      }
+    }
+  }
+
+  return result as T & U;
+}
+
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    Object.getPrototypeOf(value) === Object.prototype
+  );
 }
