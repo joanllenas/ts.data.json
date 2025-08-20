@@ -384,6 +384,17 @@ describe('json-decoder', () => {
         oneOfError('string | number', true)
       );
     });
+    it('should apply transformations', () => {
+      const optionalV2 = JsonDecoder.oneOf(
+        [
+          JsonDecoder.string(),
+          JsonDecoder.null().map(() => undefined),
+          JsonDecoder.undefined()
+        ],
+        'optionalV2'
+      );
+      expectOkWithValue(optionalV2.decode(null), undefined);
+    });
   });
 
   // allOf
@@ -444,6 +455,19 @@ describe('json-decoder', () => {
         'PreviousChanges'
       );
       expectOkWithValue(accumulatorDeocder.decode({ a: 0 }), { a: 2 });
+    });
+
+    it('should accumulate the changes of previous decoders 2', () => {
+      const upperCaseStringDecoder = new Decoder<string>((value: unknown) =>
+        typeof value === 'string'
+          ? ok(value.toUpperCase())
+          : err(`It is not a valid string`)
+      );
+      const allOfDecoder = JsonDecoder.allOf(
+        [upperCaseStringDecoder],
+        'allOfDecoder'
+      );
+      expectOkWithValue(allOfDecoder.decode('testValue'), 'TESTVALUE');
     });
 
     it('should not accumulate the changes of previous decoders with arrays', () => {

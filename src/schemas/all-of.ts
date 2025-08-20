@@ -68,6 +68,8 @@ export function allOf<T extends readonly Decoder<any>[]>(
       if (result.isOk()) {
         if (isObj) {
           lastJson = deepMerge({ target: lastJson, source: result.value });
+        } else if (!Array.isArray(json)) {
+          lastJson = result.value;
         }
       } else {
         return Result.err<T>(allOfError(decoderName, i, result.error));
