@@ -648,7 +648,7 @@ describe('json-decoder', () => {
           objectStrictUnknownKeyError('User', 'email')
         );
       });
-      /*it('should allow decoding from different keys', () => {
+      it('should allow decoding from different keys', () => {
         const paymentDecoderFromDifferentKeys =
           JsonDecoder.objectStrict<Payment>(
             {
@@ -675,7 +675,7 @@ describe('json-decoder', () => {
             lastname: 'Doe'
           }
         });
-      });*/
+      });
     });
   });
 

@@ -10,7 +10,28 @@ import { primitiveError } from '../errors/primitive-error';
 import * as Result from '../utils/result';
 
 /**
- * Represents an object with specified field decoders.
+ * Represents an object that maps properties of a TypeScript type `T` to
+ * decoders used to validate raw JSON values. Each property may either be a
+ * `Decoder<T[P]>` (decoding a field from the same key in the input JSON) or
+ * an object with `fromKey` and `decoder` to decode from a different input
+ * key.
+ *
+ * The `fromKey` option is useful when your TypeScript property name differs
+ * from the incoming JSON key (for example, snake_case JSON keys mapped to
+ * camelCase TypeScript properties). Errors reported still reference the
+ * TypeScript property name (the key of `DecoderObject`).
+ *
+ * @example
+ * ```ts
+ * // Example where the JSON has `first_name`, but our TypeScript property is `firstName`
+ * interface User { firstName: string; lastName: string; age: number }
+ *
+ * const decoders: DecoderObject<User> = {
+ *   firstName: { fromKey: 'first_name', decoder: JsonDecoder.string() },
+ *   lastName: { fromKey: 'last_name', decoder: JsonDecoder.string() },
+ *   age: JsonDecoder.number()
+ * };
+ * ```
  *
  * @category Internal Types
  */
@@ -21,7 +42,9 @@ export type DecoderObject<T> = {
 };
 
 /**
- * Decoder for objects with specified field decoders.
+ * Decoder for objects with specified field decoders. Supports mapping a
+ * TypeScript property to a different JSON key via a `{ fromKey, decoder }`
+ * entry in the `decoders` map.
  *
  * @category Data Structures
  * @param decoders Key/value pairs of decoders for each object field.
@@ -38,8 +61,8 @@ export type DecoderObject<T> = {
  *
  * const userDecoder = JsonDecoder.object<User>(
  *   {
- *     firstName: JsonDecoder.string(),
- *     lastName: JsonDecoder.string(),
+ *     firstName: { fromKey: 'first_name', decoder: JsonDecoder.string() },
+ *     lastName: { fromKey: 'last_name', decoder: JsonDecoder.string() },
  *     age: JsonDecoder.number()
  *   },
  *   'User'
