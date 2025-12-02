@@ -14,7 +14,11 @@ import * as Result from '../utils/result';
  *
  * @category Internal Types
  */
-export type DecoderObject<T> = { [P in keyof Required<T>]: Decoder<T[P]> };
+export type DecoderObject<T> = {
+  [P in keyof Required<T>]:
+    | Decoder<T[P]>
+    | { fromKey: string; decoder: Decoder<T[P]> };
+};
 
 /**
  * Decoder for objects with specified field decoders.
@@ -59,7 +63,13 @@ export function object<T>(
       const result: any = {};
       for (const key in decoders) {
         if (Object.prototype.hasOwnProperty.call(decoders, key)) {
-          const r = decoders[key].decode(json[key]);
+          let r;
+          const decoderObject = decoders[key];
+          if (decoderObject instanceof Decoder) {
+            r = decoderObject.decode(json[key]);
+          } else {
+            r = decoderObject.decoder.decode(json[decoderObject.fromKey]);
+          }
           if (r.isOk()) {
             result[key] = r.value;
           } else {

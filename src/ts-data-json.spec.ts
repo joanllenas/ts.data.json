@@ -591,6 +591,34 @@ describe('json-decoder', () => {
       expectErrWithMsg(userDecoder.decode(5), primitiveError(5, 'User'));
     });
 
+    it('should allow decoding from different keys', () => {
+      const paymentDecoderFromDifferentKeys = JsonDecoder.object<Payment>(
+        {
+          iban: { fromKey: 'the_iban', decoder: JsonDecoder.string() },
+          valid: JsonDecoder.boolean(),
+          account_holder: userDecoder
+        },
+        'Payment'
+      );
+
+      const the_payment = {
+        the_iban: 'ES123456789',
+        valid: true,
+        account_holder: {
+          firstname: 'John',
+          lastname: 'Doe'
+        }
+      };
+      expectOkWithValue(paymentDecoderFromDifferentKeys.decode(the_payment), {
+        iban: 'ES123456789',
+        valid: true,
+        account_holder: {
+          firstname: 'John',
+          lastname: 'Doe'
+        }
+      });
+    });
+
     describe('objectStrict', () => {
       const strictUserDecoder = JsonDecoder.objectStrict<User>(
         {
@@ -620,6 +648,34 @@ describe('json-decoder', () => {
           objectStrictUnknownKeyError('User', 'email')
         );
       });
+      /*it('should allow decoding from different keys', () => {
+        const paymentDecoderFromDifferentKeys =
+          JsonDecoder.objectStrict<Payment>(
+            {
+              iban: { fromKey: 'the_iban', decoder: JsonDecoder.string() },
+              valid: JsonDecoder.boolean(),
+              account_holder: userDecoder
+            },
+            'Payment'
+          );
+
+        const the_payment = {
+          the_iban: 'ES123456789',
+          valid: true,
+          account_holder: {
+            firstname: 'John',
+            lastname: 'Doe'
+          }
+        };
+        expectOkWithValue(paymentDecoderFromDifferentKeys.decode(the_payment), {
+          iban: 'ES123456789',
+          valid: true,
+          account_holder: {
+            firstname: 'John',
+            lastname: 'Doe'
+          }
+        });
+      });*/
     });
   });
 
