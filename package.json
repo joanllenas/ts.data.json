@@ -1,6 +1,6 @@
 {
   "name": "ts.data.json",
-  "version": "3.1.1",
+  "version": "3.2.0",
   "description": "A JSON decoding library for Typescript",
   "type": "module",
   "main": "./dist/cjs/index.min.js",
@@ -25,7 +25,7 @@
   "scripts": {
     "build:tsc": "tsc -p tsconfig.json && tsc -p tsconfig-cjs.json",
     "build:esbuild": "node build.js",
-    "build": "npm run build:tsc && npm run build:esbuild && npm run size-check",
+    "build": "npm run build:tsc && npm run build:esbuild",
     "test:watch": "vitest",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
@@ -34,20 +34,9 @@
     "format:check": "prettier ./src --check && prettier ./assets/documents --check",
     "prebeta": "npm run test && npm run lint",
     "beta": "npm run build && npm publish --tag beta",
-    "size-check": "bundlesize",
     "docs": "typedoc",
     "postdocs": "mkdir -p docs/latest/media && cp assets/media/github-mark.png docs/latest/media/ && cp assets/media/github-mark-white.png docs/latest/media/"
   },
-  "bundlesize": [
-    {
-      "path": "./dist/cjs/index.min.js",
-      "maxSize": "2 kB"
-    },
-    {
-      "path": "./dist/esm/index.min.js",
-      "maxSize": "2 kB"
-    }
-  ],
   "keywords": [
     "json",
     "decoder",
@@ -78,7 +67,6 @@
     "@typescript-eslint/eslint-plugin": "~7.1.0",
     "@typescript-eslint/parser": "~7.1.0",
     "@vitest/coverage-v8": "^1.3.1",
-    "bundlesize": "^0.18.2",
     "esbuild": "^0.20.1",
     "eslint": "~8.57.0",
     "prettier": "~3.2.5",

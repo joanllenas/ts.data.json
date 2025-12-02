@@ -17,15 +17,21 @@
         text-align: center;
         color: #333;
       }
-      .versions {
+      .latest-version {
         display: flex;
+        justify-content: center;
+        margin-top: 40px;
+      }
+      .older-versions {
+        display: flex;
+        flex-wrap: wrap;
         justify-content: center;
         gap: 20px;
         margin-top: 40px;
       }
       .version-link {
         display: inline-block;
-        padding: 12px 24px;
+        padding: 18px 32px;
         background-color: #0366d6;
         color: white;
         text-decoration: none;
@@ -39,14 +45,20 @@
         background-color: #f6f8fa;
         color: #24292e;
         border: 1px solid #e1e4e8;
+        padding: 6px 24px;
       }
     </style>
   </head>
   <body>
     <h1>ts.data.json Documentation</h1>
-    <div class="versions">
+    <div class="latest-version">
       <a href="latest/index.html" class="version-link"
-        >Latest Version (v3.1.0)</a
+        >Latest Version (v3.2.0)</a
+      >
+    </div>
+    <div class="older-versions">
+      <a href="v3.1.0/index.html" class="version-link secondary"
+        >Version 3.1.0</a
       >
       <a href="v3.0.0/index.html" class="version-link secondary"
         >Version 3.0.0</a
