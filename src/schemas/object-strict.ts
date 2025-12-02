@@ -67,6 +67,20 @@ export type DecoderObjectStrict<T> = {
  * userDecoder.decode({name: 'John', age: 30}); // Ok<User>
  * userDecoder.decode({name: 'John', age: 30, extra: 'field'}); // Err({error: 'Unknown key "extra" found while processing strict <User> decoder'})
  * ```
+ *
+ * @example
+ * ```ts
+ * // You can also use the fromKey API to decode from different JSON keys
+ * const userDecoder = JsonDecoder.objectStrict<User>(
+ *   {
+ *     name: { fromKey: 'user_name', decoder: JsonDecoder.string() },
+ *     age: JsonDecoder.number()
+ *   },
+ *   'User'
+ * );
+ *
+ * userDecoder.decode({user_name: 'John', age: 30}); // Ok<User>
+ * ```
  */
 export function objectStrict<T>(
   decoders: DecoderObjectStrict<T>,

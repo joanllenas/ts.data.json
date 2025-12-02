@@ -61,8 +61,8 @@ export type DecoderObject<T> = {
  *
  * const userDecoder = JsonDecoder.object<User>(
  *   {
- *     firstName: { fromKey: 'first_name', decoder: JsonDecoder.string() },
- *     lastName: { fromKey: 'last_name', decoder: JsonDecoder.string() },
+ *     firstName: JsonDecoder.string(),
+ *     lastName: JsonDecoder.string(),
  *     age: JsonDecoder.number()
  *   },
  *   'User'
@@ -75,6 +75,19 @@ export type DecoderObject<T> = {
  * };
  *
  * userDecoder.decode(json); // Ok<User>({value: {firstName: 'John', lastName: 'Doe', age: 30}})
+ * ```
+ *
+ * @example
+ * ```ts
+ * // You can also use `fromKey` to map TypeScript properties to different JSON keys
+ * const userDecoder = JsonDecoder.object<User>(
+ *   {
+ *     firstName: { fromKey: 'first_name', decoder: JsonDecoder.string() },
+ *     lastName: { fromKey: 'last_name', decoder: JsonDecoder.string() },
+ *     age: JsonDecoder.number()
+ *   },
+ *   'User'
+ * );
  * ```
  */
 export function object<T>(
