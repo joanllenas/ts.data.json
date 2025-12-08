@@ -5,9 +5,9 @@
  */
 
 import { Decoder } from '../core';
-import * as Result from '../utils/result';
-import { recordError } from '../errors/record-error';
 import { primitiveError } from '../errors/primitive-error';
+import { recordError } from '../errors/record-error';
+import * as Result from '../utils/result';
 
 /**
  * Decoder for record types with string keys.
@@ -51,6 +51,7 @@ export function record<V>(
   });
 }
 
+/* v8 ignore start */
 /**
  * Alias for the `record` function.
  *
@@ -64,3 +65,4 @@ export function dictionary<V>(
 ): Decoder<{ [K: string]: V }> {
   return record(decoder, decoderName);
 }
+/* v8 ignore stop */

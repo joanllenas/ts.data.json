@@ -637,17 +637,6 @@ describe('json-decoder', () => {
           lastname: 'Doe'
         });
       });
-      it('should fail when object has unknown keys', () => {
-        const user = {
-          firstname: 'John',
-          lastname: 'Doe',
-          email: 'doe@johndoe.com'
-        };
-        expectErrWithMsg(
-          strictUserDecoder.decode(user),
-          objectStrictUnknownKeyError('User', 'email')
-        );
-      });
       it('should allow decoding from different keys', () => {
         const paymentDecoderFromDifferentKeys =
           JsonDecoder.objectStrict<Payment>(
@@ -675,6 +664,33 @@ describe('json-decoder', () => {
             lastname: 'Doe'
           }
         });
+      });
+      it('should fail when object has unknown keys', () => {
+        const user = {
+          firstname: 'John',
+          lastname: 'Doe',
+          email: 'doe@johndoe.com'
+        };
+        expectErrWithMsg(
+          strictUserDecoder.decode(user),
+          objectStrictUnknownKeyError('User', 'email')
+        );
+      });
+      it('should fail when any decoded key fails to decode', () => {
+        const user = {
+          firstname: 'John',
+          lastname: undefined
+        };
+        expectErrWithMsg(
+          strictUserDecoder.decode(user),
+          objectError('User', 'lastname', primitiveError(undefined, 'string'))
+        );
+      });
+      it('should fail when the provided json is not an object', () => {
+        expectErrWithMsg(
+          strictUserDecoder.decode('hello'),
+          primitiveError('hello', 'User')
+        );
       });
     });
   });
@@ -771,6 +787,15 @@ describe('json-decoder', () => {
           }
         }
       });
+    });
+
+    it('should fail when the provided json is not a record', () => {
+      expectErrWithMsg(
+        JsonDecoder.record(JsonDecoder.number(), 'Dict<number>').decode(
+          'hello'
+        ),
+        primitiveError('hello', 'Dict<number>')
+      );
     });
 
     it('should fail to decode a primitive record with an invalid value', () => {
@@ -924,7 +949,27 @@ describe('json-decoder', () => {
         [3, 4, 5]
       ]);
     });
-    it('should decode throw a length mismatch error', () => {
+    it('should fail when the decoded value is not an array', () => {
+      const decoder: Decoder<[number, string]> = JsonDecoder.tuple(
+        [JsonDecoder.number(), JsonDecoder.string()],
+        '[number, string]'
+      );
+      expectErrWithMsg(
+        decoder.decode('hello'),
+        '"hello" is not a valid [number, string]'
+      );
+    });
+    it('should fail when ny of the tuplde items decoder fails', () => {
+      const decoder: Decoder<[number, string]> = JsonDecoder.tuple(
+        [JsonDecoder.number(), JsonDecoder.string()],
+        '[number, string]'
+      );
+      expectErrWithMsg(
+        decoder.decode([1, 2]),
+        arrayError('[number, string]', 1, primitiveError(2, 'string'))
+      );
+    });
+    it('should fail with a length mismatch error', () => {
       const decoder: Decoder<[number, number[]]> = JsonDecoder.tuple(
         [
           JsonDecoder.number(),
@@ -1197,6 +1242,37 @@ describe('json-decoder', () => {
   });
 
   describe('Decoder<a>', () => {
+    describe('parse', () => {
+      const userDecoder = JsonDecoder.object(
+        {
+          firstname: JsonDecoder.string(),
+          lastname: JsonDecoder.string()
+        },
+        'User'
+      );
+
+      it('should fail if parsing a number with a string deocder', () => {
+        expect(() => JsonDecoder.string().parse(123)).toThrowError(
+          '123 is not a valid string'
+        );
+      });
+
+      it('should parse a valid JSON string', () => {
+        expect(
+          userDecoder.parse({ firstname: 'John', lastname: 'Doe' })
+        ).toEqual({
+          firstname: 'John',
+          lastname: 'Doe'
+        });
+      });
+
+      it('should fail when decoded value does not match schema', () => {
+        expect(() => userDecoder.parse({ firstname: 'John' })).toThrowError(
+          '<User> decoder failed at key "lastname" with error: undefined is not a valid string'
+        );
+      });
+    });
+
     describe('decodePromise', () => {
       it('should resolve when decoding succeeds', async () => {
         expect(await JsonDecoder.string().decodePromise('hola')).toEqual(
@@ -1335,6 +1411,17 @@ describe('json-decoder', () => {
         expectErrWithMsg(
           shapeDecoder.decode(circle),
           `<Shape> does not support type "circle"`
+        );
+      });
+
+      it('should fail when flatMap fails', () => {
+        expectErrWithMsg(
+          JsonDecoder.string()
+            .flatMap(() => {
+              return JsonDecoder.fail('Ouch!');
+            })
+            .decode(''),
+          `Ouch!`
         );
       });
 

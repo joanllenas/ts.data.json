@@ -33,6 +33,7 @@ export function fallback<T>(defaultValue: T, decoder: Decoder<T>): Decoder<T> {
   });
 }
 
+/* v8 ignore start */
 /**
  * Alias for the `fallback` function.
  *
@@ -43,3 +44,4 @@ export function fallback<T>(defaultValue: T, decoder: Decoder<T>): Decoder<T> {
 export function failover<T>(defaultValue: T, decoder: Decoder<T>): Decoder<T> {
   return fallback(defaultValue, decoder);
 }
+/* v8 ignore stop */
