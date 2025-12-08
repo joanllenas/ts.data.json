@@ -1197,6 +1197,37 @@ describe('json-decoder', () => {
   });
 
   describe('Decoder<a>', () => {
+    describe('parse', () => {
+      const userDecoder = JsonDecoder.object(
+        {
+          firstname: JsonDecoder.string(),
+          lastname: JsonDecoder.string()
+        },
+        'User'
+      );
+
+      it('should fail if parsing a number with a string deocder', () => {
+        expect(() => JsonDecoder.string().parse(123)).toThrowError(
+          '123 is not a valid string'
+        );
+      });
+
+      it('should parse a valid JSON string', () => {
+        expect(
+          userDecoder.parse({ firstname: 'John', lastname: 'Doe' })
+        ).toEqual({
+          firstname: 'John',
+          lastname: 'Doe'
+        });
+      });
+
+      it('should fail when decoded value does not match schema', () => {
+        expect(() => userDecoder.parse({ firstname: 'John' })).toThrowError(
+          '<User> decoder failed at key "lastname" with error: undefined is not a valid string'
+        );
+      });
+    });
+
     describe('decodePromise', () => {
       it('should resolve when decoding succeeds', async () => {
         expect(await JsonDecoder.string().decodePromise('hola')).toEqual(

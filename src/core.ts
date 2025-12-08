@@ -59,6 +59,28 @@ export class Decoder<T> implements StandardSchemaV1<unknown, T> {
   constructor(private decodeFn: (json: any) => Result.Result<T>) {}
 
   /**
+   * Parses a JSON object of type <T> and returns the decoded value or throws an error
+   * @param json The JSON object to decode
+   * @returns The decoded value of type T
+   * @throws {string} Throws the error message if decoding fails
+   * @category Entry Point
+   *
+   * @example
+   * ```ts
+   * JsonDecoder.string().parse('hello'); // 'hello'
+   * JsonDecoder.string().parse(123); // throws '123 is not a valid string'
+   * ```
+   */
+  parse(json: any): T {
+    const result = this.decode(json);
+    if (result.isOk()) {
+      return result.value;
+    } else {
+      throw result.error;
+    }
+  }
+
+  /**
    * Decodes a JSON object of type <T> and returns a Result<T>
    * @param json The JSON object to decode
    * @returns A Result containing either the decoded value or an error message
