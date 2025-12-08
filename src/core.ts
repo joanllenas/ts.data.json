@@ -137,13 +137,14 @@ export class Decoder<T> implements StandardSchemaV1<unknown, T> {
     });
   }
 
-  /* v8 ignore next */
+  /* v8 ignore start */
   /**
    * Alias for decodePromise
    * @deprecated Use decodePromise instead
    * @ignore
    */
   decodeToPromise = this.decodePromise;
+  /* v8 ignore stop */
 
   /**
    * If the decoder has succeeded, transforms the decoded value into something else
@@ -200,11 +201,12 @@ export class Decoder<T> implements StandardSchemaV1<unknown, T> {
     });
   }
 
-  /* v8 ignore next */
+  /* v8 ignore start */
   /**
    * Alias for flatMap
    * @deprecated Use flatMap instead
    * @ignore
    */
   chain = this.flatMap;
+  /* v8 ignore stop */
 }

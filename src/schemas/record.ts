@@ -51,7 +51,7 @@ export function record<V>(
   });
 }
 
-/* v8 ignore next */
+/* v8 ignore start */
 /**
  * Alias for the `record` function.
  *
@@ -65,3 +65,4 @@ export function dictionary<V>(
 ): Decoder<{ [K: string]: V }> {
   return record(decoder, decoderName);
 }
+/* v8 ignore stop */
