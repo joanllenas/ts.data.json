@@ -637,17 +637,6 @@ describe('json-decoder', () => {
           lastname: 'Doe'
         });
       });
-      it('should fail when object has unknown keys', () => {
-        const user = {
-          firstname: 'John',
-          lastname: 'Doe',
-          email: 'doe@johndoe.com'
-        };
-        expectErrWithMsg(
-          strictUserDecoder.decode(user),
-          objectStrictUnknownKeyError('User', 'email')
-        );
-      });
       it('should allow decoding from different keys', () => {
         const paymentDecoderFromDifferentKeys =
           JsonDecoder.objectStrict<Payment>(
@@ -675,6 +664,33 @@ describe('json-decoder', () => {
             lastname: 'Doe'
           }
         });
+      });
+      it('should fail when object has unknown keys', () => {
+        const user = {
+          firstname: 'John',
+          lastname: 'Doe',
+          email: 'doe@johndoe.com'
+        };
+        expectErrWithMsg(
+          strictUserDecoder.decode(user),
+          objectStrictUnknownKeyError('User', 'email')
+        );
+      });
+      it('should fail when any decoded key fails to decode', () => {
+        const user = {
+          firstname: 'John',
+          lastname: undefined
+        };
+        expectErrWithMsg(
+          strictUserDecoder.decode(user),
+          objectError('User', 'lastname', primitiveError(undefined, 'string'))
+        );
+      });
+      it('should fail when the provided json is not an object', () => {
+        expectErrWithMsg(
+          strictUserDecoder.decode('hello'),
+          primitiveError('hello', 'User')
+        );
       });
     });
   });
@@ -771,6 +787,15 @@ describe('json-decoder', () => {
           }
         }
       });
+    });
+
+    it('should fail when the provided json is not a record', () => {
+      expectErrWithMsg(
+        JsonDecoder.record(JsonDecoder.number(), 'Dict<number>').decode(
+          'hello'
+        ),
+        primitiveError('hello', 'Dict<number>')
+      );
     });
 
     it('should fail to decode a primitive record with an invalid value', () => {
@@ -1386,6 +1411,17 @@ describe('json-decoder', () => {
         expectErrWithMsg(
           shapeDecoder.decode(circle),
           `<Shape> does not support type "circle"`
+        );
+      });
+
+      it('should fail when flatMap fails', () => {
+        expectErrWithMsg(
+          JsonDecoder.string()
+            .flatMap(() => {
+              return JsonDecoder.fail('Ouch!');
+            })
+            .decode(''),
+          `Ouch!`
         );
       });
 
