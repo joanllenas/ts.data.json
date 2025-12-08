@@ -33,7 +33,7 @@ export function literal<const T>(value: T): Decoder<T> {
   });
 }
 
-/* istanbul ignore next */
+/* v8 ignore next */
 /**
  * Alias for the `literal` function.
  * @category Utils

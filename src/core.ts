@@ -137,7 +137,7 @@ export class Decoder<T> implements StandardSchemaV1<unknown, T> {
     });
   }
 
-  /* istanbul ignore next */
+  /* v8 ignore next */
   /**
    * Alias for decodePromise
    * @deprecated Use decodePromise instead
@@ -200,7 +200,7 @@ export class Decoder<T> implements StandardSchemaV1<unknown, T> {
     });
   }
 
-  /* istanbul ignore next */
+  /* v8 ignore next */
   /**
    * Alias for flatMap
    * @deprecated Use flatMap instead

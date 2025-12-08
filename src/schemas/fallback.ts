@@ -33,7 +33,7 @@ export function fallback<T>(defaultValue: T, decoder: Decoder<T>): Decoder<T> {
   });
 }
 
-/* istanbul ignore next */
+/* v8 ignore next */
 /**
  * Alias for the `fallback` function.
  *

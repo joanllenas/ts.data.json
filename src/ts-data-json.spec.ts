@@ -924,7 +924,27 @@ describe('json-decoder', () => {
         [3, 4, 5]
       ]);
     });
-    it('should decode throw a length mismatch error', () => {
+    it('should fail when the decoded value is not an array', () => {
+      const decoder: Decoder<[number, string]> = JsonDecoder.tuple(
+        [JsonDecoder.number(), JsonDecoder.string()],
+        '[number, string]'
+      );
+      expectErrWithMsg(
+        decoder.decode('hello'),
+        '"hello" is not a valid [number, string]'
+      );
+    });
+    it('should fail when ny of the tuplde items decoder fails', () => {
+      const decoder: Decoder<[number, string]> = JsonDecoder.tuple(
+        [JsonDecoder.number(), JsonDecoder.string()],
+        '[number, string]'
+      );
+      expectErrWithMsg(
+        decoder.decode([1, 2]),
+        arrayError('[number, string]', 1, primitiveError(2, 'string'))
+      );
+    });
+    it('should fail with a length mismatch error', () => {
       const decoder: Decoder<[number, number[]]> = JsonDecoder.tuple(
         [
           JsonDecoder.number(),

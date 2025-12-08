@@ -51,7 +51,7 @@ export function record<V>(
   });
 }
 
-/* istanbul ignore next */
+/* v8 ignore next */
 /**
  * Alias for the `record` function.
  *
