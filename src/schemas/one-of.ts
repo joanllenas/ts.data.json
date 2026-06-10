@@ -34,6 +34,11 @@ export function oneOf<T>(decoders: Array<Decoder<T>>): Decoder<T> {
         return result;
       }
     }
-    return Result.err<T>([{ message: `${JSON.stringify(json)} could not be decoded with any of the provided decoders`, path: [] }]);
+    return Result.err<T>([
+      {
+        message: `${JSON.stringify(json)} could not be decoded with any of the provided decoders`,
+        path: []
+      }
+    ]);
   });
 }

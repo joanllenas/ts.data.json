@@ -32,6 +32,8 @@ export function enumeration<E>(enumObj: object): Decoder<E> {
     if (enumValue !== undefined) {
       return Result.ok<E>(enumValue);
     }
-    return Result.err<E>([{ message: `"${json}" is not a valid enum value`, path: [] }]);
+    return Result.err<E>([
+      { message: `"${json}" is not a valid enum value`, path: [] }
+    ]);
   });
 }

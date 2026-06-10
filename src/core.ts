@@ -125,9 +125,10 @@ export class Decoder<T> implements StandardSchemaV1<unknown, T> {
         return {
           issues: failure.issues.map(issue => ({
             message: issue.message,
-            path: issue.path.length > 0
-              ? issue.path.map(segment => ({ key: segment }))
-              : undefined
+            path:
+              issue.path.length > 0
+                ? issue.path.map(segment => ({ key: segment }))
+                : undefined
           }))
         };
       }
@@ -153,7 +154,9 @@ export class Decoder<T> implements StandardSchemaV1<unknown, T> {
         return resolve(result.value);
       } else {
         const failure = result as Result.Err<T>;
-        return reject(new Error(formatIssues(failure.issues), { cause: failure.issues }));
+        return reject(
+          new Error(formatIssues(failure.issues), { cause: failure.issues })
+        );
       }
     });
   }

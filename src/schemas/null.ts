@@ -27,7 +27,9 @@ function null_(): Decoder<null> {
     if (json === null) {
       return Result.ok<null>(null);
     } else {
-      return Result.err<null>([{ message: `${JSON.stringify(json)} is not null`, path: [] }]);
+      return Result.err<null>([
+        { message: `${JSON.stringify(json)} is not null`, path: [] }
+      ]);
     }
   });
 }

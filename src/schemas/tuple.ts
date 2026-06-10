@@ -49,10 +49,12 @@ export function tuple<T extends readonly [] | readonly Decoder<any>[]>(
     if (json instanceof Array) {
       const arr = [];
       if (json.length !== decoders.length) {
-        return Result.err<TupleOfResults<T>>([{
-          message: `tuple received ${json.length} items but expected ${decoders.length}`,
-          path: []
-        }]);
+        return Result.err<TupleOfResults<T>>([
+          {
+            message: `tuple received ${json.length} items but expected ${decoders.length}`,
+            path: []
+          }
+        ]);
       }
       for (let i = 0; i < json.length; i++) {
         const result = decoders[i].decode(json[i]);

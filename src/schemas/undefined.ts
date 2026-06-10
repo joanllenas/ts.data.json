@@ -27,7 +27,9 @@ function undefined_(): Decoder<undefined> {
     if (json === undefined) {
       return Result.ok<undefined>(undefined);
     } else {
-      return Result.err<undefined>([{ message: `${JSON.stringify(json)} is not undefined`, path: [] }]);
+      return Result.err<undefined>([
+        { message: `${JSON.stringify(json)} is not undefined`, path: [] }
+      ]);
     }
   });
 }

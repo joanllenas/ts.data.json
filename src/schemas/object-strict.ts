@@ -94,7 +94,9 @@ export function objectStrict<T>(decoders: DecoderObjectStrict<T>): Decoder<T> {
       }
       for (const key in json) {
         if (!allowedKeys.has(key)) {
-          return Result.err<T>([{ message: `Unknown key "${key}" found in strict object`, path: [] }]);
+          return Result.err<T>([
+            { message: `Unknown key "${key}" found in strict object`, path: [] }
+          ]);
         }
       }
       const result: any = {};

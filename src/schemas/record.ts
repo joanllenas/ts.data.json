@@ -57,7 +57,9 @@ export function record<V>(decoder: Decoder<V>): Decoder<{ [K: string]: V }> {
  * @deprecated Use `record` directly instead.
  * @ignore
  */
-export function dictionary<V>(decoder: Decoder<V>): Decoder<{ [K: string]: V }> {
+export function dictionary<V>(
+  decoder: Decoder<V>
+): Decoder<{ [K: string]: V }> {
   return record(decoder);
 }
 /* v8 ignore stop */
