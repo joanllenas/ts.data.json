@@ -32,16 +32,3 @@ export function fallback<T>(defaultValue: T, decoder: Decoder<T>): Decoder<T> {
     }
   });
 }
-
-/* v8 ignore start */
-/**
- * Alias for the `fallback` function.
- *
- * @category Transformations
- * @deprecated Use `fallback` directly instead.
- * @ignore
- */
-export function failover<T>(defaultValue: T, decoder: Decoder<T>): Decoder<T> {
-  return fallback(defaultValue, decoder);
-}
-/* v8 ignore stop */

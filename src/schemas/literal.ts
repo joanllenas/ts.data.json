@@ -36,15 +36,3 @@ export function literal<const T>(value: T): Decoder<T> {
     }
   });
 }
-
-/* v8 ignore start */
-/**
- * Alias for the `literal` function.
- * @category Utils
- * @deprecated Use `literal` directly instead.
- * @ignore
- */
-export function isExactly<const T>(value: T): Decoder<T> {
-  return literal(value);
-}
-/* v8 ignore stop */

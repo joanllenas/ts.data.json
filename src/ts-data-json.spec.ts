@@ -203,7 +203,7 @@ describe('json-decoder', () => {
         'algo'
       );
     });
-    it('should return the failoverValue when value is not provided', () => {
+    it('should return the fallback value when value is not provided', () => {
       expectOkWithValue(
         JsonDecoder.fallback('fallback value', JsonDecoder.string()).decode(44),
         'fallback value'

@@ -53,18 +53,3 @@ export function record<V>(decoder: Decoder<V>): Decoder<{ [K: string]: V }> {
     }
   });
 }
-
-/* v8 ignore start */
-/**
- * Alias for the `record` function.
- *
- * @category Data Structures
- * @deprecated Use `record` directly instead.
- * @ignore
- */
-export function dictionary<V>(
-  decoder: Decoder<V>
-): Decoder<{ [K: string]: V }> {
-  return record(decoder);
-}
-/* v8 ignore stop */
