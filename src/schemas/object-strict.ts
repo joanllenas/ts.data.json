@@ -5,9 +5,8 @@
  */
 
 import { Decoder } from '../core';
-import { objectError } from '../errors/object-error';
-import { objectStrictUnknownKeyError } from '../errors/object-strict-unknown-key-error';
-import { primitiveError } from '../errors/primitive-error';
+import { primitiveError } from '../utils/errors';
+import { Err } from '../utils/result';
 import * as Result from '../utils/result';
 
 /**
@@ -46,7 +45,6 @@ export type DecoderObjectStrict<T> = {
  *
  * @category Data Structures
  * @param decoders Key/value pairs of decoders for each object field.
- * @param decoderName How to display the name of the object being decoded in errors.
  * @returns A decoder that validates and returns objects matching the specified structure, failing if unknown fields are present
  *
  * @example
@@ -56,36 +54,27 @@ export type DecoderObjectStrict<T> = {
  *   age: number;
  * }
  *
- * const userDecoder = JsonDecoder.objectStrict<User>(
- *   {
- *     name: JsonDecoder.string(),
- *     age: JsonDecoder.number()
- *   },
- *   'User'
- * );
+ * const userDecoder = JsonDecoder.objectStrict<User>({
+ *   name: JsonDecoder.string(),
+ *   age: JsonDecoder.number()
+ * });
  *
  * userDecoder.decode({name: 'John', age: 30}); // Ok<User>
- * userDecoder.decode({name: 'John', age: 30, extra: 'field'}); // Err({error: 'Unknown key "extra" found while processing strict <User> decoder'})
+ * userDecoder.decode({name: 'John', age: 30, extra: 'field'}); // Err with issues: [{ message: 'Unknown key "extra" found in strict object', path: [] }]
  * ```
  *
  * @example
  * ```ts
- * // You can also use the fromKey API to decode from different JSON keys
- * const userDecoder = JsonDecoder.objectStrict<User>(
- *   {
- *     name: { fromKey: 'user_name', decoder: JsonDecoder.string() },
- *     age: JsonDecoder.number()
- *   },
- *   'User'
- * );
+ * // Use the fromKey API to decode from different JSON keys
+ * const userDecoder = JsonDecoder.objectStrict<User>({
+ *   name: { fromKey: 'user_name', decoder: JsonDecoder.string() },
+ *   age: JsonDecoder.number()
+ * });
  *
  * userDecoder.decode({user_name: 'John', age: 30}); // Ok<User>
  * ```
  */
-export function objectStrict<T>(
-  decoders: DecoderObjectStrict<T>,
-  decoderName: string
-): Decoder<T> {
+export function objectStrict<T>(decoders: DecoderObjectStrict<T>): Decoder<T> {
   return new Decoder<T>((json: any) => {
     if (json !== null && typeof json === 'object') {
       // Build an allowed JSON key set from provided decoders. If a decoder
@@ -105,7 +94,7 @@ export function objectStrict<T>(
       }
       for (const key in json) {
         if (!allowedKeys.has(key)) {
-          return Result.err<T>(objectStrictUnknownKeyError(decoderName, key));
+          return Result.err<T>([{ message: `Unknown key "${key}" found in strict object`, path: [] }]);
         }
       }
       const result: any = {};
@@ -121,13 +110,17 @@ export function objectStrict<T>(
           if (r.isOk()) {
             result[key] = r.value;
           } else {
-            return Result.err<T>(objectError(decoderName, key, r.error));
+            const issues = (r as Err<unknown>).issues.map(issue => ({
+              message: issue.message,
+              path: [key as string, ...issue.path]
+            }));
+            return Result.err<T>(issues);
           }
         }
       }
       return Result.ok<T>(result);
     } else {
-      return Result.err<T>(primitiveError(json, decoderName));
+      return Result.err<T>(primitiveError(json, 'object'));
     }
   });
 }

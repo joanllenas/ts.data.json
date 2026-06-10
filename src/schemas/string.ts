@@ -6,7 +6,7 @@
 
 import { Decoder } from '../core';
 import * as Result from '../utils/result';
-import { primitiveError } from '../errors/primitive-error';
+import { primitiveError } from '../utils/errors';
 
 /**
  * Decoder for `string` values.

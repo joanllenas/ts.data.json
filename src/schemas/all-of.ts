@@ -5,7 +5,7 @@
  */
 
 import { Decoder } from '../core';
-import { allOfError } from '../errors/all-of-error';
+import { Err } from '../utils/result';
 import * as Result from '../utils/result';
 
 /**
@@ -39,26 +39,23 @@ export type AllOfOutput<T extends readonly Decoder<any>[]> =
  *
  * @category Utils
  * @param decoders Array of decoders to try in sequence
- * @param decoderName How to display the name of the object being decoded in errors
  * @returns A decoder that tries each decoder in sequence until all succeed
  *
  * @example
  * ```ts
  *  type User = { firstname: string; lastname: string; role: 'admin' | 'user'; };
- *  const firstnameDecoder = JsonDecoder.object({ firstname: JsonDecoder.string() }, '{firstname: string}');
- *  const lastnameDecoder = JsonDecoder.object({ lastname: JsonDecoder.string() }, '{lastname: string}');
- *  const roleDecoder = JsonDecoder.oneOf([JsonDecoder.literal('admin'), JsonDecoder.literal('user')], 'admin | user');
+ *  const firstnameDecoder = JsonDecoder.object({ firstname: JsonDecoder.string() });
+ *  const lastnameDecoder = JsonDecoder.object({ lastname: JsonDecoder.string() });
+ *  const roleDecoder = JsonDecoder.oneOf([JsonDecoder.literal('admin'), JsonDecoder.literal('user')]);
  *  const userDecoder: Decoder<User> = JsonDecoder.allOf(
- *    [firstnameDecoder, lastnameDecoder, JsonDecoder.object({ role: roleDecoder }, 'role')],
- *    'User'
+ *    [firstnameDecoder, lastnameDecoder, JsonDecoder.object({ role: roleDecoder })]
  *  );
- *  userDecoder.decode({ firstname: 'John', lastname: 'Doe', role: 'admin' }); // Ok<User>({value: { firstname: 'John', lastname: 'Doe', role: 'admin' }})
- *  userDecoder.decode({ firstname: 'John' }); // Err({error: '<User> allOf decoder failed at index #1 with <{lastname: string}> decoder failed at key "lastname" with error: undefined is not a valid string'})
+ *  userDecoder.decode({ firstname: 'John', lastname: 'Doe', role: 'admin' }); // Ok<User>
+ *  userDecoder.decode({ firstname: 'John' }); // Err with issues: [{ message: 'undefined is not a valid string', path: ['lastname'] }]
  * ```
  */
 export function allOf<T extends readonly Decoder<any>[]>(
-  decoders: T,
-  decoderName: string
+  decoders: T
 ): Decoder<AllOfOutput<T>> {
   return new Decoder((json: any) => {
     const isObj = isPlainObject(json);
@@ -72,7 +69,7 @@ export function allOf<T extends readonly Decoder<any>[]>(
           lastJson = result.value;
         }
       } else {
-        return Result.err<T>(allOfError(decoderName, i, result.error));
+        return Result.err<T>((result as Err<unknown>).issues);
       }
     }
     return Result.ok(lastJson);

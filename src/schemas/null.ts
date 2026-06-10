@@ -5,7 +5,6 @@
  */
 
 import { Decoder } from '../core';
-import { nullError } from '../errors/null-error';
 import * as Result from '../utils/result';
 
 /**
@@ -28,7 +27,7 @@ function null_(): Decoder<null> {
     if (json === null) {
       return Result.ok<null>(null);
     } else {
-      return Result.err<null>(nullError(json));
+      return Result.err<null>([{ message: `${JSON.stringify(json)} is not null`, path: [] }]);
     }
   });
 }

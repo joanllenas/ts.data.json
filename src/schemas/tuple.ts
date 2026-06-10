@@ -5,9 +5,8 @@
  */
 
 import { Decoder } from '../core';
-import { arrayError } from '../errors/array-error';
-import { primitiveError } from '../errors/primitive-error';
-import { tupleLengthMismatchError } from '../errors/tuple-length-mismatch-error';
+import { primitiveError } from '../utils/errors';
+import { Err } from '../utils/result';
 import * as Result from '../utils/result';
 
 /**
@@ -33,46 +32,44 @@ export type TupleOfResults<T extends readonly [] | readonly Decoder<any>[]> = {
  *
  * @category Data Structures
  * @param decoders Array of decoders for each tuple element
- * @param decoderName How to display the name of the object being decoded in errors
  * @returns A decoder that validates and returns tuples
  *
  * @example
  * ```ts
- * const pointDecoder = JsonDecoder.tuple(
- *   [JsonDecoder.number(), JsonDecoder.number()],
- *   'Point'
- * );
+ * const pointDecoder = JsonDecoder.tuple([JsonDecoder.number(), JsonDecoder.number()]);
  *
  * pointDecoder.decode([1, 2]); // Ok<[number, number]>
- * pointDecoder.decode([1, 2, 3]); // Err({error: '<Point> tuple decoder failed because it received a tuple of length 3 but expected 2'})
+ * pointDecoder.decode([1, 2, 3]); // Err with issues: [{ message: 'tuple received 3 items but expected 2', path: [] }]
  * ```
  */
 export function tuple<T extends readonly [] | readonly Decoder<any>[]>(
-  decoders: T,
-  decoderName: string
+  decoders: T
 ): Decoder<TupleOfResults<T>> {
   return new Decoder<TupleOfResults<T>>(json => {
     if (json instanceof Array) {
       const arr = [];
       if (json.length !== decoders.length) {
-        return Result.err<TupleOfResults<T>>(
-          tupleLengthMismatchError(decoderName, json, decoders)
-        );
+        return Result.err<TupleOfResults<T>>([{
+          message: `tuple received ${json.length} items but expected ${decoders.length}`,
+          path: []
+        }]);
       }
       for (let i = 0; i < json.length; i++) {
         const result = decoders[i].decode(json[i]);
         if (result.isOk()) {
           arr.push(result.value);
         } else {
-          return Result.err<TupleOfResults<T>>(
-            arrayError(decoderName, i, result.error)
-          );
+          const issues = (result as Err<unknown>).issues.map(issue => ({
+            message: issue.message,
+            path: [i, ...issue.path]
+          }));
+          return Result.err<TupleOfResults<T>>(issues);
         }
       }
       // Cast to a tuple of the right type.
       return Result.ok<TupleOfResults<T>>(arr as unknown as TupleOfResults<T>);
     } else {
-      return Result.err<TupleOfResults<T>>(primitiveError(json, decoderName));
+      return Result.err<TupleOfResults<T>>(primitiveError(json, 'tuple'));
     }
   });
 }

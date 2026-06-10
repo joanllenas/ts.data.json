@@ -5,8 +5,8 @@
  */
 
 import { Decoder } from '../core';
-import { primitiveError } from '../errors/primitive-error';
-import { recordError } from '../errors/record-error';
+import { primitiveError } from '../utils/errors';
+import { Err } from '../utils/result';
 import * as Result from '../utils/result';
 
 /**
@@ -14,21 +14,17 @@ import * as Result from '../utils/result';
  *
  * @category Data Structures
  * @param decoder The decoder for the record values
- * @param decoderName How to display the name of the object being decoded in errors
  * @returns A decoder that validates and returns a record with string keys
  *
  * @example
  * ```ts
- * const numberRecord = JsonDecoder.record(JsonDecoder.number(), 'NumberRecord');
+ * const numberRecord = JsonDecoder.record(JsonDecoder.number());
  *
  * numberRecord.decode({a: 1, b: 2}); // Ok<Record<string, number>>
- * numberRecord.decode({a: '1', b: 2}); // Err({error: '<NumberRecord> record decoder failed at key "a" with error: "1" is not a valid number'})
+ * numberRecord.decode({a: '1', b: 2}); // Err with issues: [{ message: '"1" is not a valid number', path: ['a'] }]
  * ```
  */
-export function record<V>(
-  decoder: Decoder<V>,
-  decoderName: string
-): Decoder<{ [K: string]: V }> {
+export function record<V>(decoder: Decoder<V>): Decoder<{ [K: string]: V }> {
   return new Decoder<{ [K: string]: V }>(json => {
     if (json !== null && typeof json === 'object') {
       const obj: { [K: string]: V } = {};
@@ -38,15 +34,17 @@ export function record<V>(
           if (result.isOk()) {
             obj[key] = result.value;
           } else {
-            return Result.err<{ [K: string]: V }>(
-              recordError(decoderName, key, result.error)
-            );
+            const issues = (result as Err<unknown>).issues.map(issue => ({
+              message: issue.message,
+              path: [key, ...issue.path]
+            }));
+            return Result.err<{ [K: string]: V }>(issues);
           }
         }
       }
       return Result.ok<{ [K: string]: V }>(obj);
     } else {
-      return Result.err<{ [K: string]: V }>(primitiveError(json, decoderName));
+      return Result.err<{ [K: string]: V }>(primitiveError(json, 'object'));
     }
   });
 }
@@ -59,10 +57,7 @@ export function record<V>(
  * @deprecated Use `record` directly instead.
  * @ignore
  */
-export function dictionary<V>(
-  decoder: Decoder<V>,
-  decoderName: string
-): Decoder<{ [K: string]: V }> {
-  return record(decoder, decoderName);
+export function dictionary<V>(decoder: Decoder<V>): Decoder<{ [K: string]: V }> {
+  return record(decoder);
 }
 /* v8 ignore stop */

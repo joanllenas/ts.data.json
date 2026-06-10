@@ -5,7 +5,6 @@
  */
 
 import { Decoder } from '../core';
-import { exactlyError } from '../errors/exactly-error';
 import * as Result from '../utils/result';
 
 /**
@@ -28,7 +27,7 @@ export function literal<const T>(value: T): Decoder<T> {
     if (json === value) {
       return Result.ok<T>(value);
     } else {
-      return Result.err<T>(exactlyError(json, value));
+      return Result.err<T>([{ message: `${JSON.stringify(json)} is not exactly ${JSON.stringify(value)}`, path: [] }]);
     }
   });
 }

@@ -5,7 +5,7 @@
  */
 
 import { Decoder } from '../core';
-import { primitiveError } from '../errors/primitive-error';
+import { primitiveError } from '../utils/errors';
 import * as Result from '../utils/result';
 
 /**

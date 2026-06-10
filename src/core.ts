@@ -4,8 +4,19 @@
  * @category Api docs
  */
 
+import type { DecodingIssue } from './utils/result';
 import * as Result from './utils/result';
 import type { StandardSchemaV1 } from './utils/standard-schema-v1';
+
+function formatIssues(issues: ReadonlyArray<DecodingIssue>): string {
+  return issues
+    .map(issue =>
+      issue.path.length === 0
+        ? issue.message
+        : `${issue.path.join('.')}: ${issue.message}`
+    )
+    .join('; ');
+}
 
 /**
  * Extracts the type parameter T from a JsonDecoder.Decoder<T>.
@@ -39,7 +50,7 @@ export type FromDecoder<D> = D extends Decoder<infer T> ? T : never;
  *     if (typeof json === 'string') {
  *       return JsonDecoder.ok(json);
  *     } else {
- *       return JsonDecoder.err('Expected a string');
+ *       return JsonDecoder.err([{ message: 'Expected a string', path: [] }]);
  *     }
  *   }
  * );
@@ -62,13 +73,13 @@ export class Decoder<T> implements StandardSchemaV1<unknown, T> {
    * Parses a JSON object of type <T> and returns the decoded value or throws an error
    * @param json The JSON object to decode
    * @returns The decoded value of type T
-   * @throws {string} Throws the error message if decoding fails
+   * @throws {Error} Throws an Error whose message describes the failure and whose `cause` contains the structured `DecodingIssue[]`
    * @category Entry Point
    *
    * @example
    * ```ts
    * JsonDecoder.string().parse('hello'); // 'hello'
-   * JsonDecoder.string().parse(123); // throws '123 is not a valid string'
+   * JsonDecoder.string().parse(123); // throws Error('123 is not a valid string')
    * ```
    */
   parse(json: any): T {
@@ -76,7 +87,8 @@ export class Decoder<T> implements StandardSchemaV1<unknown, T> {
     if (result.isOk()) {
       return result.value;
     } else {
-      throw result.error;
+      const failure = result as Result.Err<T>;
+      throw new Error(formatIssues(failure.issues), { cause: failure.issues });
     }
   }
 
@@ -109,7 +121,15 @@ export class Decoder<T> implements StandardSchemaV1<unknown, T> {
       if (result.isOk()) {
         return { value: result.value };
       } else {
-        return { issues: [{ message: result.error }] };
+        const failure = result as Result.Err<T>;
+        return {
+          issues: failure.issues.map(issue => ({
+            message: issue.message,
+            path: issue.path.length > 0
+              ? issue.path.map(segment => ({ key: segment }))
+              : undefined
+          }))
+        };
       }
     }
   };
@@ -123,7 +143,7 @@ export class Decoder<T> implements StandardSchemaV1<unknown, T> {
    * @example
    * ```ts
    * JsonDecoder.string().decodePromise('hola').then(res => console.log(res)); // 'hola'
-   * JsonDecoder.string().decodePromise(2).catch(err => console.log(err)); // '2 is not a valid string'
+   * JsonDecoder.string().decodePromise(2).catch(err => console.log(err.message)); // '2 is not a valid string'
    * ```
    */
   decodePromise(json: any): Promise<T> {
@@ -132,7 +152,8 @@ export class Decoder<T> implements StandardSchemaV1<unknown, T> {
       if (result.isOk()) {
         return resolve(result.value);
       } else {
-        return reject(result.error);
+        const failure = result as Result.Err<T>;
+        return reject(new Error(formatIssues(failure.issues), { cause: failure.issues }));
       }
     });
   }
@@ -168,7 +189,7 @@ export class Decoder<T> implements StandardSchemaV1<unknown, T> {
       if (result.isOk()) {
         return Result.ok(fn(result.value));
       } else {
-        return Result.err(result.error);
+        return Result.err((result as Result.Err<T>).issues);
       }
     });
   }
@@ -196,7 +217,7 @@ export class Decoder<T> implements StandardSchemaV1<unknown, T> {
       if (result.isOk()) {
         return fn(result.value).decode(json);
       } else {
-        return Result.err(result.error);
+        return Result.err((result as Result.Err<T>).issues);
       }
     });
   }
