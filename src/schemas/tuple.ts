@@ -5,8 +5,7 @@
  */
 
 import { Decoder } from '../core';
-import { primitiveError } from '../utils/errors';
-import { Err } from '../utils/result';
+import { primitiveError, prependPath } from '../utils/errors';
 import * as Result from '../utils/result';
 
 /**
@@ -47,7 +46,6 @@ export function tuple<T extends readonly [] | readonly Decoder<any>[]>(
 ): Decoder<TupleOfResults<T>> {
   return new Decoder<TupleOfResults<T>>(json => {
     if (json instanceof Array) {
-      const arr = [];
       if (json.length !== decoders.length) {
         return Result.err<TupleOfResults<T>>([
           {
@@ -56,17 +54,18 @@ export function tuple<T extends readonly [] | readonly Decoder<any>[]>(
           }
         ]);
       }
+      const arr = [];
+      const allIssues: Result.DecodingIssue[] = [];
       for (let i = 0; i < json.length; i++) {
         const result = decoders[i].decode(json[i]);
         if (result.isOk()) {
           arr.push(result.value);
         } else {
-          const issues = (result as Err<unknown>).issues.map(issue => ({
-            message: issue.message,
-            path: [i, ...issue.path]
-          }));
-          return Result.err<TupleOfResults<T>>(issues);
+          allIssues.push(...prependPath(result.issues, i));
         }
+      }
+      if (allIssues.length > 0) {
+        return Result.err<TupleOfResults<T>>(allIssues);
       }
       // Cast to a tuple of the right type.
       return Result.ok<TupleOfResults<T>>(arr as unknown as TupleOfResults<T>);

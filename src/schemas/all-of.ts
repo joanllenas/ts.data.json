@@ -5,7 +5,6 @@
  */
 
 import { Decoder } from '../core';
-import { Err } from '../utils/result';
 import * as Result from '../utils/result';
 
 /**
@@ -60,6 +59,7 @@ export function allOf<T extends readonly Decoder<any>[]>(
   return new Decoder((json: any) => {
     const isObj = isPlainObject(json);
     let lastJson = json;
+    const allIssues: Result.DecodingIssue[] = [];
     for (let i = 0; i < decoders.length; i++) {
       const result = decoders[i].decode(lastJson);
       if (result.isOk()) {
@@ -69,8 +69,11 @@ export function allOf<T extends readonly Decoder<any>[]>(
           lastJson = result.value;
         }
       } else {
-        return Result.err<T>((result as Err<unknown>).issues);
+        allIssues.push(...result.issues);
       }
+    }
+    if (allIssues.length > 0) {
+      return Result.err<T>(allIssues);
     }
     return Result.ok(lastJson);
   });

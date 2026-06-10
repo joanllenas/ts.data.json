@@ -28,17 +28,28 @@ import * as Result from '../utils/result';
  */
 export function oneOf<T>(decoders: Array<Decoder<T>>): Decoder<T> {
   return new Decoder<T>((json: any) => {
+    let deepestIssues: ReadonlyArray<Result.DecodingIssue> = [];
+    let deepestDepth = -1;
     for (let i = 0; i < decoders.length; i++) {
       const result = decoders[i].decode(json);
       if (result.isOk()) {
         return result;
       }
+      const maxDepth = result.issues.reduce(
+        (max, issue) => Math.max(max, issue.path.length),
+        0
+      );
+      if (maxDepth > deepestDepth) {
+        deepestDepth = maxDepth;
+        deepestIssues = result.issues;
+      }
     }
-    return Result.err<T>([
-      {
+    if (deepestIssues.length === 0) {
+      return Result.err<T>([{
         message: `${JSON.stringify(json)} could not be decoded with any of the provided decoders`,
         path: []
-      }
-    ]);
+      }]);
+    }
+    return Result.err<T>(deepestIssues);
   });
 }

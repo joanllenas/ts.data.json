@@ -5,8 +5,7 @@
  */
 
 import { Decoder } from '../core';
-import { primitiveError } from '../utils/errors';
-import { Err } from '../utils/result';
+import { primitiveError, prependPath } from '../utils/errors';
 import * as Result from '../utils/result';
 
 /**
@@ -81,6 +80,7 @@ export function object<T>(decoders: DecoderObject<T>): Decoder<T> {
   return new Decoder<T>((json: any) => {
     if (json !== null && typeof json === 'object') {
       const result: any = {};
+      const allIssues: Result.DecodingIssue[] = [];
       for (const key in decoders) {
         if (Object.prototype.hasOwnProperty.call(decoders, key)) {
           let r;
@@ -93,13 +93,12 @@ export function object<T>(decoders: DecoderObject<T>): Decoder<T> {
           if (r.isOk()) {
             result[key] = r.value;
           } else {
-            const issues = (r as Err<unknown>).issues.map(issue => ({
-              message: issue.message,
-              path: [key as string, ...issue.path]
-            }));
-            return Result.err<T>(issues);
+            allIssues.push(...prependPath(r.issues, key as string));
           }
         }
+      }
+      if (allIssues.length > 0) {
+        return Result.err<T>(allIssues);
       }
       return Result.ok<T>(result);
     } else {

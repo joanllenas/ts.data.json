@@ -5,8 +5,7 @@
  */
 
 import { Decoder } from '../core';
-import { primitiveError } from '../utils/errors';
-import { Err } from '../utils/result';
+import { primitiveError, prependPath } from '../utils/errors';
 import * as Result from '../utils/result';
 
 /**
@@ -92,11 +91,10 @@ export function objectStrict<T>(decoders: DecoderObjectStrict<T>): Decoder<T> {
           }
         }
       }
+      const allIssues: Result.DecodingIssue[] = [];
       for (const key in json) {
         if (!allowedKeys.has(key)) {
-          return Result.err<T>([
-            { message: `Unknown key "${key}" found in strict object`, path: [] }
-          ]);
+          allIssues.push({ message: `Unknown key "${key}" found in strict object`, path: [] });
         }
       }
       const result: any = {};
@@ -112,13 +110,12 @@ export function objectStrict<T>(decoders: DecoderObjectStrict<T>): Decoder<T> {
           if (r.isOk()) {
             result[key] = r.value;
           } else {
-            const issues = (r as Err<unknown>).issues.map(issue => ({
-              message: issue.message,
-              path: [key as string, ...issue.path]
-            }));
-            return Result.err<T>(issues);
+            allIssues.push(...prependPath(r.issues, key as string));
           }
         }
+      }
+      if (allIssues.length > 0) {
+        return Result.err<T>(allIssues);
       }
       return Result.ok<T>(result);
     } else {

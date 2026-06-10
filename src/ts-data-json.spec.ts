@@ -362,13 +362,7 @@ describe('json-decoder', () => {
           JsonDecoder.string(),
           JsonDecoder.number()
         ]).decode(true),
-        [
-          {
-            message:
-              'true could not be decoded with any of the provided decoders',
-            path: []
-          }
-        ]
+        [{ message: 'true is not a valid string', path: [] }]
       );
     });
     it('should apply transformations', () => {
@@ -412,7 +406,8 @@ describe('json-decoder', () => {
 
     it('should fail when any of the provided decoders fail', () => {
       expectErrWithIssues(userDecoder.decode({ firstname: 'John' }), [
-        { message: 'undefined is not a valid string', path: ['lastname'] }
+        { message: 'undefined is not a valid string', path: ['lastname'] },
+        { message: 'undefined is not exactly "admin"', path: ['role'] }
       ]);
     });
 
@@ -534,12 +529,16 @@ describe('json-decoder', () => {
         lastname: true
       };
       expectErrWithIssues(userDecoder.decode(user), [
-        { message: '2 is not a valid string', path: ['firstname'] }
+        { message: '2 is not a valid string', path: ['firstname'] },
+        { message: 'true is not a valid string', path: ['lastname'] }
       ]);
 
       expectStandardErrWithIssues(
         userDecoder['~standard'].validate(user) as Result<User>,
-        [{ message: '2 is not a valid string', path: [{ key: 'firstname' }] }]
+        [
+          { message: '2 is not a valid string', path: [{ key: 'firstname' }] },
+          { message: 'true is not a valid string', path: [{ key: 'lastname' }] }
+        ]
       );
     });
 

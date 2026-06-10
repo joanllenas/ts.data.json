@@ -5,8 +5,7 @@
  */
 
 import { Decoder } from '../core';
-import { primitiveError } from '../utils/errors';
-import { Err } from '../utils/result';
+import { primitiveError, prependPath } from '../utils/errors';
 import * as Result from '../utils/result';
 
 /**
@@ -28,17 +27,17 @@ export function array<T>(decoder: Decoder<T>): Decoder<Array<T>> {
   return new Decoder<Array<T>>(json => {
     if (json instanceof Array) {
       const arr: Array<T> = [];
+      const allIssues: Result.DecodingIssue[] = [];
       for (let i = 0; i < json.length; i++) {
         const result = decoder.decode(json[i]);
         if (result.isOk()) {
           arr.push(result.value);
         } else {
-          const issues = (result as Err<unknown>).issues.map(issue => ({
-            message: issue.message,
-            path: [i, ...issue.path]
-          }));
-          return Result.err<Array<T>>(issues);
+          allIssues.push(...prependPath(result.issues, i));
         }
+      }
+      if (allIssues.length > 0) {
+        return Result.err<Array<T>>(allIssues);
       }
       return Result.ok<Array<T>>(arr);
     } else {
