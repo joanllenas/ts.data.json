@@ -4,169 +4,104 @@
 ![codecov](https://codecov.io/gh/joanllenas/ts.data.json/graph/badge.svg?token=LI9KXL4QT0)
 [![npm version](https://badge.fury.io/js/ts.data.json.svg)](https://www.npmjs.com/package/ts.data.json)
 [![bundle size](https://badgen.net/bundlephobia/minzip/ts.data.json)](https://bundlephobia.com/package/ts.data.json)
-[![npm downloads](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fapi.npmjs.org%2Fdownloads%2Fpoint%2Flast-month%2Fts.data.json&query=%24.downloads&suffix=%2Fmonth&label=downloads&cacheSeconds=86400)](https://www.npmjs.com/package/ts.data.json)
+[![npm downloads](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fapi.npmjs.org%2Fdownloads%2Fpoint%2Flast-month%2Fts.data.json&query=%24.downloads&suffix=%2Fmonth&label=downloads&cacheSeconds=101220)](https://www.npmjs.com/package/ts.data.json)
 
-
-
-TypeScript type annotations offer compile-time guarantees. However, when data flows into our applications from external sources, various issues can still occur at runtime.
-
-JSON decoders validate incoming JSON before it enters the application. This way, if the data has an unexpected structure, we're immediately alerted.
+TypeScript types vanish at runtime, so the moment JSON crosses into your app from an API, a file, or `localStorage`, those compile-time guarantees are gone. `ts.data.json` puts them back: you describe the shape you expect with a **decoder**, and it validates the data at the boundary, handing you a fully typed value or a precise error.
 
 <p align="center">
   <a href="https://en.wikipedia.org/wiki/All_your_base_are_belong_to_us">
-    <img src="assets/media/all-your-json-are-belong-to-us.jpg">
+    <img src="assets/media/all-your-json-are-belong-to-us.jpg" alt="All your JSON are belong to us">
   </a>
 </p>
 
-## Documentation
+## Features
 
-The [documentation site](https://joanllenas.github.io/ts.data.json/) is auto-generated with TSDoc comments using TypeDoc. You'll find documentation for v2.3.1, v3 and later.
-
-Planning to migrate to v3? Be sure to read the [v3 migration guide](https://joanllenas.github.io/ts.data.json/v3.0.0/documents/Migrating_to_v3.html).
-
-If you're new to JSON decoding, you should read the introductory article [Decoding JSON with TypeScript](https://dev.to/joanllenas/decoding-json-with-typescript-1jjc), which, although somewhat dated, clearly explains how and why to use this library.
+- **Tiny & tree-shakeable** -- zero dependencies, ships ESM + CJS, `sideEffects: false`. You bundle only the decoders you import.
+- **Rich, structured errors** -- every failure is a `{ message, path }` issue, and _all_ failures are reported at once, not just the first.
+- **Standard Schema compliant** -- decoders implement the [Standard Schema](https://standardschema.dev) spec, so they drop straight into any Standard-Schema-aware tool.
+- **Type inference** -- derive your static types from the decoders themselves with `FromDecoder`. No duplicate interfaces to keep in sync.
 
 ## Installation
 
 ```bash
-npm install ts.data.json --save
+npm install ts.data.json
 ```
 
-## Quick Example
+## Quick example
 
-You can play with this example in [this stackblitz playground](https://stackblitz.com/edit/ts-data-json-decoder-playground-cg13tmki?file=src%2Fmain.ts).
-
-### One import to rule them all
+One import gives you every decoder:
 
 ```ts
 import * as JsonDecoder from 'ts.data.json';
 ```
 
-### Define your types
+Describe the shape you expect, then let TypeScript infer the type from it:
 
 ```ts
-interface Address {
-  street: string;
-  city: string;
-  country: string;
-  postalCode: string;
+const userDecoder = JsonDecoder.object({
+  id: JsonDecoder.number(),
+  name: JsonDecoder.string(),
+  roles: JsonDecoder.array(JsonDecoder.string()),
+  lastLogin: JsonDecoder.nullable(JsonDecoder.string().map(iso => new Date(iso)))
+});
+
+// No separate interface needed:
+type User = JsonDecoder.FromDecoder<typeof userDecoder>;
+// { id: number; name: string; roles: string[]; lastLogin: Date | null }
+```
+
+Decode trusted-looking data and get back a typed value:
+
+```ts
+const result = userDecoder.decode({
+  id: 123,
+  name: 'Marty McFly',
+  roles: ['user', 'premium'],
+  lastLogin: '1985-10-26T01:21:00Z'
+});
+
+if (result.isOk()) {
+  const user: User = result.value;
+  console.log(`Welcome back, ${user.name}!`);
 }
 ```
 
-### Create decoders for each type
+When the data is wrong, you get structured issues that point at exactly what failed:
 
 ```ts
-const addressDecoder = JsonDecoder.object<Address>(
-  {
-    street: JsonDecoder.string(),
-    city: JsonDecoder.string(),
-    country: JsonDecoder.string(),
-    postalCode: JsonDecoder.string()
-  },
-  'Address'
-);
-
-const userDecoder = JsonDecoder.object(
-  {
-    id: JsonDecoder.number(),
-    email: JsonDecoder.string(),
-    name: JsonDecoder.string(),
-    age: JsonDecoder.optional(JsonDecoder.number()),
-    address: addressDecoder,
-    tags: JsonDecoder.array(JsonDecoder.string(), 'string[]'),
-    isActive: JsonDecoder.boolean(),
-    lastLogin: JsonDecoder.nullable(JsonDecoder.string().map(str => new Date(str)))
-  },
-  'User'
-);
-```
-
-### Infer your types
-
-You can also infer the types from its decoders!
-
-```ts
-type User = JsonDecoder.FromDecoder<typeof userDecoder>;
-```
-
-### Decode a valid API response
-
-```ts
-// Valid API response
-const apiResponse = {
-  id: 123,
-  email: 'marty@mcfly.com',
+const result = userDecoder.decode({
+  id: 'not-a-number', // should be a number
   name: 'Marty McFly',
-  age: 17,
-  address: {
-    street: '123 Main St',
-    city: 'San Francisco',
-    country: 'USA',
-    postalCode: '94105'
-  },
-  tags: ['user', 'premium'],
-  isActive: true,
-  lastLogin: '1985-10-26T01:21:00Z'
-};
+  roles: ['user', 42], // 42 should be a string
+  lastLogin: null
+});
 
-// Decode the response
-userDecoder
-  .decodePromise(apiResponse)
-  .then((user: User) => {
-    log(`Welcome back, ${user.name}!`);
-    log(`Your last login was: ${user.lastLogin?.toLocaleString()}`);
-  })
-  .catch(error => {
-    console.error('Failed to decode user data:', error);
+if (!result.isOk()) {
+  result.issues.forEach(issue => {
+    console.log(`${issue.path.join('.')}: ${issue.message}`);
   });
+  // id: "not-a-number" is not a valid number
+  // roles.1: 42 is not a valid string
+}
 ```
 
-### Output
+## Documentation
 
-```txt
-Welcome back, Marty McFly!
-Your last login was: 10/26/1985, 1:21:00 AM
-```
+Full, auto-generated API docs and guides live on the [documentation site](https://joanllenas.github.io/ts.data.json/):
 
-### Decode an invalid API response
+- [Basic Usage](https://joanllenas.github.io/ts.data.json/latest/documents/Basic_Usage.html)
+- [Advanced Usage](https://joanllenas.github.io/ts.data.json/latest/documents/Advanced_Usage.html)
+- [Migrating from v2 to v3](https://joanllenas.github.io/ts.data.json/v3.0.0/documents/Migrating_to_v3.html)
+- [Migrating from v3 to v4](https://joanllenas.github.io/ts.data.json/latest/documents/Migrating_to_v4.html)
 
-```ts
-// Invalid API response
-const invalidResponse = {
-  id: 'not-a-number', // Should be a number
-  email: 'marty@mcfly.com',
-  name: 'Marty McFly',
-  age: 17,
-  address: {
-    street: '123 Main St',
-    city: 'San Francisco',
-    country: 'USA',
-    postalCode: '94105'
-  },
-  tags: ['user', 'premium'],
-  isActive: true,
-  lastLogin: '1985-10-26T01:21:00Z'
-};
-
-// Decode the response
-userDecoder
-  .decodePromise(invalidResponse)
-  .then(() => {
-    log('User decoded successfully');
-  })
-  .catch(error => {
-    log(`Validation failed: ${error}`, true);
-  });
-```
-
-### Output
-
-```txt
-Validation failed: <User> decoder failed at key "id" with error: "not-a-number" is not a valid number
-```
+New to JSON decoding? The introductory article [Decoding JSON with TypeScript](https://dev.to/joanllenas/decoding-json-with-typescript-1jjc) explains the how and why (slightly dated, but the ideas still hold).
 
 ## Related libraries
 
 - [zod](https://github.com/colinhacks/zod)
 - [valibot](https://github.com/fabian-hiller/valibot)
 - [io-ts](https://github.com/gcanti/io-ts)
+
+## License
+
+Released under the [BSD-3-Clause](LICENSE) license.

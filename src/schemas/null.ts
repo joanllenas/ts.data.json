@@ -5,7 +5,6 @@
  */
 
 import { Decoder } from '../core';
-import { nullError } from '../errors/null-error';
 import * as Result from '../utils/result';
 
 /**
@@ -18,8 +17,8 @@ import * as Result from '../utils/result';
  * ```ts
  * const nullDecoder = JsonDecoder.null();
  * nullDecoder.decode(null); // Ok<null>({value: null})
- * nullDecoder.decode(123); // Err({error: '123 is not a valid null'})
- * nullDecoder.decode(undefined); // Err({error: 'undefined is not a valid null'})
+ * nullDecoder.decode(123); // Err({ issues: [{ message: '123 is not null', path: [] }] })
+ * nullDecoder.decode(undefined); // Err({ issues: [{ message: 'undefined is not null', path: [] }] })
  * ```
  * @category Primitives
  */
@@ -28,7 +27,9 @@ function null_(): Decoder<null> {
     if (json === null) {
       return Result.ok<null>(null);
     } else {
-      return Result.err<null>(nullError(json));
+      return Result.err<null>([
+        { message: `${JSON.stringify(json)} is not null`, path: [] }
+      ]);
     }
   });
 }

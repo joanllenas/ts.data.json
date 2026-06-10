@@ -17,11 +17,11 @@ import * as Result from '../utils/result';
  * @example
  * ```ts
  * const failDecoder = JsonDecoder.fail<string>('This decoder always fails');
- * failDecoder.decode('anything'); // Err({error: 'This decoder always fails'})
+ * failDecoder.decode('anything'); // Err({ issues: [{ message: 'This decoder always fails', path: [] }] })
  * ```
  */
 export function fail<T>(error: string): Decoder<T> {
   return new Decoder<T>(() => {
-    return Result.err<any>(error);
+    return Result.err<T>([{ message: error, path: [] }]);
   });
 }

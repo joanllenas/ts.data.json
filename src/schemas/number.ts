@@ -6,7 +6,7 @@
 
 import { Decoder } from '../core';
 import * as Result from '../utils/result';
-import { primitiveError } from '../errors/primitive-error';
+import { primitiveError } from '../utils/errors';
 
 /**
  * Decoder for `number` values.
@@ -17,7 +17,7 @@ import { primitiveError } from '../errors/primitive-error';
  * @example
  * ```ts
  * JsonDecoder.number().decode(99); // Ok<number>({value: 99})
- * JsonDecoder.number().decode('hola'); // Err({error: 'hola is not a valid number'})
+ * JsonDecoder.number().decode('hola'); // Err({ issues: [{ message: '"hola" is not a valid number', path: [] }] })
  * ```
  */
 export function number(): Decoder<number> {

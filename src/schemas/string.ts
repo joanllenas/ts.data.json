@@ -6,7 +6,7 @@
 
 import { Decoder } from '../core';
 import * as Result from '../utils/result';
-import { primitiveError } from '../errors/primitive-error';
+import { primitiveError } from '../utils/errors';
 
 /**
  * Decoder for `string` values.
@@ -17,7 +17,7 @@ import { primitiveError } from '../errors/primitive-error';
  * @example
  * ```ts
  * JsonDecoder.string().decode('hi'); // Ok<string>({value: 'hi'})
- * JsonDecoder.string().decode(5); // Err({error: '5 is not a valid string'})
+ * JsonDecoder.string().decode(5); // Err({ issues: [{ message: '"5" is not a valid string', path: [] }] })
  * ```
  */
 export function string(): Decoder<string> {

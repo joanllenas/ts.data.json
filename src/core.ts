@@ -4,8 +4,19 @@
  * @category Api docs
  */
 
+import type { DecodingIssue } from './utils/result';
 import * as Result from './utils/result';
 import type { StandardSchemaV1 } from './utils/standard-schema-v1';
+
+function formatIssues(issues: ReadonlyArray<DecodingIssue>): string {
+  return issues
+    .map(issue =>
+      issue.path.length === 0
+        ? issue.message
+        : `${issue.path.join('.')}: ${issue.message}`
+    )
+    .join('; ');
+}
 
 /**
  * Extracts the type parameter T from a JsonDecoder.Decoder<T>.
@@ -39,12 +50,12 @@ export type FromDecoder<D> = D extends Decoder<infer T> ? T : never;
  *     if (typeof json === 'string') {
  *       return JsonDecoder.ok(json);
  *     } else {
- *       return JsonDecoder.err('Expected a string');
+ *       return JsonDecoder.err([{ message: 'Expected a string', path: [] }]);
  *     }
  *   }
  * );
  * myStringDecoder().decode('hello'); // Ok<string>({value: 'hello'})
- * myStringDecoder().decode(123); // Err({error: 'Expected a string'})
+ * myStringDecoder().decode(123); // Err({ issues: [{ message: 'Expected a string', path: [] }] })
  * ```
  *
  * @template T - The type that this decoder will produce when successful
@@ -62,13 +73,13 @@ export class Decoder<T> implements StandardSchemaV1<unknown, T> {
    * Parses a JSON object of type <T> and returns the decoded value or throws an error
    * @param json The JSON object to decode
    * @returns The decoded value of type T
-   * @throws {string} Throws the error message if decoding fails
+   * @throws {Error} Throws an Error whose message describes the failure and whose `cause` contains the structured `DecodingIssue[]`
    * @category Entry Point
    *
    * @example
    * ```ts
    * JsonDecoder.string().parse('hello'); // 'hello'
-   * JsonDecoder.string().parse(123); // throws '123 is not a valid string'
+   * JsonDecoder.string().parse(123); // throws Error('123 is not a valid string')
    * ```
    */
   parse(json: any): T {
@@ -76,7 +87,8 @@ export class Decoder<T> implements StandardSchemaV1<unknown, T> {
     if (result.isOk()) {
       return result.value;
     } else {
-      throw result.error;
+      const failure = result as Result.Err<T>;
+      throw new Error(formatIssues(failure.issues), { cause: failure.issues });
     }
   }
 
@@ -89,7 +101,7 @@ export class Decoder<T> implements StandardSchemaV1<unknown, T> {
    * @example
    * ```ts
    * JsonDecoder.string().decode('hi'); // Ok<string>({value: 'hi'})
-   * JsonDecoder.string().decode(5); // Err({error: '5 is not a valid string'})
+   * JsonDecoder.string().decode(5); // Err({ issues: [{ message: '"5" is not a valid string', path: [] }] })
    * ```
    */
   decode(json: any): Result.Result<T> {
@@ -109,7 +121,16 @@ export class Decoder<T> implements StandardSchemaV1<unknown, T> {
       if (result.isOk()) {
         return { value: result.value };
       } else {
-        return { issues: [{ message: result.error }] };
+        const failure = result as Result.Err<T>;
+        return {
+          issues: failure.issues.map(issue => ({
+            message: issue.message,
+            path:
+              issue.path.length > 0
+                ? issue.path.map(segment => ({ key: segment }))
+                : undefined
+          }))
+        };
       }
     }
   };
@@ -123,7 +144,7 @@ export class Decoder<T> implements StandardSchemaV1<unknown, T> {
    * @example
    * ```ts
    * JsonDecoder.string().decodePromise('hola').then(res => console.log(res)); // 'hola'
-   * JsonDecoder.string().decodePromise(2).catch(err => console.log(err)); // '2 is not a valid string'
+   * JsonDecoder.string().decodePromise(2).catch(err => console.log(err.message)); // '2 is not a valid string'
    * ```
    */
   decodePromise(json: any): Promise<T> {
@@ -132,19 +153,13 @@ export class Decoder<T> implements StandardSchemaV1<unknown, T> {
       if (result.isOk()) {
         return resolve(result.value);
       } else {
-        return reject(result.error);
+        const failure = result as Result.Err<T>;
+        return reject(
+          new Error(formatIssues(failure.issues), { cause: failure.issues })
+        );
       }
     });
   }
-
-  /* v8 ignore start */
-  /**
-   * Alias for decodePromise
-   * @deprecated Use decodePromise instead
-   * @ignore
-   */
-  decodeToPromise = this.decodePromise;
-  /* v8 ignore stop */
 
   /**
    * If the decoder has succeeded, transforms the decoded value into something else
@@ -159,7 +174,7 @@ export class Decoder<T> implements StandardSchemaV1<unknown, T> {
    * // Ok scenario
    * dateDecoder.decode('2018-12-21T18:22:25.490Z'); // Ok<Date>({value: Date(......)})
    * // Err scenario
-   * dateDecoder.decode(false); // Err({error: 'false is not a valid string'})
+   * dateDecoder.decode(false); // Err({ issues: [{ message: 'false is not a valid string', path: [] }] })
    * ```
    */
   map<O>(fn: (value: T) => O): Decoder<O> {
@@ -168,7 +183,7 @@ export class Decoder<T> implements StandardSchemaV1<unknown, T> {
       if (result.isOk()) {
         return Result.ok(fn(result.value));
       } else {
-        return Result.err(result.error);
+        return Result.err((result as Result.Err<T>).issues);
       }
     });
   }
@@ -187,7 +202,7 @@ export class Decoder<T> implements StandardSchemaV1<unknown, T> {
    *     : JsonDecoder.fail(`Age ${age} is less than 18`)
    * );
    * adultDecoder.decode(18); // Ok<number>({value: 18})
-   * adultDecoder.decode(17); // Err({error: 'Age 17 is less than 18'})
+   * adultDecoder.decode(17); // Err({ issues: [{ message: 'Age 17 is less than 18', path: [] }] })
    * ```
    */
   flatMap<O>(fn: (value: T) => Decoder<O>): Decoder<O> {
@@ -196,17 +211,8 @@ export class Decoder<T> implements StandardSchemaV1<unknown, T> {
       if (result.isOk()) {
         return fn(result.value).decode(json);
       } else {
-        return Result.err(result.error);
+        return Result.err((result as Result.Err<T>).issues);
       }
     });
   }
-
-  /* v8 ignore start */
-  /**
-   * Alias for flatMap
-   * @deprecated Use flatMap instead
-   * @ignore
-   */
-  chain = this.flatMap;
-  /* v8 ignore stop */
 }

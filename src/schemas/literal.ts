@@ -5,7 +5,6 @@
  */
 
 import { Decoder } from '../core';
-import { exactlyError } from '../errors/exactly-error';
 import * as Result from '../utils/result';
 
 /**
@@ -20,7 +19,7 @@ import * as Result from '../utils/result';
  * const oneDecoder = JsonDecoder.literal(1);
  *
  * oneDecoder.decode(1); // Ok<1>({value: 1})
- * oneDecoder.decode(2); // Err({error: '2 is not exactly 1'})
+ * oneDecoder.decode(2); // Err({ issues: [{ message: '2 is not exactly 1', path: [] }] })
  * ```
  */
 export function literal<const T>(value: T): Decoder<T> {
@@ -28,19 +27,12 @@ export function literal<const T>(value: T): Decoder<T> {
     if (json === value) {
       return Result.ok<T>(value);
     } else {
-      return Result.err<T>(exactlyError(json, value));
+      return Result.err<T>([
+        {
+          message: `${JSON.stringify(json)} is not exactly ${JSON.stringify(value)}`,
+          path: []
+        }
+      ]);
     }
   });
 }
-
-/* v8 ignore start */
-/**
- * Alias for the `literal` function.
- * @category Utils
- * @deprecated Use `literal` directly instead.
- * @ignore
- */
-export function isExactly<const T>(value: T): Decoder<T> {
-  return literal(value);
-}
-/* v8 ignore stop */

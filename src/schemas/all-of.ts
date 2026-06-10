@@ -5,7 +5,6 @@
  */
 
 import { Decoder } from '../core';
-import { allOfError } from '../errors/all-of-error';
 import * as Result from '../utils/result';
 
 /**
@@ -39,30 +38,33 @@ export type AllOfOutput<T extends readonly Decoder<any>[]> =
  *
  * @category Utils
  * @param decoders Array of decoders to try in sequence
- * @param decoderName How to display the name of the object being decoded in errors
  * @returns A decoder that tries each decoder in sequence until all succeed
  *
  * @example
  * ```ts
  *  type User = { firstname: string; lastname: string; role: 'admin' | 'user'; };
- *  const firstnameDecoder = JsonDecoder.object({ firstname: JsonDecoder.string() }, '{firstname: string}');
- *  const lastnameDecoder = JsonDecoder.object({ lastname: JsonDecoder.string() }, '{lastname: string}');
- *  const roleDecoder = JsonDecoder.oneOf([JsonDecoder.literal('admin'), JsonDecoder.literal('user')], 'admin | user');
+ *  const firstnameDecoder = JsonDecoder.object({ firstname: JsonDecoder.string() });
+ *  const lastnameDecoder = JsonDecoder.object({ lastname: JsonDecoder.string() });
+ *  const roleDecoder = JsonDecoder.oneOf([JsonDecoder.literal('admin'), JsonDecoder.literal('user')]);
  *  const userDecoder: Decoder<User> = JsonDecoder.allOf(
- *    [firstnameDecoder, lastnameDecoder, JsonDecoder.object({ role: roleDecoder }, 'role')],
- *    'User'
+ *    [firstnameDecoder, lastnameDecoder, JsonDecoder.object({ role: roleDecoder })]
  *  );
- *  userDecoder.decode({ firstname: 'John', lastname: 'Doe', role: 'admin' }); // Ok<User>({value: { firstname: 'John', lastname: 'Doe', role: 'admin' }})
- *  userDecoder.decode({ firstname: 'John' }); // Err({error: '<User> allOf decoder failed at index #1 with <{lastname: string}> decoder failed at key "lastname" with error: undefined is not a valid string'})
+ *  userDecoder.decode({ firstname: 'John', lastname: 'Doe', role: 'admin' }); // Ok<User>
+ *  // All failing sub-decoders are run and their issues are accumulated:
+ *  userDecoder.decode({ firstname: 'John' });
+ *  // Err({ issues: [
+ *  //   { message: 'undefined is not a valid string', path: ['lastname'] },
+ *  //   { message: 'undefined is not exactly "admin"', path: ['role'] }
+ *  // ] })
  * ```
  */
 export function allOf<T extends readonly Decoder<any>[]>(
-  decoders: T,
-  decoderName: string
+  decoders: T
 ): Decoder<AllOfOutput<T>> {
   return new Decoder((json: any) => {
     const isObj = isPlainObject(json);
     let lastJson = json;
+    const allIssues: Result.DecodingIssue[] = [];
     for (let i = 0; i < decoders.length; i++) {
       const result = decoders[i].decode(lastJson);
       if (result.isOk()) {
@@ -72,8 +74,11 @@ export function allOf<T extends readonly Decoder<any>[]>(
           lastJson = result.value;
         }
       } else {
-        return Result.err<T>(allOfError(decoderName, i, result.error));
+        allIssues.push(...result.issues);
       }
+    }
+    if (allIssues.length > 0) {
+      return Result.err<T>(allIssues);
     }
     return Result.ok(lastJson);
   });

@@ -6,6 +6,25 @@
  */
 
 /**
+ * A single decoding failure with a human-readable message and the path from
+ * the root of the decoded value to the field that failed.
+ *
+ * @example
+ * ```typescript
+ * // A failure at users[2].name would look like:
+ * const issue: DecodingIssue = { message: '"null" is not a valid string', path: ['users', 2, 'name'] };
+ * ```
+ */
+export interface DecodingIssue {
+  readonly message: string;
+  /**
+   * Path segments from the decoded root to the failing field.
+   * An empty array means the failure is at the root level.
+   */
+  readonly path: ReadonlyArray<string | number>;
+}
+
+/**
  * A type-safe way to handle success and error cases.
  * The Result type is used throughout the library to handle decoding results.
  *
@@ -58,34 +77,34 @@ export class Ok<T> {
 }
 
 /**
- * Represents a failed operation with an error message.
+ * Represents a failed operation with one or more structured issues.
  *
  * @typeParam T - The type that would have been returned if successful
  */
 export class Err<T> {
   /**
-   * Creates a new Err instance containing an error message.
-   * @param error - The error message describing what went wrong
+   * Creates a new Err instance from structured decoding issues.
+   * @param issues - The list of issues describing what went wrong and where.
    */
-  constructor(readonly error: string) {}
+  constructor(readonly issues: ReadonlyArray<DecodingIssue>) {}
 
   /**
-   * Returns a new Err with the same error message but a different type parameter.
+   * Returns a new Err with the same issues but a different type parameter.
    * Since this represents an error, the transform function is never called.
    *
    * @typeParam O - The new type parameter
    * @param _fn - The function that would have transformed the value (ignored)
-   * @returns A new Err with the same error message
+   * @returns A new Err with the same issues
    *
    * @example
    * ```typescript
    * const result: Result<number> = err("Invalid input");
    * const mapped: Result<string> = result.map(x => x.toString());
-   * // mapped = Err("Invalid input")
+   * // mapped = Err([{ message: "Invalid input", path: [] }])
    * ```
    */
   map<O>(_fn: (value: T) => O): Result<O> {
-    return err<O>(this.error);
+    return new Err<O>(this.issues);
   }
 
   /**
@@ -96,10 +115,10 @@ export class Err<T> {
    *
    * @example
    * ```typescript
-   * const result: Result<number> = err("Invalid input");
+   * const result: Result<number> = err([{ message: "Invalid input", path: [] }]);
    * if (!result.isOk()) {
-   *   // TypeScript knows result.error exists here
-   *   console.log(result.error);
+   *   // TypeScript knows result.issues exists here
+   *   console.log(result.issues);
    * }
    * ```
    */
@@ -137,15 +156,14 @@ export function ok<T>(value: T): Result<T> {
  * Creates a new Err instance representing a failed operation.
  *
  * @typeParam T - The type that would have been returned if successful
- * @param error - The error message describing what went wrong
- * @returns A Result containing the error message
+ * @param issues - One or more structured issues describing what went wrong and where.
  *
  * @example
  * ```typescript
- * const result = JsonDecoder.err<number>("Invalid number");
- * // result = Err("Invalid number")
+ * const result = JsonDecoder.err<number>([{ message: "Invalid number", path: ["age"] }]);
+ * // result.issues === [{ message: "Invalid number", path: ["age"] }]
  * ```
  */
-export function err<T>(error: string): Result<T> {
-  return new Err<T>(error);
+export function err<T>(issues: ReadonlyArray<DecodingIssue>): Result<T> {
+  return new Err<T>(issues);
 }

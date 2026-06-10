@@ -21,4 +21,11 @@ export * from './schemas/string';
 export * from './schemas/succeed';
 export * from './schemas/tuple';
 export * from './schemas/undefined';
-export { Err, err, Ok, ok, type Result } from './utils/result';
+export {
+  Err,
+  err,
+  Ok,
+  ok,
+  type Result,
+  type DecodingIssue
+} from './utils/result';
