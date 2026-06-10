@@ -14,7 +14,10 @@ const expectOk = <T>(result: Result<T>, expectedValue: T) => {
 
 const expectErrWithIssues = <T>(
   result: Result<T>,
-  expectedIssues: ReadonlyArray<{ message: string; path: ReadonlyArray<string | number> }>
+  expectedIssues: ReadonlyArray<{
+    message: string;
+    path: ReadonlyArray<string | number>;
+  }>
 ) => {
   expect(result).toBeInstanceOf(Err);
   expect((result as Err<T>).issues).toEqual(expectedIssues);
@@ -191,11 +194,14 @@ describe('advanced-usage -- union types and type discrimination', () => {
   });
 
   it('decodes a rectangle shape', () => {
-    expectOk(shapeDecoder.decode({ type: 'rectangle', width: 10, height: 20 }), {
-      type: 'rectangle',
-      width: 10,
-      height: 20
-    });
+    expectOk(
+      shapeDecoder.decode({ type: 'rectangle', width: 10, height: 20 }),
+      {
+        type: 'rectangle',
+        width: 10,
+        height: 20
+      }
+    );
   });
 
   it('computes areas when decoding an array of shapes', () => {
@@ -220,7 +226,11 @@ describe('advanced-usage -- union types and type discrimination', () => {
   });
 
   it('fails with a path-based issue for a bad discriminator', () => {
-    const result = shapeDecoder.decode({ type: 'triangle', base: 10, height: 5 });
+    const result = shapeDecoder.decode({
+      type: 'triangle',
+      base: 10,
+      height: 5
+    });
     expect(result.isOk()).toBe(false);
   });
 });
@@ -230,9 +240,10 @@ describe('advanced-usage -- union types and type discrimination', () => {
 // ---------------------------------------------------------------------------
 
 describe('advanced-usage -- complex transformations', () => {
-  type SnakeToCamel<S extends string> = S extends `${infer T}_${infer U}${infer Rest}`
-    ? `${T}${Uppercase<U>}${SnakeToCamel<Rest>}`
-    : S;
+  type SnakeToCamel<S extends string> =
+    S extends `${infer T}_${infer U}${infer Rest}`
+      ? `${T}${Uppercase<U>}${SnakeToCamel<Rest>}`
+      : S;
   type CamelizedRecord<T extends Record<string, unknown>> = {
     [K in keyof T as SnakeToCamel<K & string>]: T[K];
   };
@@ -247,14 +258,11 @@ describe('advanced-usage -- complex transformations', () => {
         .replace(/^_+|_+$/g, '');
     }
     return decoder.flatMap(record => {
-      const camelizedRecord = Object.keys(record).reduce(
-        (acc, key) => {
-          const k = snakeToCamel(key);
-          (acc as Record<string, unknown>)[k] = record[key];
-          return acc;
-        },
-        {} as CamelizedRecord<T>
-      );
+      const camelizedRecord = Object.keys(record).reduce((acc, key) => {
+        const k = snakeToCamel(key);
+        (acc as Record<string, unknown>)[k] = record[key];
+        return acc;
+      }, {} as CamelizedRecord<T>);
       return JsonDecoder.constant(camelizedRecord);
     });
   }
@@ -304,7 +312,10 @@ describe('advanced-usage -- strict object validation', () => {
   });
 
   it('decodes an object with exactly the expected keys', () => {
-    expectOk(strictUserDecoder.decode({ id: 1, name: 'John' }), { id: 1, name: 'John' });
+    expectOk(strictUserDecoder.decode({ id: 1, name: 'John' }), {
+      id: 1,
+      name: 'John'
+    });
   });
 
   it('fails when the object has an unknown extra key', () => {

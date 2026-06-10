@@ -13,7 +13,10 @@ const expectOk = <T>(result: Result<T>, expectedValue: T) => {
 
 const expectErrWithIssues = <T>(
   result: Result<T>,
-  expectedIssues: ReadonlyArray<{ message: string; path: ReadonlyArray<string | number> }>
+  expectedIssues: ReadonlyArray<{
+    message: string;
+    path: ReadonlyArray<string | number>;
+  }>
 ) => {
   expect(result).toBeInstanceOf(Err);
   expect((result as Err<T>).issues).toEqual(expectedIssues);
@@ -82,21 +85,34 @@ describe('basic-usage -- object decoding', () => {
 
   it('decodes a valid user object', () => {
     expectOk(
-      userDecoder.decode({ id: 1, name: 'John Doe', email: 'john@example.com', age: 30 }),
+      userDecoder.decode({
+        id: 1,
+        name: 'John Doe',
+        email: 'john@example.com',
+        age: 30
+      }),
       { id: 1, name: 'John Doe', email: 'john@example.com', age: 30 }
     );
   });
 
   it('decodes a user without the optional age field', () => {
     expectOk(
-      userDecoder.decode({ id: 1, name: 'John Doe', email: 'john@example.com' }),
+      userDecoder.decode({
+        id: 1,
+        name: 'John Doe',
+        email: 'john@example.com'
+      }),
       { id: 1, name: 'John Doe', email: 'john@example.com', age: undefined }
     );
   });
 
   it('accumulates all field errors and reports them together', () => {
     expectErrWithIssues(
-      userDecoder.decode({ id: 'not-a-number', name: 42, email: 'john@example.com' }),
+      userDecoder.decode({
+        id: 'not-a-number',
+        name: 42,
+        email: 'john@example.com'
+      }),
       [
         { message: '"not-a-number" is not a valid number', path: ['id'] },
         { message: '42 is not a valid string', path: ['name'] }
@@ -106,7 +122,11 @@ describe('basic-usage -- object decoding', () => {
 
   it('decodePromise rejects with a formatted error message', async () => {
     await expect(
-      userDecoder.decodePromise({ id: 'not-a-number', name: 'John Doe', email: 'john@example.com' })
+      userDecoder.decodePromise({
+        id: 'not-a-number',
+        name: 'John Doe',
+        email: 'john@example.com'
+      })
     ).rejects.toThrow('id: "not-a-number" is not a valid number');
   });
 });
@@ -184,14 +204,22 @@ describe('basic-usage -- nested objects', () => {
 describe('basic-usage -- arrays', () => {
   it('decodes an array of strings', () => {
     expectOk(
-      JsonDecoder.array(JsonDecoder.string()).decode(['typescript', 'json', 'decoder']),
+      JsonDecoder.array(JsonDecoder.string()).decode([
+        'typescript',
+        'json',
+        'decoder'
+      ]),
       ['typescript', 'json', 'decoder']
     );
   });
 
   it('reports an element failure with its index in the path', () => {
     expectErrWithIssues(
-      JsonDecoder.array(JsonDecoder.string()).decode(['typescript', 123, 'decoder']),
+      JsonDecoder.array(JsonDecoder.string()).decode([
+        'typescript',
+        123,
+        'decoder'
+      ]),
       [{ message: '123 is not a valid string', path: [1] }]
     );
   });
@@ -281,7 +309,12 @@ describe('basic-usage -- handling results', () => {
   });
 
   it('chains map transformations on a successful result', () => {
-    const validUser = { id: 1, name: 'John Doe', email: 'john@example.com', age: 30 };
+    const validUser = {
+      id: 1,
+      name: 'John Doe',
+      email: 'john@example.com',
+      age: 30
+    };
     const uppercasedEmail = userDecoder
       .decode(validUser)
       .map(user => user.email)
@@ -294,7 +327,11 @@ describe('basic-usage -- handling results', () => {
   });
 
   it('accesses the issues array with path information on failure', () => {
-    const result = userDecoder.decode({ id: 'bad', name: 42, email: 'john@example.com' });
+    const result = userDecoder.decode({
+      id: 'bad',
+      name: 42,
+      email: 'john@example.com'
+    });
 
     expect(result.isOk()).toBe(false);
     if (!result.isOk()) {
@@ -328,11 +365,19 @@ describe('basic-usage -- type inference', () => {
 
     type InferredUser = JsonDecoder.FromDecoder<typeof inlineDecoder>;
 
-    const result = inlineDecoder.decode({ id: 1, name: 'Alice', email: 'alice@example.com' });
+    const result = inlineDecoder.decode({
+      id: 1,
+      name: 'Alice',
+      email: 'alice@example.com'
+    });
     expect(result.isOk()).toBe(true);
     if (result.isOk()) {
       const user: InferredUser = result.value;
-      expect(user).toEqual({ id: 1, name: 'Alice', email: 'alice@example.com' });
+      expect(user).toEqual({
+        id: 1,
+        name: 'Alice',
+        email: 'alice@example.com'
+      });
     }
   });
 });

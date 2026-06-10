@@ -1,7 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import { Decoder } from './core';
 import * as JsonDecoder from './schemas';
-import { Err, Ok, ok, err, type DecodingIssue, type Result } from './utils/result';
+import {
+  Err,
+  Ok,
+  ok,
+  err,
+  type DecodingIssue,
+  type Result
+} from './utils/result';
 
 // ---------------------------------------------------------------------------
 // Helpers (same pattern as basic-usage.spec.ts / ts-data-json.spec.ts)
@@ -14,7 +21,10 @@ const expectOk = <T>(result: Result<T>, expectedValue: T) => {
 
 const expectErrWithIssues = <T>(
   result: Result<T>,
-  expectedIssues: ReadonlyArray<{ message: string; path: ReadonlyArray<string | number> }>
+  expectedIssues: ReadonlyArray<{
+    message: string;
+    path: ReadonlyArray<string | number>;
+  }>
 ) => {
   expect(result).toBeInstanceOf(Err);
   expect((result as Err<T>).issues).toEqual(expectedIssues);
@@ -36,7 +46,10 @@ const userDecoder = JsonDecoder.object<User>({
 
 describe('v4-migration -- decoders take no name argument', () => {
   it('object decodes without a name argument', () => {
-    expectOk(userDecoder.decode({ id: 1, name: 'John' }), { id: 1, name: 'John' });
+    expectOk(userDecoder.decode({ id: 1, name: 'John' }), {
+      id: 1,
+      name: 'John'
+    });
   });
 
   it('objectStrict decodes without a name argument', () => {
@@ -48,7 +61,10 @@ describe('v4-migration -- decoders take no name argument', () => {
   });
 
   it('array decodes without a name argument', () => {
-    expectOk(JsonDecoder.array(JsonDecoder.string()).decode(['a', 'b']), ['a', 'b']);
+    expectOk(JsonDecoder.array(JsonDecoder.string()).decode(['a', 'b']), [
+      'a',
+      'b'
+    ]);
   });
 
   it('oneOf decodes without a name argument', () => {
@@ -60,7 +76,10 @@ describe('v4-migration -- decoders take no name argument', () => {
   });
 
   it('record decodes without a name argument', () => {
-    expectOk(JsonDecoder.record(JsonDecoder.number()).decode({ a: 1, b: 2 }), { a: 1, b: 2 });
+    expectOk(JsonDecoder.record(JsonDecoder.number()).decode({ a: 1, b: 2 }), {
+      a: 1,
+      b: 2
+    });
   });
 });
 
@@ -77,15 +96,17 @@ describe('v4-migration -- structured error model', () => {
   });
 
   it('array element failure carries the index in the path', () => {
-    expectErrWithIssues(JsonDecoder.array(JsonDecoder.string()).decode(['a', 2]), [
-      { message: '2 is not a valid string', path: [1] }
-    ]);
+    expectErrWithIssues(
+      JsonDecoder.array(JsonDecoder.string()).decode(['a', 2]),
+      [{ message: '2 is not a valid string', path: [1] }]
+    );
   });
 
   it('record value failure carries the key in the path', () => {
-    expectErrWithIssues(JsonDecoder.record(JsonDecoder.number()).decode({ a: 'x' }), [
-      { message: '"x" is not a valid number', path: ['a'] }
-    ]);
+    expectErrWithIssues(
+      JsonDecoder.record(JsonDecoder.number()).decode({ a: 'x' }),
+      [{ message: '"x" is not a valid number', path: ['a'] }]
+    );
   });
 
   it('strict object reports a simplified unknown-key message', () => {
@@ -93,9 +114,10 @@ describe('v4-migration -- structured error model', () => {
       id: JsonDecoder.number(),
       name: JsonDecoder.string()
     });
-    expectErrWithIssues(strict.decode({ id: 1, name: 'John', extra: 'field' }), [
-      { message: 'Unknown key "extra" found in strict object', path: [] }
-    ]);
+    expectErrWithIssues(
+      strict.decode({ id: 1, name: 'John', extra: 'field' }),
+      [{ message: 'Unknown key "extra" found in strict object', path: [] }]
+    );
   });
 
   it('primitive failure keeps the same message at the root path', () => {
@@ -109,9 +131,10 @@ describe('v4-migration -- structured error model', () => {
       owner: User;
     }
     const groupDecoder = JsonDecoder.object<Group>({ owner: userDecoder });
-    expectErrWithIssues(groupDecoder.decode({ owner: { id: 'x', name: 'John' } }), [
-      { message: '"x" is not a valid number', path: ['owner', 'id'] }
-    ]);
+    expectErrWithIssues(
+      groupDecoder.decode({ owner: { id: 'x', name: 'John' } }),
+      [{ message: '"x" is not a valid number', path: ['owner', 'id'] }]
+    );
   });
 });
 
@@ -139,14 +162,18 @@ describe('v4-migration -- oneOf surfaces the deepest branch', () => {
       }) as Decoder<Shape>,
       JsonDecoder.null()
     ]);
-    expectErrWithIssues(shapeDecoder.decode({ kind: 'circle', radius: 'big' }), [
-      { message: '"big" is not a valid number', path: ['radius'] }
-    ]);
+    expectErrWithIssues(
+      shapeDecoder.decode({ kind: 'circle', radius: 'big' }),
+      [{ message: '"big" is not a valid number', path: ['radius'] }]
+    );
   });
 
   it('an empty decoder list falls back to the generic message', () => {
     expectErrWithIssues(JsonDecoder.oneOf<never>([]).decode(true), [
-      { message: 'true could not be decoded with any of the provided decoders', path: [] }
+      {
+        message: 'true could not be decoded with any of the provided decoders',
+        path: []
+      }
     ]);
   });
 });
@@ -175,9 +202,9 @@ describe('v4-migration -- parse and decodePromise throw Error objects', () => {
   });
 
   it('decodePromise rejects with an Error whose message is the formatted issues', async () => {
-    await expect(userDecoder.decodePromise({ id: 'x', name: 'John' })).rejects.toThrow(
-      'id: "x" is not a valid number'
-    );
+    await expect(
+      userDecoder.decodePromise({ id: 'x', name: 'John' })
+    ).rejects.toThrow('id: "x" is not a valid number');
   });
 });
 
@@ -187,7 +214,9 @@ describe('v4-migration -- parse and decodePromise throw Error objects', () => {
 
 describe('v4-migration -- err() factory takes issues', () => {
   const myStringDecoder = new Decoder<string>(json =>
-    typeof json === 'string' ? ok(json) : err([{ message: 'Expected a string', path: [] }])
+    typeof json === 'string'
+      ? ok(json)
+      : err([{ message: 'Expected a string', path: [] }])
   );
 
   it('a custom decoder built with err() returns the expected issue', () => {
@@ -211,10 +240,13 @@ describe('v4-migration -- all errors at once', () => {
   });
 
   it('array decoder accumulates every failing element', () => {
-    expectErrWithIssues(JsonDecoder.array(JsonDecoder.number()).decode([1, '2', '3']), [
-      { message: '"2" is not a valid number', path: [1] },
-      { message: '"3" is not a valid number', path: [2] }
-    ]);
+    expectErrWithIssues(
+      JsonDecoder.array(JsonDecoder.number()).decode([1, '2', '3']),
+      [
+        { message: '"2" is not a valid number', path: [1] },
+        { message: '"3" is not a valid number', path: [2] }
+      ]
+    );
   });
 });
 
@@ -227,10 +259,13 @@ describe('v4-migration -- structured issues with paths', () => {
     const result = userDecoder.decode({ id: 'bad', name: 42 });
     expect(result.isOk()).toBe(false);
     if (!result.isOk()) {
-      const fieldErrors = result.issues.reduce<Record<string, string>>((acc, issue) => {
-        acc[issue.path.join('.')] = issue.message;
-        return acc;
-      }, {});
+      const fieldErrors = result.issues.reduce<Record<string, string>>(
+        (acc, issue) => {
+          acc[issue.path.join('.')] = issue.message;
+          return acc;
+        },
+        {}
+      );
       expect(fieldErrors).toEqual({
         id: '"bad" is not a valid number',
         name: '42 is not a valid string'

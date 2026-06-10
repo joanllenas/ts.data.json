@@ -94,7 +94,10 @@ export function objectStrict<T>(decoders: DecoderObjectStrict<T>): Decoder<T> {
       const allIssues: Result.DecodingIssue[] = [];
       for (const key in json) {
         if (!allowedKeys.has(key)) {
-          allIssues.push({ message: `Unknown key "${key}" found in strict object`, path: [] });
+          allIssues.push({
+            message: `Unknown key "${key}" found in strict object`,
+            path: []
+          });
         }
       }
       const result: any = {};
