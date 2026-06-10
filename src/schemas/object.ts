@@ -64,6 +64,13 @@ export type DecoderObject<T> = {
  * });
  *
  * userDecoder.decode({ firstName: 'John', lastName: 'Doe', age: 30 }); // Ok<User>
+ *
+ * // All field failures are collected before returning:
+ * userDecoder.decode({ firstName: 1, lastName: 2, age: 30 });
+ * // Err({ issues: [
+ * //   { message: '1 is not a valid string', path: ['firstName'] },
+ * //   { message: '2 is not a valid string', path: ['lastName'] }
+ * // ] })
  * ```
  *
  * @example

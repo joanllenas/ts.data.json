@@ -50,7 +50,12 @@ export type AllOfOutput<T extends readonly Decoder<any>[]> =
  *    [firstnameDecoder, lastnameDecoder, JsonDecoder.object({ role: roleDecoder })]
  *  );
  *  userDecoder.decode({ firstname: 'John', lastname: 'Doe', role: 'admin' }); // Ok<User>
- *  userDecoder.decode({ firstname: 'John' }); // Err with issues: [{ message: 'undefined is not a valid string', path: ['lastname'] }]
+ *  // All failing sub-decoders are run and their issues are accumulated:
+ *  userDecoder.decode({ firstname: 'John' });
+ *  // Err({ issues: [
+ *  //   { message: 'undefined is not a valid string', path: ['lastname'] },
+ *  //   { message: 'undefined is not exactly "admin"', path: ['role'] }
+ *  // ] })
  * ```
  */
 export function allOf<T extends readonly Decoder<any>[]>(

@@ -20,7 +20,13 @@ import * as Result from '../utils/result';
  * const numberRecord = JsonDecoder.record(JsonDecoder.number());
  *
  * numberRecord.decode({a: 1, b: 2}); // Ok<Record<string, number>>
- * numberRecord.decode({a: '1', b: 2}); // Err with issues: [{ message: '"1" is not a valid number', path: ['a'] }]
+ *
+ * // All value failures are collected before returning:
+ * numberRecord.decode({a: '1', b: '2'});
+ * // Err({ issues: [
+ * //   { message: '"1" is not a valid number', path: ['a'] },
+ * //   { message: '"2" is not a valid number', path: ['b'] }
+ * // ] })
  * ```
  */
 export function record<V>(decoder: Decoder<V>): Decoder<{ [K: string]: V }> {

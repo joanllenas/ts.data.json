@@ -9,6 +9,9 @@ import * as Result from '../utils/result';
 
 /**
  * Decoder that tries multiple decoders in sequence until one succeeds.
+ * When all decoders fail, returns the issues from the sub-decoder that
+ * reached the deepest path before failing, as those represent the most
+ * specific (most actionable) failure.
  *
  * @category Utils
  * @param decoders Array of decoders to try in sequence
@@ -23,7 +26,22 @@ import * as Result from '../utils/result';
  *
  * stringOrNumber.decode('hello'); // Ok<string>
  * stringOrNumber.decode(42); // Ok<number>
- * stringOrNumber.decode(true); // Err with issues: [{ message: 'true could not be decoded with any of the provided decoders', path: [] }]
+ * stringOrNumber.decode(true); // Err({ issues: [{ message: 'true is not a valid string', path: [] }] })
+ * ```
+ *
+ * @example
+ * ```ts
+ * // When one branch fails deeper, its issues win over a shallow mismatch
+ * type Shape = { kind: 'circle'; radius: number } | null;
+ * const shapeDecoder = JsonDecoder.oneOf<Shape>([
+ *   JsonDecoder.object({ kind: JsonDecoder.literal('circle'), radius: JsonDecoder.number() }),
+ *   JsonDecoder.null()
+ * ]);
+ *
+ * // The object branch fails at path ['radius'], which is deeper than null's
+ * // root-level failure, so the object branch issues are surfaced.
+ * shapeDecoder.decode({ kind: 'circle', radius: 'big' });
+ * // Err({ issues: [{ message: '"big" is not a valid number', path: ['radius'] }] })
  * ```
  */
 export function oneOf<T>(decoders: Array<Decoder<T>>): Decoder<T> {

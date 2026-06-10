@@ -38,7 +38,14 @@ export type TupleOfResults<T extends readonly [] | readonly Decoder<any>[]> = {
  * const pointDecoder = JsonDecoder.tuple([JsonDecoder.number(), JsonDecoder.number()]);
  *
  * pointDecoder.decode([1, 2]); // Ok<[number, number]>
- * pointDecoder.decode([1, 2, 3]); // Err with issues: [{ message: 'tuple received 3 items but expected 2', path: [] }]
+ * pointDecoder.decode([1, 2, 3]); // Err({ issues: [{ message: 'tuple received 3 items but expected 2', path: [] }] })
+ *
+ * // All element failures are collected before returning:
+ * pointDecoder.decode(['a', 'b']);
+ * // Err({ issues: [
+ * //   { message: '"a" is not a valid number', path: [0] },
+ * //   { message: '"b" is not a valid number', path: [1] }
+ * // ] })
  * ```
  */
 export function tuple<T extends readonly [] | readonly Decoder<any>[]>(
