@@ -57,24 +57,35 @@ jobs:
     name: Publish to NPM
     needs: ci  # Only runs if CI passes
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write # OIDC token for npm Trusted Publishing (no NPM_TOKEN needed)
     # Only runs on master push and if version doesn't exist
     if: |
-      github.event_name == 'push' && 
-      github.ref == 'refs/heads/master' && 
+      github.event_name == 'push' &&
+      github.ref == 'refs/heads/master' &&
       needs.ci.outputs.should_publish == 'true'
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+          registry-url: 'https://registry.npmjs.org'
+
+      # Trusted Publishing (OIDC) requires npm >= 11.5.1
+      - name: Upgrade npm
+        run: npm install -g npm@latest
 
       - name: Install Dependencies
         run: npm ci
 
       - name: Build Project
         run: npm run build
-      
-      - name: Authenticate with npm
-        run: echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > ~/.npmrc
 
+      # Authenticates via the OIDC id-token; provenance is generated automatically.
       - name: Publish to NPM
         run: npm publish
 
