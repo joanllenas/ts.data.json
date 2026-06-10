@@ -42,12 +42,10 @@
     "validate",
     "parse"
   ],
-  "author": "daniel van den eijkel",
+  "author": "Joan Llenas Masó <joan.llenas.maso@gmail.com>",
   "contributors": [
     {
-      "name": "Joan Llenas Masó",
-      "email": "joan.llenas.maso@gmail.com",
-      "url": "http://joanllenas.com"
+      "name": "Daniel van den Eijkel"
     }
   ],
   "license": "BSD-3-Clause",
