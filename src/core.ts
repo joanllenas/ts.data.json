@@ -55,7 +55,7 @@ export type FromDecoder<D> = D extends Decoder<infer T> ? T : never;
  *   }
  * );
  * myStringDecoder().decode('hello'); // Ok<string>({value: 'hello'})
- * myStringDecoder().decode(123); // Err({error: 'Expected a string'})
+ * myStringDecoder().decode(123); // Err({ issues: [{ message: 'Expected a string', path: [] }] })
  * ```
  *
  * @template T - The type that this decoder will produce when successful
@@ -101,7 +101,7 @@ export class Decoder<T> implements StandardSchemaV1<unknown, T> {
    * @example
    * ```ts
    * JsonDecoder.string().decode('hi'); // Ok<string>({value: 'hi'})
-   * JsonDecoder.string().decode(5); // Err({error: '5 is not a valid string'})
+   * JsonDecoder.string().decode(5); // Err({ issues: [{ message: '"5" is not a valid string', path: [] }] })
    * ```
    */
   decode(json: any): Result.Result<T> {
@@ -180,7 +180,7 @@ export class Decoder<T> implements StandardSchemaV1<unknown, T> {
    * // Ok scenario
    * dateDecoder.decode('2018-12-21T18:22:25.490Z'); // Ok<Date>({value: Date(......)})
    * // Err scenario
-   * dateDecoder.decode(false); // Err({error: 'false is not a valid string'})
+   * dateDecoder.decode(false); // Err({ issues: [{ message: 'false is not a valid string', path: [] }] })
    * ```
    */
   map<O>(fn: (value: T) => O): Decoder<O> {
@@ -208,7 +208,7 @@ export class Decoder<T> implements StandardSchemaV1<unknown, T> {
    *     : JsonDecoder.fail(`Age ${age} is less than 18`)
    * );
    * adultDecoder.decode(18); // Ok<number>({value: 18})
-   * adultDecoder.decode(17); // Err({error: 'Age 17 is less than 18'})
+   * adultDecoder.decode(17); // Err({ issues: [{ message: 'Age 17 is less than 18', path: [] }] })
    * ```
    */
   flatMap<O>(fn: (value: T) => Decoder<O>): Decoder<O> {

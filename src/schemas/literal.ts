@@ -19,7 +19,7 @@ import * as Result from '../utils/result';
  * const oneDecoder = JsonDecoder.literal(1);
  *
  * oneDecoder.decode(1); // Ok<1>({value: 1})
- * oneDecoder.decode(2); // Err({error: '2 is not exactly 1'})
+ * oneDecoder.decode(2); // Err({ issues: [{ message: '2 is not exactly 1', path: [] }] })
  * ```
  */
 export function literal<const T>(value: T): Decoder<T> {

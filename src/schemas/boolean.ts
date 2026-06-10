@@ -17,7 +17,7 @@ import { primitiveError } from '../utils/errors';
  * @example
  * ```ts
  * JsonDecoder.boolean().decode(true); // Ok<boolean>({value: true})
- * JsonDecoder.boolean().decode('true'); // Err({error: 'true is not a valid boolean'})
+ * JsonDecoder.boolean().decode('true'); // Err({ issues: [{ message: '"true" is not a valid boolean', path: [] }] })
  * ```
  */
 export function boolean(): Decoder<boolean> {

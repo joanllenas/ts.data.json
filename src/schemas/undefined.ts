@@ -17,8 +17,8 @@ import * as Result from '../utils/result';
  * ```ts
  * const undefinedDecoder = JsonDecoder.undefined();
  * undefinedDecoder.decode(undefined); // Ok<undefined>({value: undefined})
- * undefinedDecoder.decode(123); // Err({error: '123 is not a valid undefined'})
- * undefinedDecoder.decode(null); // Err({error: 'null is not a valid undefined'})
+ * undefinedDecoder.decode(123); // Err({ issues: [{ message: '123 is not undefined', path: [] }] })
+ * undefinedDecoder.decode(null); // Err({ issues: [{ message: 'null is not undefined', path: [] }] })
  * ```
  * @category Primitives
  */
