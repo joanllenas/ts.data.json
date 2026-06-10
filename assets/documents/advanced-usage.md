@@ -8,8 +8,6 @@ group: Documents
 
 This guide covers advanced patterns and features of `ts.data.json`. For basic usage, see the [Basic Usage](basic-usage.md) guide.
 
-You can play with this examples in [this stackblitz playground](https://stackblitz.com/edit/ts-data-json-decoder-playground-ah7vqumm?file=src%2Fmain.ts).
-
 ## Custom Decoders
 
 ### String Decoder
@@ -18,28 +16,32 @@ You can easily replicate the string decoder:
 
 ```typescript
 import * as JsonDecoder from 'ts.data.json';
+import { ok, err } from 'ts.data.json';
 
 const myStringDecoder: JsonDecoder.Decoder<string> = new JsonDecoder.Decoder((json: unknown) => {
   if (typeof json === 'string') {
     return ok(json);
   } else {
-    return err('Expected a string');
+    return err([{ message: 'Expected a string', path: [] }]);
   }
 });
 
-console.log(myStringDecoder.decode('Hello!')); // Ok('Hello!)
-console.log(myStringDecoder.decode(123)); // Err('Expected a string')
+console.log(myStringDecoder.decode('Hello!')); // Ok({ value: 'Hello!' })
+console.log(myStringDecoder.decode(123)); // Err({ issues: [{ message: 'Expected a string', path: [] }] })
 ```
 
 ### Email Decoder
 
-Leverage built-in decoders and layer other decoders on top by following this pattern with the `chain` function.
+Leverage built-in decoders and layer other decoders on top by following this pattern with the `flatMap` function.
 
 ```typescript
 const emailDecoder = JsonDecoder.string().flatMap(email => {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   return emailRegex.test(email) ? JsonDecoder.succeed() : JsonDecoder.fail(`Invalid email format: ${email}`);
 });
+
+emailDecoder.decode('user@example.com'); // Ok({ value: 'user@example.com' })
+emailDecoder.decode('not-an-email'); // Err({ issues: [{ message: 'Invalid email format: not-an-email', path: [] }] })
 ```
 
 ### Date decoder
@@ -49,6 +51,9 @@ const dateDecoder = JsonDecoder.string().flatMap(str => {
   const date = new Date(str);
   return isNaN(date.getTime()) ? JsonDecoder.fail(`Invalid date format: ${str}`) : JsonDecoder.succeed();
 });
+
+dateDecoder.decode('2024-01-15'); // Ok({ value: '2024-01-15' })
+dateDecoder.decode('not-a-date'); // Err({ issues: [{ message: 'Invalid date format: not-a-date', path: [] }] })
 ```
 
 ### Range decoder
@@ -57,6 +62,9 @@ const dateDecoder = JsonDecoder.string().flatMap(str => {
 const ageDecoder = JsonDecoder.number().flatMap(age => {
   return age >= 0 && age <= 120 ? JsonDecoder.succeed() : JsonDecoder.fail(`Age must be between 0 and 120, got: ${age}`);
 });
+
+ageDecoder.decode(25); // Ok({ value: 25 })
+ageDecoder.decode(200); // Err({ issues: [{ message: 'Age must be between 0 and 120, got: 200', path: [] }] })
 ```
 
 ## Recursive Types
@@ -70,13 +78,10 @@ interface TreeNode {
 }
 
 const treeDecoder: JsonDecoder.Decoder<TreeNode> = JsonDecoder.lazy(() =>
-  JsonDecoder.object<TreeNode>(
-    {
-      label: JsonDecoder.string(),
-      children: JsonDecoder.optional(JsonDecoder.array(treeDecoder, 'TreeNode[]'))
-    },
-    'TreeNode'
-  )
+  JsonDecoder.object<TreeNode>({
+    value: JsonDecoder.string(),
+    children: JsonDecoder.optional(JsonDecoder.array(treeDecoder))
+  })
 );
 
 const tree = {
@@ -92,9 +97,9 @@ const tree = {
 
 treeDecoder.decode(tree).map(node => console.log(JSON.stringify(node, null, 2))); // Ok(...)
 
-const badTree = { ...tree, children: [...tree.children, { label: 12 }] };
+const badTree = { ...tree, children: [...tree.children, { value: 12 }] };
 treeDecoder.decode(badTree);
-// Error: <TreeNode> decoder failed at key \"children\" with error: <TreeNode[]> decoder failed at index \"2\" with error: <TreeNode> decoder failed at key \"label\" with error: 12 is not a valid string"
+// Err({ issues: [{ message: '12 is not a valid string', path: ['children', 2, 'value'] }] })
 ```
 
 ## Union Types and Type Discrimination
@@ -104,24 +109,18 @@ Handle different object shapes based on a discriminator field:
 ```typescript
 type Shape = { type: 'circle'; radius: number } | { type: 'rectangle'; width: number; height: number };
 
-const circleDecoder = JsonDecoder.object<Shape>(
-  {
-    type: JsonDecoder.constant('circle'),
-    radius: JsonDecoder.number()
-  },
-  'Circle'
-);
+const circleDecoder = JsonDecoder.object<Extract<Shape, { type: 'circle' }>>({
+  type: JsonDecoder.literal('circle'),
+  radius: JsonDecoder.number()
+});
 
-const rectangleDecoder = JsonDecoder.object<Shape>(
-  {
-    type: JsonDecoder.constant('rectangle'),
-    width: JsonDecoder.number(),
-    height: JsonDecoder.number()
-  },
-  'Rectangle'
-);
+const rectangleDecoder = JsonDecoder.object<Extract<Shape, { type: 'rectangle' }>>({
+  type: JsonDecoder.literal('rectangle'),
+  width: JsonDecoder.number(),
+  height: JsonDecoder.number()
+});
 
-const shapeDecoder = JsonDecoder.oneOf<Shape>([circleDecoder, rectangleDecoder], 'Shape');
+const shapeDecoder = JsonDecoder.oneOf<Shape>([circleDecoder, rectangleDecoder]);
 
 // Usage
 const shapes = [
@@ -130,10 +129,10 @@ const shapes = [
 ];
 
 console.log(
-  JsonDecoder.array(shapeDecoder, 'Shape[]')
+  JsonDecoder.array(shapeDecoder)
     .decode(shapes)
-    .map(shapes =>
-      shapes.map(shape => {
+    .map(decodedShapes =>
+      decodedShapes.map(shape => {
         if (shape.type === 'circle') {
           return `Circle area: ${Math.PI * shape.radius ** 2}`;
         } else {
@@ -141,7 +140,7 @@ console.log(
         }
       })
     )
-); // {"value":["Circle area: 78.53981633974483","Rectangle area: 200"]}
+); // Ok({ value: ["Circle area: 78.53981633974483", "Rectangle area: 200"] })
 ```
 
 ## Complex Transformations
@@ -160,7 +159,7 @@ function camelizeRecord<T extends Record<string, unknown>>(decoder: JsonDecoder.
   function snakeToCamel(str: string): string {
     return str
       .toLowerCase() // Ensure lowercase input
-      .replace(/[_]+([a-z])/g, (_, letter) => letter.toUpperCase()) // Convert _x → X
+      .replace(/[_]+([a-z])/g, (_, letter) => letter.toUpperCase()) // Convert _x to X
       .replace(/^_+|_+$/g, ''); // Remove leading/trailing underscores
   }
   return decoder.flatMap(record => {
@@ -174,15 +173,12 @@ function camelizeRecord<T extends Record<string, unknown>>(decoder: JsonDecoder.
 }
 
 const camelizeApiUserDecoder = camelizeRecord(
-  JsonDecoder.object(
-    {
-      id: JsonDecoder.number(),
-      first_name: JsonDecoder.string(),
-      last_name: JsonDecoder.string(),
-      email_address: JsonDecoder.string()
-    },
-    'User'
-  )
+  JsonDecoder.object({
+    id: JsonDecoder.number(),
+    first_name: JsonDecoder.string(),
+    last_name: JsonDecoder.string(),
+    email_address: JsonDecoder.string()
+  })
 );
 
 type User = JsonDecoder.FromDecoder<typeof camelizeApiUserDecoder>;
@@ -195,7 +191,7 @@ const apiUserJson = {
 };
 
 const user: User = await camelizeApiUserDecoder.decodePromise(apiUserJson);
-// {"id":1, "firstName":"John", "lastName":"Doe", "emailAddress":"john@doe.com"}
+// { id: 1, firstName: 'John', lastName: 'Doe', emailAddress: 'john@doe.com' }
 ```
 
 ## Strict Object Validation
@@ -208,20 +204,18 @@ interface MiniUser {
   name: string;
 }
 
-const strictUserDecoder = JsonDecoder.objectStrict<MiniUser>(
-  {
-    id: JsonDecoder.number(),
-    name: JsonDecoder.string()
-  },
-  'MiniUser'
-);
+const strictUserDecoder = JsonDecoder.objectStrict<MiniUser>({
+  id: JsonDecoder.number(),
+  name: JsonDecoder.string()
+});
 
 // This will fail because of extra properties
 strictUserDecoder.decode({
   id: 1,
   name: 'John',
   extra: 'field'
-}); // Error: Unknown key \"extra\" found while processing strict <MiniUser> decoder
+});
+// Err({ issues: [{ message: 'Unknown key "extra" found in strict object', path: [] }] })
 ```
 
 ## Record Decoding
@@ -234,22 +228,22 @@ interface MiniUser {
   name: string;
 }
 
+const miniUserDecoder = JsonDecoder.object<MiniUser>({
+  id: JsonDecoder.number(),
+  name: JsonDecoder.string()
+});
+
 // Map of user IDs to users
-interface UserMap {
-  [key: string]: MiniUser;
-}
+const userMapDecoder = JsonDecoder.record(miniUserDecoder);
 
-const userMapDecoder = JsonDecoder.record(userDecoder, 'UserMap');
-
-const users: UserMap = {
-  "user1": { id: 1, name: "John" },
-  "user2": { id: 2, name: "Jane" }
+const users = {
+  user1: { id: 1, name: 'John' },
+  user2: { id: 2, name: 'Jane' }
 };
 
-userMapDecoder.decode(users: UserMap)
-  .map(userMap => {
-    console.log(userMap["user1"]); // { id: 1, name: "John" }
-  });
+userMapDecoder.decode(users).map(userMap => {
+  console.log(userMap['user1']); // { id: 1, name: "John" }
+});
 ```
 
 ## Best Practices for Complex Applications
@@ -265,16 +259,17 @@ userMapDecoder.decode(users: UserMap)
 2. **Validation Factories**: Create functions that generate common validation patterns:
 
    ```typescript
-   const createRangeDecoder = (min: number, max: number, name: string) => JsonDecoder.number.flatMap(n => (n >= min && n <= max ? JsonDecoder.succeed() : JsonDecoder.fail(`${name} must be between ${min} and ${max}`)));
+   const createRangeDecoder = (min: number, max: number, name: string) => JsonDecoder.number().flatMap(n => (n >= min && n <= max ? JsonDecoder.succeed() : JsonDecoder.fail(`${name} must be between ${min} and ${max}`)));
 
    const ageDecoder = createRangeDecoder(0, 120, 'Age');
    const percentageDecoder = createRangeDecoder(0, 100, 'Percentage');
    ```
 
 3. **Error Context**: Add meaningful context to error messages:
-   ```typescript
-   const dateDecoder = JsonDecoder.string().flatMap(str => {
-     const date = new Date(str);
-     return isNaN(date.getTime()) ? JsonDecoder.fail(`Invalid date format: ${str}`) : JsonDecoder.succeed();
-   });
-   ```
+
+```typescript
+const dateDecoder = JsonDecoder.string().flatMap(str => {
+  const date = new Date(str);
+  return isNaN(date.getTime()) ? JsonDecoder.fail(`Invalid date format: ${str}`) : JsonDecoder.succeed();
+});
+```

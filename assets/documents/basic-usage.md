@@ -8,8 +8,6 @@ group: Documents
 
 `ts.data.json` helps you validate JSON data at runtime with compile-time type safety. This guide will show you how to use the library effectively.
 
-You can play with this examples in [this stackblitz playground](https://stackblitz.com/edit/ts-data-json-decoder-playground-phjiwonj?file=src%2Fmain.ts).
-
 ## Simple Types
 
 Let's start with the basics. Here's how to decode simple JSON values:
@@ -19,18 +17,18 @@ import * as JsonDecoder from 'ts.data.json';
 
 // String decoder
 const nameDecoder = JsonDecoder.string();
-nameDecoder.decode('John'); // Ok("John")
-nameDecoder.decode(123); // Err("123 is not a valid string")
+nameDecoder.decode('John'); // Ok({ value: 'John' })
+nameDecoder.decode(123); // Err({ issues: [{ message: '123 is not a valid string', path: [] }] })
 
 // Number decoder
 const ageDecoder = JsonDecoder.number();
-ageDecoder.decode(25); // Ok(25)
-ageDecoder.decode('25'); // Err("\"25\" is not a valid number")
+ageDecoder.decode(25); // Ok({ value: 25 })
+ageDecoder.decode('25'); // Err({ issues: [{ message: '"25" is not a valid number', path: [] }] })
 
 // Boolean decoder
 const isActiveDecoder = JsonDecoder.boolean();
-isActiveDecoder.decode(true); // Ok(true)
-isActiveDecoder.decode('true'); // Err("\"true\" is not a valid boolean")
+isActiveDecoder.decode(true); // Ok({ value: true })
+isActiveDecoder.decode('true'); // Err({ issues: [{ message: '"true" is not a valid boolean', path: [] }] })
 ```
 
 ## Object Decoding
@@ -47,15 +45,12 @@ interface User {
 }
 
 // Create a decoder
-const userDecoder = JsonDecoder.object<User>(
-  {
-    id: JsonDecoder.number(),
-    name: JsonDecoder.string(),
-    email: JsonDecoder.string(),
-    age: JsonDecoder.optional(JsonDecoder.number())
-  },
-  'User' // Helps with error messages
-);
+const userDecoder = JsonDecoder.object<User>({
+  id: JsonDecoder.number(),
+  name: JsonDecoder.string(),
+  email: JsonDecoder.string(),
+  age: JsonDecoder.optional(JsonDecoder.number())
+});
 
 // Valid data
 const validJson = {
@@ -68,7 +63,7 @@ const validJson = {
 const user = await userDecoder.decodePromise(validJson);
 console.log(`Hello ${user.name}!`); // Hello John Doe!
 
-// Invalid data
+// Invalid data -- all field errors are reported at once
 const invalidJson = {
   id: 'not-a-number',
   name: 'John Doe',
@@ -77,8 +72,8 @@ const invalidJson = {
 
 try {
   await userDecoder.decodePromise(invalidJson);
-} catch (err) {
-  log(err, true); // Error: <User> decoder failed at key "id" with error: "not-a-number" is not a valid number
+} catch (error) {
+  console.log(error.message); // 'id: "not-a-number" is not a valid number'
 }
 ```
 
@@ -100,23 +95,17 @@ interface User {
 }
 
 // Create decoders for nested structures
-const addressDecoder = JsonDecoder.object<Address>(
-  {
-    street: JsonDecoder.string(),
-    city: JsonDecoder.string(),
-    country: JsonDecoder.string()
-  },
-  'Address'
-);
+const addressDecoder = JsonDecoder.object<Address>({
+  street: JsonDecoder.string(),
+  city: JsonDecoder.string(),
+  country: JsonDecoder.string()
+});
 
-const userDecoder = JsonDecoder.object<User>(
-  {
-    id: JsonDecoder.number(),
-    name: JsonDecoder.string(),
-    address: addressDecoder // Use the nested decoder
-  },
-  'User'
-);
+const userDecoder = JsonDecoder.object<User>({
+  id: JsonDecoder.number(),
+  name: JsonDecoder.string(),
+  address: addressDecoder // Use the nested decoder
+});
 
 const json = {
   id: 1,
@@ -129,7 +118,7 @@ const json = {
 };
 
 console.log(
-  await userWithAddressDecoder.decodePromise(json).then(user => `${user.name} lives in ${user.address.city}`) // John Doe lives in Boston
+  await userDecoder.decodePromise(json).then(user => `${user.name} lives in ${user.address.city}`) // John Doe lives in Boston
 );
 ```
 
@@ -139,21 +128,25 @@ Decoding arrays of values:
 
 ```typescript
 // Array of strings
-const tagsDecoder = JsonDecoder.array(JsonDecoder.string(), 'string[]');
-tagsDecoder.decode(["typescript", "json", "decoder"]); // Ok(["typescript", "json", "decoder"])
-tagsDecoder.decode(["typescript", 123, "decoder"]); // Error: <string[]> decoder failed at index \"1\" with error: 123 is not a valid string
+const tagsDecoder = JsonDecoder.array(JsonDecoder.string());
+tagsDecoder.decode(['typescript', 'json', 'decoder']); // Ok({ value: ["typescript", "json", "decoder"] })
+tagsDecoder.decode(['typescript', 123, 'decoder']);
+// Err({ issues: [{ message: '123 is not a valid string', path: [1] }] })
 
 // Array of objects
-const usersDecoder = JsonDecoder.array(userDecoder, 'User[]');
-await usersDecoder.decodePromise([
-  { id: 1, name: "John", email: "john@example.com" },
-  { id: 2, name: "Jane", email: "jane@example.com" }
-]).then(users => users.map(user) => user.id))); // Ok([1,2])
+const usersDecoder = JsonDecoder.array(userDecoder);
+await usersDecoder
+  .decodePromise([
+    { id: 1, name: 'John', email: 'john@example.com' },
+    { id: 2, name: 'Jane', email: 'jane@example.com' }
+  ])
+  .then(users => users.map(user => user.id)); // [1, 2]
 
 usersDecoder.decode([
-  { id: 1, name: "John" },
-  { id: 2, name: "Jane", email: "jane@example.com" }
-]); // Error: <User[]> decoder failed at index \"0\" with error: <User> decoder failed at key \"email\" with error: undefined is not a valid string
+  { id: 1, name: 'John' },
+  { id: 2, name: 'Jane', email: 'jane@example.com' }
+]);
+// Err({ issues: [{ message: 'undefined is not a valid string', path: [0, 'email'] }] })
 ```
 
 ## Error Recovery
@@ -161,24 +154,21 @@ usersDecoder.decode([
 Use `fallback` to provide fallback values:
 
 ```typescript
-const numberOrZero = JsonDecoder.fallback(JsonDecoder.number(), 0);
+const numberOrZero = JsonDecoder.fallback(0, JsonDecoder.number());
 
-numberOrZero.decode('not a number'); // Ok(0)
+numberOrZero.decode('not a number'); // Ok({ value: 0 })
 ```
 
 You can use other strategies combining other decoders:
 
 ```typescript
-const statusDecoder = JsonDecoder.oneOf(
-  [
-    JsonDecoder.literal('active'),
-    JsonDecoder.literal('inactive'),
-    JsonDecoder.constant('unknown') // always succeeds with 'unknown'
-  ],
-  'Status'
-);
-statusDecoder.decode('inactive'); // Ok('inactive')
-statusDecoder.decode('zxytwqgtyb'); // Ok('unknown')
+const statusDecoder = JsonDecoder.oneOf([
+  JsonDecoder.literal('active'),
+  JsonDecoder.literal('inactive'),
+  JsonDecoder.constant('unknown') // always succeeds with 'unknown'
+]);
+statusDecoder.decode('inactive'); // Ok({ value: 'inactive' })
+statusDecoder.decode('zxytwqgtyb'); // Ok({ value: 'unknown' })
 ```
 
 ## Handling Results
@@ -200,6 +190,20 @@ if (uppercasedUserEmail.isOk()) {
 }
 ```
 
+When a decode fails, the `Err` result holds an `issues` array. Each entry contains a human-readable `message` and a `path` pointing to the failing field:
+
+```typescript
+const result = userDecoder.decode({ id: 'bad', name: 42, email: 'john@example.com' });
+if (!result.isOk()) {
+  result.issues.forEach(issue => {
+    const location = issue.path.length > 0 ? issue.path.join('.') : 'root';
+    console.log(`${location}: ${issue.message}`);
+    // id: "bad" is not a valid number
+    // name: 42 is not a valid string
+  });
+}
+```
+
 ## Type Inference
 
 You can use the `FromDecoder` type to infer types from decoders:
@@ -207,14 +211,11 @@ You can use the `FromDecoder` type to infer types from decoders:
 ```typescript
 import { FromDecoder } from 'ts.data.json';
 
-const userDecoder = JsonDecoder.object(
-  {
-    id: JsonDecoder.number(),
-    name: JsonDecoder.string(),
-    email: JsonDecoder.string()
-  },
-  'User'
-);
+const userDecoder = JsonDecoder.object({
+  id: JsonDecoder.number(),
+  name: JsonDecoder.string(),
+  email: JsonDecoder.string()
+});
 
 // Instead of manually defining the User interface:
 type User = JsonDecoder.FromDecoder<typeof userDecoder>;
@@ -223,27 +224,19 @@ type User = JsonDecoder.FromDecoder<typeof userDecoder>;
 
 ## Best Practices
 
-1. **Name Your Decoders**: Always provide a name for object decoders to get better error messages:
-
-   ```typescript
-   // Good
-   const userDecoder = JsonDecoder.object(..., 'User');
-   // Bad
-   const userDecoder = JsonDecoder.object(..., '');
-   ```
-
-2. **Reuse Decoders**: Create reusable decoders for common patterns:
+1. **Reuse Decoders**: Create reusable decoders for common patterns:
 
    ```typescript
    const numToStringDecoder = JsonDecoder.number().map(n => n.toString(10));
-   numToStringDecoder.decode(123) // Ok("123")
+   numToStringDecoder.decode(123); // Ok({ value: "123" })
 
    const dateDecoder = JsonDecoder.string().flatMap(...);
    const emailDecoder = JsonDecoder.string().flatMap(...);
    ```
 
-3. **Type Safety**: Let TypeScript help you by using type annotations and inference:
-   ```typescript
+2. **Type Safety**: Let TypeScript help you by using type annotations and inference:
+
+```typescript
    const myDecoder = JsonDecoder.object(...);
    type User = JsonDecoder.FromDecoder<typeof myDecoder>;
-   ```
+```
