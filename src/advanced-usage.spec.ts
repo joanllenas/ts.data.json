@@ -221,15 +221,17 @@ describe('advanced-usage -- union types and type discrimination', () => {
   });
 
   it('reports only the matched variant failure for a bad field', () => {
-    expectErrWithIssues(shapeDecoder.decode({ type: 'circle', radius: 'big' }), [
-      { message: '"big" is not a valid number', path: ['radius'] }
-    ]);
+    expectErrWithIssues(
+      shapeDecoder.decode({ type: 'circle', radius: 'big' }),
+      [{ message: '"big" is not a valid number', path: ['radius'] }]
+    );
   });
 
   it('lists the expected tags for an unknown discriminator', () => {
     expectErrWithIssues(shapeDecoder.decode({ type: 'triangle' }), [
       {
-        message: '"type" must be one of "circle", "rectangle", but got "triangle"',
+        message:
+          '"type" must be one of "circle", "rectangle", but got "triangle"',
         path: ['type']
       }
     ]);

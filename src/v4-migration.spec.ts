@@ -168,11 +168,14 @@ describe('v4-migration -- oneOf reports none-matched plus every alternative', ()
       }) as Decoder<Shape>,
       JsonDecoder.null()
     ]);
-    expectErrWithIssues(shapeDecoder.decode({ kind: 'circle', radius: 'big' }), [
-      { message: 'no alternative matched (tried 2)', path: [] },
-      { message: '"big" is not a valid number', path: ['radius'] },
-      { message: '{"kind":"circle","radius":"big"} is not null', path: [] }
-    ]);
+    expectErrWithIssues(
+      shapeDecoder.decode({ kind: 'circle', radius: 'big' }),
+      [
+        { message: 'no alternative matched (tried 2)', path: [] },
+        { message: '"big" is not a valid number', path: ['radius'] },
+        { message: '{"kind":"circle","radius":"big"} is not null', path: [] }
+      ]
+    );
   });
 
   it('an empty decoder list reports that none of zero alternatives matched', () => {
@@ -207,9 +210,10 @@ describe('v4-migration -- discriminatedUnion (new tagged-union decoder)', () => 
   });
 
   it('reports only the matching variant failure for a bad field', () => {
-    expectErrWithIssues(shapeDecoder.decode({ type: 'circle', radius: 'big' }), [
-      { message: '"big" is not a valid number', path: ['radius'] }
-    ]);
+    expectErrWithIssues(
+      shapeDecoder.decode({ type: 'circle', radius: 'big' }),
+      [{ message: '"big" is not a valid number', path: ['radius'] }]
+    );
   });
 
   it('lists the expected tags for an unknown discriminator', () => {
