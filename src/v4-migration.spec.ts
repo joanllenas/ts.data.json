@@ -139,21 +139,26 @@ describe('v4-migration -- structured error model', () => {
 });
 
 // ---------------------------------------------------------------------------
-// oneOf now surfaces the deepest branch's issues (not a generic message)
+// oneOf now reports a "none matched" summary followed by the deepest branch's
+// issues (not a generic message, and never just a single misleading branch)
 // ---------------------------------------------------------------------------
 
-describe('v4-migration -- oneOf surfaces the deepest branch', () => {
-  it('a simple mismatch surfaces the first branch failure', () => {
+describe('v4-migration -- oneOf reports none-matched plus the deepest branch', () => {
+  it('a flat mismatch surfaces the summary plus every rejected alternative', () => {
     const stringOrNumber = JsonDecoder.oneOf<string | number>([
       JsonDecoder.string(),
       JsonDecoder.number()
     ]);
     expectErrWithIssues(stringOrNumber.decode(true), [
-      { message: 'true is not a valid string', path: [] }
+      { message: 'no alternative matched (tried 2)', path: [] },
+      {
+        message: 'true is not a valid string or true is not a valid number',
+        path: []
+      }
     ]);
   });
 
-  it('the branch that decoded furthest wins', () => {
+  it('the branch that decoded furthest wins (after the summary)', () => {
     type Shape = { kind: 'circle'; radius: number } | null;
     const shapeDecoder = JsonDecoder.oneOf<Shape>([
       JsonDecoder.object({
@@ -162,18 +167,15 @@ describe('v4-migration -- oneOf surfaces the deepest branch', () => {
       }) as Decoder<Shape>,
       JsonDecoder.null()
     ]);
-    expectErrWithIssues(
-      shapeDecoder.decode({ kind: 'circle', radius: 'big' }),
-      [{ message: '"big" is not a valid number', path: ['radius'] }]
-    );
+    expectErrWithIssues(shapeDecoder.decode({ kind: 'circle', radius: 'big' }), [
+      { message: 'no alternative matched (tried 2)', path: [] },
+      { message: '"big" is not a valid number', path: ['radius'] }
+    ]);
   });
 
-  it('an empty decoder list falls back to the generic message', () => {
+  it('an empty decoder list reports that none of zero alternatives matched', () => {
     expectErrWithIssues(JsonDecoder.oneOf<never>([]).decode(true), [
-      {
-        message: 'true could not be decoded with any of the provided decoders',
-        path: []
-      }
+      { message: 'no alternative matched (tried 0)', path: [] }
     ]);
   });
 });

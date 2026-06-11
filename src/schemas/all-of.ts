@@ -54,7 +54,8 @@ export type AllOfOutput<T extends readonly Decoder<any>[]> =
  *  userDecoder.decode({ firstname: 'John' });
  *  // Err({ issues: [
  *  //   { message: 'undefined is not a valid string', path: ['lastname'] },
- *  //   { message: 'undefined is not exactly "admin"', path: ['role'] }
+ *  //   { message: 'no alternative matched (tried 2)', path: ['role'] },
+ *  //   { message: 'undefined is not exactly "admin" or undefined is not exactly "user"', path: ['role'] }
  *  // ] })
  * ```
  */

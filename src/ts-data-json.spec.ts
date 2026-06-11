@@ -362,7 +362,13 @@ describe('json-decoder', () => {
           JsonDecoder.string(),
           JsonDecoder.number()
         ]).decode(true),
-        [{ message: 'true is not a valid string', path: [] }]
+        [
+          { message: 'no alternative matched (tried 2)', path: [] },
+          {
+            message: 'true is not a valid string or true is not a valid number',
+            path: []
+          }
+        ]
       );
     });
     it('should apply transformations', () => {
@@ -407,7 +413,12 @@ describe('json-decoder', () => {
     it('should fail when any of the provided decoders fail', () => {
       expectErrWithIssues(userDecoder.decode({ firstname: 'John' }), [
         { message: 'undefined is not a valid string', path: ['lastname'] },
-        { message: 'undefined is not exactly "admin"', path: ['role'] }
+        { message: 'no alternative matched (tried 2)', path: ['role'] },
+        {
+          message:
+            'undefined is not exactly "admin" or undefined is not exactly "user"',
+          path: ['role']
+        }
       ]);
     });
 
