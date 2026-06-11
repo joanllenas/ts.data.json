@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import * as JsonDecoder from './schemas';
 import { Err, Ok, ok, type Result } from './utils/result';
+import { FromDecoder } from './core';
 
 // ---------------------------------------------------------------------------
 // Helpers (mirrors the pattern from ts-data-json.spec.ts)
@@ -363,7 +364,7 @@ describe('basic-usage -- type inference', () => {
       email: JsonDecoder.string()
     });
 
-    type InferredUser = JsonDecoder.FromDecoder<typeof inlineDecoder>;
+    type InferredUser = FromDecoder<typeof inlineDecoder>;
 
     const result = inlineDecoder.decode({
       id: 1,

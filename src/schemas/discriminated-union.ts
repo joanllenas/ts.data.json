@@ -20,7 +20,7 @@ import * as Result from '../utils/result';
  *
  * **When to use:** prefer `discriminatedUnion` over {@link oneOf} whenever your
  * variants are objects sharing a literal "tag" field (`kind`, `type`, `status`,
- * …). It gives precise, single-variant errors that `oneOf` cannot.
+ * etc...). It gives precise, single-variant errors that `oneOf` cannot.
  *
  * @category Utils
  * @param discriminant The name of the field that holds the tag value.

@@ -17,9 +17,9 @@ import * as Result from '../utils/result';
  * **When to use:** reach for `oneOf` for flat unions (primitives, literals) or
  * "try these shapes in order". For other common unions there are more precise
  * tools that produce cleaner errors:
- * - tagged object unions (a shared literal field) → {@link discriminatedUnion}
- * - `X | null` → {@link nullable}
- * - `X | undefined` → {@link optional}
+ * - tagged object unions (a shared literal field) -> {@link discriminatedUnion}
+ * - `X | null` -> {@link nullable}
+ * - `X | undefined` -> {@link optional}
  *
  * @category Utils
  * @param decoders Array of decoders to try in sequence
