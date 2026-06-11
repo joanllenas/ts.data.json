@@ -3,6 +3,7 @@ export * from './schemas/all-of';
 export * from './schemas/array';
 export * from './schemas/boolean';
 export * from './schemas/constant';
+export * from './schemas/discriminated-union';
 export * from './schemas/empty-object';
 export * from './schemas/enum';
 export * from './schemas/fail';

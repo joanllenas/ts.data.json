@@ -485,3 +485,79 @@ describe('allOf - complex combinations and nesting', () => {
     ]);
   });
 });
+
+// ---------------------------------------------------------------------------
+// discriminatedUnion - precise tagged-union errors (no heuristic)
+//
+// Contrast with the oneOf scenarios above: knowing the tag key, this isolates
+// the intended variant and reports only its failure.
+// ---------------------------------------------------------------------------
+describe('discriminatedUnion - complex combinations and nesting', () => {
+  type Circle = { kind: 'circle'; radius: number };
+  type Square = { kind: 'square'; side: number };
+
+  const shape = jd.discriminatedUnion('kind', {
+    circle: jd.object<Circle>({
+      kind: jd.literal('circle'),
+      radius: jd.number()
+    }),
+    square: jd.object<Square>({
+      kind: jd.literal('square'),
+      side: jd.number()
+    })
+  });
+
+  it('1. isolates the matched variant and reports only its failure', () => {
+    // Unlike oneOf, no square kind/side noise: only the circle radius error.
+    expectErrWithIssues(shape.decode({ kind: 'circle', radius: 'big' }), [
+      { message: '"big" is not a valid number', path: ['radius'] }
+    ]);
+  });
+
+  it('2. reports the expected tags when the discriminant is unknown', () => {
+    expectErrWithIssues(shape.decode({ kind: 'triangle' }), [
+      {
+        message: '"kind" must be one of "circle", "square", but got "triangle"',
+        path: ['kind']
+      }
+    ]);
+  });
+
+  it('3. reports the expected tags when the discriminant is missing', () => {
+    expectErrWithIssues(shape.decode({ radius: 5 }), [
+      {
+        message: '"kind" must be one of "circle", "square", but got undefined',
+        path: ['kind']
+      }
+    ]);
+  });
+
+  it('4. fails with an object error on non-object input', () => {
+    expectErrWithIssues(shape.decode('nope'), [
+      { message: '"nope" is not a valid object', path: [] }
+    ]);
+  });
+
+  it('5. nested in an object, the parent path is prepended to the failure', () => {
+    const decoder = jd.object({ shape });
+    expectErrWithIssues(
+      decoder.decode({ shape: { kind: 'square', side: 'wide' } }),
+      [{ message: '"wide" is not a valid number', path: ['shape', 'side'] }]
+    );
+    expectErrWithIssues(decoder.decode({ shape: { kind: 'hexagon' } }), [
+      {
+        message: '"kind" must be one of "circle", "square", but got "hexagon"',
+        path: ['shape', 'kind']
+      }
+    ]);
+  });
+
+  it('6. decodes the matching variant successfully', () => {
+    const result = shape.decode({ kind: 'square', side: 4 });
+    expect(result).toBeInstanceOf(Ok);
+    expect((result as Ok<Circle | Square>).value).toEqual({
+      kind: 'square',
+      side: 4
+    });
+  });
+});

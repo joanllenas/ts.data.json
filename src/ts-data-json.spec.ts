@@ -381,6 +381,55 @@ describe('json-decoder', () => {
     });
   });
 
+  // discriminatedUnion
+  describe('discriminatedUnion (tagged union types)', () => {
+    type Circle = { kind: 'circle'; radius: number };
+    type Square = { kind: 'square'; side: number };
+    const shapeDecoder = JsonDecoder.discriminatedUnion('kind', {
+      circle: JsonDecoder.object<Circle>({
+        kind: JsonDecoder.literal('circle'),
+        radius: JsonDecoder.number()
+      }),
+      square: JsonDecoder.object<Square>({
+        kind: JsonDecoder.literal('square'),
+        side: JsonDecoder.number()
+      })
+    });
+
+    it('decodes each variant and infers the union type', () => {
+      // Type assertion: the decoder produces Circle | Square.
+      const _typeCheck: FromDecoder<typeof shapeDecoder> = {
+        kind: 'circle',
+        radius: 1
+      };
+      expectOkWithValue(shapeDecoder.decode({ kind: 'circle', radius: 5 }), {
+        kind: 'circle',
+        radius: 5
+      });
+      expectOkWithValue(shapeDecoder.decode({ kind: 'square', side: 4 }), {
+        kind: 'square',
+        side: 4
+      });
+    });
+
+    it('reports the expected tags for an unknown discriminant', () => {
+      expectErrWithIssues(shapeDecoder.decode({ kind: 'triangle' }), [
+        {
+          message:
+            '"kind" must be one of "circle", "square", but got "triangle"',
+          path: ['kind']
+        }
+      ]);
+    });
+
+    it('delegates to the matched variant on a field failure', () => {
+      expectErrWithIssues(
+        shapeDecoder.decode({ kind: 'circle', radius: 'x' }),
+        [{ message: '"x" is not a valid number', path: ['radius'] }]
+      );
+    });
+  });
+
   // allOf
   describe('allOf', () => {
     type User = { firstname: string; lastname: string; role: 'admin' | 'user' };
