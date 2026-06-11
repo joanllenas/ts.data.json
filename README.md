@@ -78,10 +78,10 @@ const result = userDecoder.decode({
 
 if (!result.isOk()) {
   result.issues.forEach(issue => {
-    console.log(`${issue.path.join('.')}: ${issue.message}`);
+    console.log(`${JsonDecoder.formatIssuePath(issue.path)}: ${issue.message}`);
   });
   // id: "not-a-number" is not a valid number
-  // roles.1: 42 is not a valid string
+  // roles[1]: 42 is not a valid string
 }
 ```
 

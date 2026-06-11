@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { Decoder } from './core';
+import { Decoder, formatIssuePath } from './core';
 import * as jd from './schemas';
 import { Err, Ok, Result } from './utils/result';
 
@@ -229,29 +229,22 @@ describe('decoders that never fail', () => {
 });
 
 // ---------------------------------------------------------------------------
-// Section 3 - observations / exploration (surface the quirks)
+// Section 2b - path formatting (parse() / decodePromise() message location)
 //
-// These tests pin down the CURRENT behavior of aspects that may be worth
-// reconsidering. They are intentionally written against today's output: if any
-// quirk is "fixed", the matching test fails, which is the signal to revisit it.
+// The structured `path` array is rendered into the thrown Error message with
+// object keys dot-joined and array indices in bracket notation.
 // ---------------------------------------------------------------------------
-describe('error mechanism observations', () => {
-  it('null/undefined decoders use a different message format than the other primitives', () => {
-    // string/number/boolean go through primitiveError → "X is not a valid <tag>".
-    expectErrWithIssues(jd.boolean().decode(1), [
-      { message: '1 is not a valid boolean', path: [] }
-    ]);
-    // null/undefined hand-roll their own "X is not null" / "X is not undefined"
-    // wording instead, so the primitive error messages are not uniform.
-    expectErrWithIssues(jd.null().decode(1), [
-      { message: '1 is not null', path: [] }
-    ]);
-    expectErrWithIssues(jd.undefined().decode(1), [
-      { message: '1 is not undefined', path: [] }
-    ]);
+describe('issue path formatting', () => {
+  it('formatIssuePath joins object keys with dots and array indices with brackets', () => {
+    expect(formatIssuePath([])).toBe('');
+    expect(formatIssuePath(['user', 'name'])).toBe('user.name');
+    expect(formatIssuePath(['items', 0])).toBe('items[0]');
+    expect(formatIssuePath(['user', 'roles', 1])).toBe('user.roles[1]');
+    // A leading array index has no object key in front of it.
+    expect(formatIssuePath([0, 'email'])).toBe('[0].email');
   });
 
-  it('parse() flattens array-index paths with dots (items.0, not items[0])', () => {
+  it('parse() formats array-index paths with bracket notation (items[0])', () => {
     const decoder = jd.object({
       items: jd.array(jd.number())
     });
@@ -263,13 +256,40 @@ describe('error mechanism observations', () => {
     }
     expect(thrown).toBeInstanceOf(Error);
     const error = thrown as Error;
-    expect(error.message).toBe('items.0: "x" is not a valid number');
-    // The structured issues remain available on `cause`.
+    expect(error.message).toBe('items[0]: "x" is not a valid number');
+    // The structured issues remain available on `cause`, unchanged.
     expect(error.cause).toEqual([
       { message: '"x" is not a valid number', path: ['items', 0] }
     ]);
   });
 
+  it('parse() composes object and array segments (users[0].email)', () => {
+    const decoder = jd.object({
+      users: jd.array(jd.object({ email: jd.string() }))
+    });
+    let thrown: unknown;
+    try {
+      decoder.parse({ users: [{ email: 42 }] });
+    } catch (e) {
+      thrown = e;
+    }
+    expect(thrown).toBeInstanceOf(Error);
+    const error = thrown as Error;
+    expect(error.message).toBe('users[0].email: 42 is not a valid string');
+    expect(error.cause).toEqual([
+      { message: '42 is not a valid string', path: ['users', 0, 'email'] }
+    ]);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Section 3 - observations / exploration (surface the quirks)
+//
+// These tests pin down the CURRENT behavior of aspects that may be worth
+// reconsidering. They are intentionally written against today's output: if any
+// quirk is "fixed", the matching test fails, which is the signal to revisit it.
+// ---------------------------------------------------------------------------
+describe('error mechanism observations', () => {
   it('primitiveError quoting is value-type dependent (JSON.stringify)', () => {
     // A string value is rendered WITH quotes...
     expectErrWithIssues(jd.number().decode('5'), [

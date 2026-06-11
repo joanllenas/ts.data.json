@@ -94,7 +94,7 @@ After:
 const result = userDecoder.decode(badJson);
 if (!result.isOk()) {
   result.issues.forEach(issue => {
-    const location = issue.path.length > 0 ? issue.path.join('.') : 'root';
+    const location = issue.path.length > 0 ? JsonDecoder.formatIssuePath(issue.path) : 'root';
     console.log(`${location}: ${issue.message}`);
   });
 }
@@ -104,7 +104,7 @@ if (!result.isOk()) {
 
 In v3, `parse()` threw the raw error string and `decodePromise()` rejected with the raw error string. In v4, both throw or reject a real `Error`:
 
-- `error.message` is the formatted issues string (each issue rendered as `path.join('.'): message`, joined by `; `).
+- `error.message` is the formatted issues string (each issue rendered as `location: message`, joined by `; `). In the location, object keys are dot-joined and array indices use bracket notation (e.g. `roles[1]`). The same formatting is available standalone via `JsonDecoder.formatIssuePath(issue.path)`.
 - `error.cause` is the structured `DecodingIssue[]`, so you can still inspect the issues programmatically.
 
 Before:
@@ -162,14 +162,14 @@ const myStringDecoder = new Decoder<string>(json => (typeof json === 'string' ? 
 
 Decoder names are no longer part of error messages, and the failing key or index is now carried by the issue `path` instead of being embedded in the message text.
 
-| Concern            | v3 message                                                                                     | v4 message + path                                                               |
-| ------------------ | ---------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
-| Object field       | `<User> decoder failed at key "id" with error: "x" is not a valid number`                      | `{ message: '"x" is not a valid number', path: ['id'] }`                        |
-| Array index        | `<User[]> decoder failed at index "1" with error: 2 is not a valid string`                     | `{ message: '2 is not a valid string', path: [1] }`                             |
-| Record value       | `<UserMap> record decoder failed at key "a" with error: "x" is not a valid number`             | `{ message: '"x" is not a valid number', path: ['a'] }`                         |
+| Concern            | v3 message                                                                                     | v4 message + path                                                                                                                          |
+| ------------------ | ---------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| Object field       | `<User> decoder failed at key "id" with error: "x" is not a valid number`                      | `{ message: '"x" is not a valid number', path: ['id'] }`                                                                                   |
+| Array index        | `<User[]> decoder failed at index "1" with error: 2 is not a valid string`                     | `{ message: '2 is not a valid string', path: [1] }`                                                                                        |
+| Record value       | `<UserMap> record decoder failed at key "a" with error: "x" is not a valid number`             | `{ message: '"x" is not a valid number', path: ['a'] }`                                                                                    |
 | oneOf              | `<Shape> decoder failed because true can't be decoded with any of the provided oneOf decoders` | a "no alternative matched" summary plus every alternative's failure (same-path issues collapsed into one "X or Y" message); see note below |
-| Strict unknown key | `Unknown key "extra" found while processing strict <User> decoder`                             | `{ message: 'Unknown key "extra" found in strict object', path: [] }`           |
-| Primitive          | `"x" is not a valid string`                                                                    | `{ message: '"x" is not a valid string', path: [] }` (unchanged message)        |
+| Strict unknown key | `Unknown key "extra" found while processing strict <User> decoder`                             | `{ message: 'Unknown key "extra" found in strict object', path: [] }`                                                                      |
+| Primitive          | `"x" is not a valid string`                                                                    | `{ message: '"x" is not a valid string', path: [] }` (unchanged message)                                                                   |
 
 `oneOf` deserves a special mention. In v3 it always produced one generic "can't be decoded with any of the provided oneOf decoders" message. In v4, when no branch matches, it returns a `no alternative matched (tried N)` summary followed by every alternative's failure. Issues that share a `path` are collapsed into a single "X or Y" message so competing alternatives don't read as conjunctive requirements:
 
@@ -233,7 +233,7 @@ Because each issue exposes a `path` from the root of the decoded value to the fa
 const result = userDecoder.decode({ id: 'bad', name: 42 });
 if (!result.isOk()) {
   const fieldErrors = result.issues.reduce<Record<string, string>>((acc, issue) => {
-    const field = issue.path.join('.');
+    const field = JsonDecoder.formatIssuePath(issue.path);
     acc[field] = issue.message;
     return acc;
   }, {});

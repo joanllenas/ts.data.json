@@ -1,4 +1,4 @@
-export { Decoder, type FromDecoder } from './core';
+export { Decoder, formatIssuePath, type FromDecoder } from './core';
 export * from './schemas/all-of';
 export * from './schemas/array';
 export * from './schemas/boolean';

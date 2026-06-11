@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { Decoder } from './core';
+import { Decoder, formatIssuePath } from './core';
 import * as JsonDecoder from './schemas';
 import {
   Err,
@@ -306,7 +306,7 @@ describe('v4-migration -- structured issues with paths', () => {
     if (!result.isOk()) {
       const fieldErrors = result.issues.reduce<Record<string, string>>(
         (acc, issue) => {
-          acc[issue.path.join('.')] = issue.message;
+          acc[formatIssuePath(issue.path)] = issue.message;
           return acc;
         },
         {}

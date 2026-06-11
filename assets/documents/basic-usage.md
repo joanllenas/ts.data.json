@@ -226,7 +226,7 @@ When a decode fails, the `Err` result holds an `issues` array. Each entry contai
 const result = userDecoder.decode({ id: 'bad', name: 42, email: 'john@example.com' });
 if (!result.isOk()) {
   result.issues.forEach(issue => {
-    const location = issue.path.length > 0 ? issue.path.join('.') : 'root';
+    const location = issue.path.length > 0 ? JsonDecoder.formatIssuePath(issue.path) : 'root';
     console.log(`${location}: ${issue.message}`);
     // id: "bad" is not a valid number
     // name: 42 is not a valid string
