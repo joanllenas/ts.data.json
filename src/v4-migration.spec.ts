@@ -139,11 +139,12 @@ describe('v4-migration -- structured error model', () => {
 });
 
 // ---------------------------------------------------------------------------
-// oneOf now reports a "none matched" summary followed by the deepest branch's
-// issues (not a generic message, and never just a single misleading branch)
+// oneOf now reports a "none matched" summary followed by every alternative's
+// failure (issues sharing a path collapsed into one "X or Y" message), instead
+// of the old generic message.
 // ---------------------------------------------------------------------------
 
-describe('v4-migration -- oneOf reports none-matched plus the deepest branch', () => {
+describe('v4-migration -- oneOf reports none-matched plus every alternative', () => {
   it('a flat mismatch surfaces the summary plus every rejected alternative', () => {
     const stringOrNumber = JsonDecoder.oneOf<string | number>([
       JsonDecoder.string(),
@@ -158,7 +159,7 @@ describe('v4-migration -- oneOf reports none-matched plus the deepest branch', (
     ]);
   });
 
-  it('the branch that decoded furthest wins (after the summary)', () => {
+  it('reports every alternative (object | null)', () => {
     type Shape = { kind: 'circle'; radius: number } | null;
     const shapeDecoder = JsonDecoder.oneOf<Shape>([
       JsonDecoder.object({
@@ -169,13 +170,55 @@ describe('v4-migration -- oneOf reports none-matched plus the deepest branch', (
     ]);
     expectErrWithIssues(shapeDecoder.decode({ kind: 'circle', radius: 'big' }), [
       { message: 'no alternative matched (tried 2)', path: [] },
-      { message: '"big" is not a valid number', path: ['radius'] }
+      { message: '"big" is not a valid number', path: ['radius'] },
+      { message: '{"kind":"circle","radius":"big"} is not null', path: [] }
     ]);
   });
 
   it('an empty decoder list reports that none of zero alternatives matched', () => {
     expectErrWithIssues(JsonDecoder.oneOf<never>([]).decode(true), [
       { message: 'no alternative matched (tried 0)', path: [] }
+    ]);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// New capability: discriminatedUnion for tagged unions of objects.
+// ---------------------------------------------------------------------------
+
+describe('v4-migration -- discriminatedUnion (new tagged-union decoder)', () => {
+  const shapeDecoder = JsonDecoder.discriminatedUnion('type', {
+    circle: JsonDecoder.object({
+      type: JsonDecoder.literal('circle' as const),
+      radius: JsonDecoder.number()
+    }),
+    rectangle: JsonDecoder.object({
+      type: JsonDecoder.literal('rectangle' as const),
+      width: JsonDecoder.number(),
+      height: JsonDecoder.number()
+    })
+  });
+
+  it('decodes the matching variant', () => {
+    expectOk(shapeDecoder.decode({ type: 'circle', radius: 5 }), {
+      type: 'circle',
+      radius: 5
+    });
+  });
+
+  it('reports only the matching variant failure for a bad field', () => {
+    expectErrWithIssues(shapeDecoder.decode({ type: 'circle', radius: 'big' }), [
+      { message: '"big" is not a valid number', path: ['radius'] }
+    ]);
+  });
+
+  it('lists the expected tags for an unknown discriminator', () => {
+    expectErrWithIssues(shapeDecoder.decode({ type: 'triangle' }), [
+      {
+        message:
+          '"type" must be one of "circle", "rectangle", but got "triangle"',
+        path: ['type']
+      }
     ]);
   });
 });

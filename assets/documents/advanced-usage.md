@@ -104,23 +104,40 @@ treeDecoder.decode(badTree);
 
 ## Union Types and Type Discrimination
 
-Handle different object shapes based on a discriminator field:
+For composite types, pick the combinator that matches the shape:
+
+| You want…                                                 | Use                                 |
+| --------------------------------------------------------- | ----------------------------------- |
+| One of several alternatives, tried in order               | `oneOf([a, b, …])`                  |
+| A tagged union of objects (shared literal field)          | `discriminatedUnion('kind', { … })` |
+| To merge several object decoders (intersection / `A & B`) | `allOf([a, b, …])`                  |
+| A value that may be `null`                                | `nullable(decoder)`                 |
+| A value that may be `undefined`                           | `optional(decoder)`                 |
+
+`oneOf` is the general union: it returns the first match and, on failure, reports every
+alternative. Prefer `nullable`/`optional` over `oneOf([x, null])`/`oneOf([x, undefined])`.
+
+### Tagged unions: `discriminatedUnion`
+
+When your variants are objects sharing a literal "tag" field, reach for
+`discriminatedUnion`. Knowing the tag field, it validates only the matching variant and
+produces precise, single-variant errors — rather than `oneOf`, which would try every
+branch and report all of their failures.
 
 ```typescript
 type Shape = { type: 'circle'; radius: number } | { type: 'rectangle'; width: number; height: number };
 
-const circleDecoder = JsonDecoder.object<Extract<Shape, { type: 'circle' }>>({
-  type: JsonDecoder.literal('circle'),
-  radius: JsonDecoder.number()
+const shapeDecoder = JsonDecoder.discriminatedUnion('type', {
+  circle: JsonDecoder.object<Extract<Shape, { type: 'circle' }>>({
+    type: JsonDecoder.literal('circle'),
+    radius: JsonDecoder.number()
+  }),
+  rectangle: JsonDecoder.object<Extract<Shape, { type: 'rectangle' }>>({
+    type: JsonDecoder.literal('rectangle'),
+    width: JsonDecoder.number(),
+    height: JsonDecoder.number()
+  })
 });
-
-const rectangleDecoder = JsonDecoder.object<Extract<Shape, { type: 'rectangle' }>>({
-  type: JsonDecoder.literal('rectangle'),
-  width: JsonDecoder.number(),
-  height: JsonDecoder.number()
-});
-
-const shapeDecoder = JsonDecoder.oneOf<Shape>([circleDecoder, rectangleDecoder]);
 
 // Usage
 const shapes = [
@@ -141,6 +158,14 @@ console.log(
       })
     )
 ); // Ok({ value: ["Circle area: 78.53981633974483", "Rectangle area: 200"] })
+
+// A wrong field reports only the matching variant's failure:
+shapeDecoder.decode({ type: 'circle', radius: 'big' });
+// Err -> radius: "big" is not a valid number
+
+// An unknown tag lists the expected values:
+shapeDecoder.decode({ type: 'triangle' });
+// Err -> type: "type" must be one of "circle", "rectangle", but got "triangle"
 ```
 
 ## Complex Transformations

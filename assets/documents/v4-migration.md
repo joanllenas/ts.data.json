@@ -167,24 +167,28 @@ Decoder names are no longer part of error messages, and the failing key or index
 | Object field       | `<User> decoder failed at key "id" with error: "x" is not a valid number`                      | `{ message: '"x" is not a valid number', path: ['id'] }`                        |
 | Array index        | `<User[]> decoder failed at index "1" with error: 2 is not a valid string`                     | `{ message: '2 is not a valid string', path: [1] }`                             |
 | Record value       | `<UserMap> record decoder failed at key "a" with error: "x" is not a valid number`             | `{ message: '"x" is not a valid number', path: ['a'] }`                         |
-| oneOf              | `<Shape> decoder failed because true can't be decoded with any of the provided oneOf decoders` | the issues of the branch that decoded furthest (deepest `path`); see note below |
+| oneOf              | `<Shape> decoder failed because true can't be decoded with any of the provided oneOf decoders` | a "no alternative matched" summary plus every alternative's failure (same-path issues collapsed into one "X or Y" message); see note below |
 | Strict unknown key | `Unknown key "extra" found while processing strict <User> decoder`                             | `{ message: 'Unknown key "extra" found in strict object', path: [] }`           |
 | Primitive          | `"x" is not a valid string`                                                                    | `{ message: '"x" is not a valid string', path: [] }` (unchanged message)        |
 
-`oneOf` deserves a special mention. In v3 it always produced one generic "can't be decoded with any of the provided oneOf decoders" message. In v4 it instead surfaces the issues from the branch that decoded furthest (the one whose failure reached the deepest `path`), because that is usually the most specific and actionable error:
+`oneOf` deserves a special mention. In v3 it always produced one generic "can't be decoded with any of the provided oneOf decoders" message. In v4, when no branch matches, it returns a `no alternative matched (tried N)` summary followed by every alternative's failure. Issues that share a `path` are collapsed into a single "X or Y" message so competing alternatives don't read as conjunctive requirements:
 
 ```typescript
 type Shape = { kind: 'circle'; radius: number } | null;
 
 const shapeDecoder = JsonDecoder.oneOf<Shape>([JsonDecoder.object({ kind: JsonDecoder.literal('circle'), radius: JsonDecoder.number() }), JsonDecoder.null()]);
 
-// The object branch fails deeper (at ['radius']) than the null branch (at the root),
-// so the object branch's issues are surfaced.
 shapeDecoder.decode({ kind: 'circle', radius: 'big' });
-// Err({ issues: [{ message: '"big" is not a valid number', path: ['radius'] }] })
+// Err({ issues: [
+//   { message: 'no alternative matched (tried 2)', path: [] },
+//   { message: '"big" is not a valid number', path: ['radius'] },
+//   { message: '{"kind":"circle","radius":"big"} is not null', path: [] }
+// ] })
 ```
 
-The old generic message survives only as a fallback when no branch produced any issue (for example, an empty `oneOf([])` decoder list): `{ message: '<value> could not be decoded with any of the provided decoders', path: [] }`.
+An empty `oneOf([])` decoder list reports `{ message: 'no alternative matched (tried 0)', path: [] }`.
+
+> **Tip:** for a union of objects that share a literal "tag" field, prefer the new [`discriminatedUnion`](#discriminatedunion) decoder — it validates only the matching variant and yields a precise, single-variant error instead of reporting every branch. See also the [Advanced Usage](advanced-usage.md) guide.
 
 If you assert on error strings in your tests, switch to asserting on the structured `issues` array instead.
 
@@ -238,6 +242,27 @@ if (!result.isOk()) {
 ```
 
 This structure also lines up with the [Standard Schema](https://standardschema.dev) issue shape, which `ts.data.json` implements out of the box.
+
+### discriminatedUnion
+
+v4 adds `discriminatedUnion` for tagged unions of objects that share a literal "tag" field. You give it the tag field name and a map from each tag value to its variant decoder; it reads the tag, validates only the matching variant, and reports a precise error when the tag is unknown — without the noise `oneOf` produces by trying every branch.
+
+```typescript
+const shapeDecoder = JsonDecoder.discriminatedUnion('type', {
+  circle: JsonDecoder.object({ type: JsonDecoder.literal('circle'), radius: JsonDecoder.number() }),
+  rectangle: JsonDecoder.object({ type: JsonDecoder.literal('rectangle'), width: JsonDecoder.number(), height: JsonDecoder.number() })
+});
+
+shapeDecoder.decode({ type: 'circle', radius: 5 }); // Ok({ value: { type: 'circle', radius: 5 } })
+
+// Only the matching variant is checked:
+shapeDecoder.decode({ type: 'circle', radius: 'big' });
+// Err({ issues: [{ message: '"big" is not a valid number', path: ['radius'] }] })
+
+// An unknown tag lists the expected values:
+shapeDecoder.decode({ type: 'triangle' });
+// Err({ issues: [{ message: '"type" must be one of "circle", "rectangle", but got "triangle"', path: ['type'] }] })
+```
 
 ## Quick Reference
 

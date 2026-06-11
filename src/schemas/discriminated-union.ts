@@ -11,12 +11,16 @@ import * as Result from '../utils/result';
 /**
  * Decoder for tagged (discriminated) unions.
  *
- * Unlike {@link oneOf}, which tries every branch and guesses the most relevant
- * failure, `discriminatedUnion` is told which field carries the tag and a map
- * from each tag value to the decoder for that variant. It reads the tag, picks
- * the matching decoder, and delegates to it — so a failure is that variant's
- * own structured error, with no guessing. When the tag itself is missing or
- * unknown, it reports exactly which values were expected.
+ * Unlike {@link oneOf}, which tries every branch and reports each one's failure,
+ * `discriminatedUnion` is told which field carries the tag and a map from each
+ * tag value to the decoder for that variant. It reads the tag, picks the
+ * matching decoder, and delegates to it — so a failure is that variant's own
+ * structured error, with no noise from the other variants. When the tag itself
+ * is missing or unknown, it reports exactly which values were expected.
+ *
+ * **When to use:** prefer `discriminatedUnion` over {@link oneOf} whenever your
+ * variants are objects sharing a literal "tag" field (`kind`, `type`, `status`,
+ * …). It gives precise, single-variant errors that `oneOf` cannot.
  *
  * @category Utils
  * @param discriminant The name of the field that holds the tag value.

@@ -8,14 +8,18 @@ import { Decoder } from '../core';
 import * as Result from '../utils/result';
 
 /**
- * Decoder that tries multiple decoders in sequence until one succeeds.
- * When all decoders fail, returns a summary issue stating that none of the
- * alternatives matched, followed by the failure from the sub-decoder that
- * reached the deepest path, as that represents the most specific (most
- * actionable) failure. A deep branch (e.g. the matching member of a
- * discriminated union) wins over shallow ones; when several branches fail at
- * the same deepest depth they are competing alternatives, so issues sharing a
- * path are collapsed into a single "X or Y" message.
+ * Decoder for a union of alternatives. Tries each decoder in order and returns
+ * the first success. When all of them fail, it returns a summary issue stating
+ * that none matched, followed by every alternative's failure; issues that share
+ * a path are collapsed into a single "X or Y" message so competing alternatives
+ * don't read as conjunctive requirements.
+ *
+ * **When to use:** reach for `oneOf` for flat unions (primitives, literals) or
+ * "try these shapes in order". For other common unions there are more precise
+ * tools that produce cleaner errors:
+ * - tagged object unions (a shared literal field) → {@link discriminatedUnion}
+ * - `X | null` → {@link nullable}
+ * - `X | undefined` → {@link optional}
  *
  * @category Utils
  * @param decoders Array of decoders to try in sequence
@@ -39,58 +43,44 @@ import * as Result from '../utils/result';
  *
  * @example
  * ```ts
- * // When one branch fails deeper, its issues win over a shallow mismatch
- * type Shape = { kind: 'circle'; radius: number } | null;
- * const shapeDecoder = JsonDecoder.oneOf<Shape>([
- *   JsonDecoder.object({ kind: JsonDecoder.literal('circle'), radius: JsonDecoder.number() }),
- *   JsonDecoder.null()
- * ]);
+ * // Every alternative's failure is reported. For `X | null`, prefer nullable(X)
+ * // which delegates to X and yields just X's error.
+ * const circle = JsonDecoder.object({
+ *   kind: JsonDecoder.literal('circle'),
+ *   radius: JsonDecoder.number()
+ * });
  *
- * // The object branch fails at path ['radius'], which is deeper than null's
- * // root-level failure, so the object branch issues are surfaced after the summary.
- * shapeDecoder.decode({ kind: 'circle', radius: 'big' });
+ * JsonDecoder.oneOf([circle, JsonDecoder.null()]).decode({ kind: 'circle', radius: 'big' });
  * // Err({ issues: [
  * //   { message: 'no alternative matched (tried 2)', path: [] },
+ * //   { message: '{"kind":"circle","radius":"big"} is not null', path: [] },
  * //   { message: '"big" is not a valid number', path: ['radius'] }
  * // ] })
+ *
+ * JsonDecoder.nullable(circle).decode({ kind: 'circle', radius: 'big' });
+ * // Err({ issues: [{ message: '"big" is not a valid number', path: ['radius'] }] })
  * ```
  */
 export function oneOf<T>(decoders: Array<Decoder<T>>): Decoder<T> {
   return new Decoder<T>((json: any) => {
-    let tiedBranches: ReadonlyArray<Result.DecodingIssue>[] = [];
-    let deepestDepth = -1;
+    const branches: ReadonlyArray<Result.DecodingIssue>[] = [];
     for (let i = 0; i < decoders.length; i++) {
       const result = decoders[i].decode(json);
       if (result.isOk()) {
         return result;
       }
-      const maxDepth = result.issues.reduce(
-        (max, issue) => Math.max(max, issue.path.length),
-        0
-      );
-      if (maxDepth > deepestDepth) {
-        deepestDepth = maxDepth;
-        tiedBranches = [result.issues];
-      } else if (maxDepth === deepestDepth) {
-        // Keep every branch that failed at the same deepest depth.
-        tiedBranches.push(result.issues);
-      }
+      branches.push(result.issues);
     }
-    const summary: Result.DecodingIssue = {
-      message: `no alternative matched (tried ${decoders.length})`,
-      path: []
-    };
-    if (tiedBranches.length <= 1) {
-      // 0 or 1 branch at the deepest depth: its issues belong to a single
-      // branch (its own requirements, possibly at deeper paths), so surface
-      // them as-is.
-      return Result.err<T>([summary, ...(tiedBranches[0] ?? [])]);
-    }
-    // Several branches tied at the deepest depth: they are competing
-    // alternatives, not conjunctive requirements. Collapse issues that share a
-    // path into a single "X or Y" message so they don't read as siblings that
-    // must all hold.
-    return Result.err<T>([summary, ...collapseAlternatives(tiedBranches)]);
+    // No alternative matched: report a summary followed by every alternative's
+    // failure. Issues sharing a path are collapsed into a single "X or Y"
+    // message so competing alternatives don't read as conjunctive requirements.
+    return Result.err<T>([
+      {
+        message: `no alternative matched (tried ${decoders.length})`,
+        path: []
+      },
+      ...collapseAlternatives(branches)
+    ]);
   });
 }
 
