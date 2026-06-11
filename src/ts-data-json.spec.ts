@@ -182,15 +182,15 @@ describe('json-decoder', () => {
     });
     it('should fail when the value is not in the enum', () => {
       expectErrWithIssues(JsonDecoder.enumeration<IntEnum>(IntEnum).decode(3), [
-        { message: '"3" is not a valid enum value', path: [] }
+        { message: '3 is not a valid enum value', path: [] }
       ]);
       expectErrWithIssues(
         JsonDecoder.enumeration<IntEnum>(OddlyOrderedIntEnum).decode(3),
-        [{ message: '"3" is not a valid enum value', path: [] }]
+        [{ message: '3 is not a valid enum value', path: [] }]
       );
       expectErrWithIssues(
         JsonDecoder.enumeration<HeterogeneousEnum>(HeterogeneousEnum).decode(0),
-        [{ message: '"0" is not a valid enum value', path: [] }]
+        [{ message: '0 is not a valid enum value', path: [] }]
       );
     });
   });

@@ -123,6 +123,23 @@ describe('error handling', () => {
         { message: '"green" is not a valid enum value', path: [] }
       ]);
     });
+
+    it('renders the rejected value with JSON.stringify, like the other primitives', () => {
+      enum Color {
+        Red = 'red'
+      }
+      // A string value keeps its quotes...
+      expectErrWithIssues(jd.enumeration<Color>(Color).decode('green'), [
+        { message: '"green" is not a valid enum value', path: [] }
+      ]);
+      // ...while `null` renders WITHOUT quotes, exactly like string().decode(null).
+      expectErrWithIssues(jd.enumeration<Color>(Color).decode(null), [
+        { message: 'null is not a valid enum value', path: [] }
+      ]);
+      expectErrWithIssues(jd.string().decode(null), [
+        { message: 'null is not a valid string', path: [] }
+      ]);
+    });
   });
 
   describe('oneOf', () => {
@@ -219,21 +236,6 @@ describe('decoders that never fail', () => {
 // quirk is "fixed", the matching test fails, which is the signal to revisit it.
 // ---------------------------------------------------------------------------
 describe('error mechanism observations', () => {
-  it('enumeration builds its message with raw interpolation, not JSON.stringify', () => {
-    enum Color {
-      Red = 'red'
-    }
-    // `null` is interpolated as the bare word `null` and then wrapped in
-    // hand-written quotes, producing `"null"` - as if it were the string "null".
-    expectErrWithIssues(jd.enumeration<Color>(Color).decode(null), [
-      { message: '"null" is not a valid enum value', path: [] }
-    ]);
-    // Every other decoder uses JSON.stringify, so `null` renders WITHOUT quotes.
-    expectErrWithIssues(jd.string().decode(null), [
-      { message: 'null is not a valid string', path: [] }
-    ]);
-  });
-
   it('null/undefined decoders use a different message format than the other primitives', () => {
     // string/number/boolean go through primitiveError → "X is not a valid <tag>".
     expectErrWithIssues(jd.boolean().decode(1), [
