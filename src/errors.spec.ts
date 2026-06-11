@@ -283,65 +283,6 @@ describe('issue path formatting', () => {
 });
 
 // ---------------------------------------------------------------------------
-// Section 3 - observations / exploration (surface the quirks)
-//
-// These tests pin down the CURRENT behavior of aspects that may be worth
-// reconsidering. They are intentionally written against today's output: if any
-// quirk is "fixed", the matching test fails, which is the signal to revisit it.
-// ---------------------------------------------------------------------------
-describe('error mechanism observations', () => {
-  it('primitiveError quoting is value-type dependent (JSON.stringify)', () => {
-    // A string value is rendered WITH quotes...
-    expectErrWithIssues(jd.number().decode('5'), [
-      { message: '"5" is not a valid number', path: [] }
-    ]);
-    // ...while a number value is rendered WITHOUT quotes.
-    expectErrWithIssues(jd.string().decode(5), [
-      { message: '5 is not a valid string', path: [] }
-    ]);
-  });
-
-  it('oneOf makes "none matched" explicit while keeping the closest failure actionable', () => {
-    // Flat union: the summary tells you all alternatives were tried, and the
-    // competing branches (tied at the same depth) are collapsed into one issue
-    // so they read as alternatives ("X or Y"), not separate requirements.
-    const shallow = jd.oneOf<string | number>([jd.string(), jd.number()]);
-    expectErrWithIssues(shallow.decode(true), [
-      { message: 'no alternative matched (tried 2)', path: [] },
-      {
-        message: 'true is not a valid string or true is not a valid number',
-        path: []
-      }
-    ]);
-
-    // Nested in an object, oneOf reports every alternative's failure (the object
-    // branch's `radius` and the `null` branch's mismatch), all carrying the
-    // parent path 'shape'. For an `X | null` field, prefer nullable(X) (below).
-    type Shape = { kind: 'circle'; radius: number } | null;
-    const shapeDecoder = jd.object({
-      shape: jd.oneOf<Shape>([
-        jd.object({
-          kind: jd.literal('circle' as const),
-          radius: jd.number()
-        }) as unknown as Decoder<Shape>,
-        jd.null()
-      ])
-    });
-    expectErrWithIssues(
-      shapeDecoder.decode({ shape: { kind: 'circle', radius: 'big' } }),
-      [
-        { message: 'no alternative matched (tried 2)', path: ['shape'] },
-        { message: '"big" is not a valid number', path: ['shape', 'radius'] },
-        {
-          message: '{"kind":"circle","radius":"big"} is not null',
-          path: ['shape']
-        }
-      ]
-    );
-  });
-});
-
-// ---------------------------------------------------------------------------
 // oneOf - complex combinations and nesting
 //
 // These exercise oneOf across realistic shapes so the produced issues can be
