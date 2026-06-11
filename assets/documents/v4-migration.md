@@ -27,6 +27,7 @@ The public API surface is otherwise unchanged: decoders are still functions, the
 - [New Capabilities](#new-capabilities)
   - [All errors at once](#all-errors-at-once)
   - [Structured issues with paths](#structured-issues-with-paths)
+  - [discriminatedUnion](#discriminatedunion)
 - [Quick Reference](#quick-reference)
 
 ## Breaking Changes
