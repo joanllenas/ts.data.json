@@ -292,10 +292,9 @@ describe('error mechanism observations', () => {
       }
     ]);
 
-    // Discriminated union nested in an object: the object branch fails deepest
-    // at ['radius'], so that specific failure is surfaced after the summary.
-    // Both issues carry the parent path ('shape'), so the error stays
-    // structured and points right at the offending field.
+    // Nested in an object, oneOf reports every alternative's failure (the object
+    // branch's `radius` and the `null` branch's mismatch), all carrying the
+    // parent path 'shape'. For an `X | null` field, prefer nullable(X) (below).
     type Shape = { kind: 'circle'; radius: number } | null;
     const shapeDecoder = jd.object({
       shape: jd.oneOf<Shape>([
@@ -310,7 +309,11 @@ describe('error mechanism observations', () => {
       shapeDecoder.decode({ shape: { kind: 'circle', radius: 'big' } }),
       [
         { message: 'no alternative matched (tried 2)', path: ['shape'] },
-        { message: '"big" is not a valid number', path: ['shape', 'radius'] }
+        { message: '"big" is not a valid number', path: ['shape', 'radius'] },
+        {
+          message: '{"kind":"circle","radius":"big"} is not null',
+          path: ['shape']
+        }
       ]
     );
   });
@@ -361,15 +364,26 @@ describe('oneOf - complex combinations and nesting', () => {
     ]);
   });
 
-  it('3. a uniquely-deepest branch is isolated cleanly (object | null)', () => {
+  it('3. reports every alternative (object | null); use nullable for a clean error', () => {
     const decoder = jd.oneOf<Shape | null>([
       circle as unknown as Decoder<Shape | null>,
       jd.null()
     ]);
     expectErrWithIssues(decoder.decode({ kind: 'circle', radius: 'big' }), [
       { message: 'no alternative matched (tried 2)', path: [] },
-      { message: '"big" is not a valid number', path: ['radius'] }
+      { message: '"big" is not a valid number', path: ['radius'] },
+      {
+        message: '{"kind":"circle","radius":"big"} is not null',
+        path: []
+      }
     ]);
+
+    // nullable(X) delegates to X, so its error is just X's failure.
+    const nullableCircle = jd.nullable(circle);
+    expectErrWithIssues(
+      nullableCircle.decode({ kind: 'circle', radius: 'big' }),
+      [{ message: '"big" is not a valid number', path: ['radius'] }]
+    );
   });
 
   it('4. nested in an array inside an object, the parent path is prepended', () => {
