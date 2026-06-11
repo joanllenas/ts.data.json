@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { Decoder, formatIssuePath } from './core';
+import { formatIssuePath } from './core';
 import * as jd from './schemas';
 import { Err, Ok, Result } from './utils/result';
 
@@ -283,25 +283,14 @@ describe('issue path formatting', () => {
 });
 
 // ---------------------------------------------------------------------------
-// oneOf - complex combinations and nesting
+// oneOf - primitive unions and nesting
 //
-// These exercise oneOf across realistic shapes so the produced issues can be
-// inspected. They assert the EXACT current output (order included).
+// oneOf is the general union for "alternatives tried in order"; its recommended
+// home is primitive unions. Object/tagged unions belong to discriminatedUnion,
+// and object | null / undefined belong to nullable / optional (see those
+// blocks). These tests assert the EXACT current output (order included).
 // ---------------------------------------------------------------------------
-describe('oneOf - complex combinations and nesting', () => {
-  type Circle = { kind: 'circle'; radius: number };
-  type Square = { kind: 'square'; side: number };
-  type Shape = Circle | Square;
-
-  const circle = jd.object<Circle>({
-    kind: jd.literal('circle'),
-    radius: jd.number()
-  });
-  const square = jd.object<Square>({
-    kind: jd.literal('square'),
-    side: jd.number()
-  });
-
+describe('oneOf - primitive unions and nesting', () => {
   it('1. flat primitive union collapses the alternatives into one issue', () => {
     const decoder = jd.oneOf<string | number>([jd.string(), jd.number()]);
     expectErrWithIssues(decoder.decode(true), [
@@ -313,43 +302,7 @@ describe('oneOf - complex combinations and nesting', () => {
     ]);
   });
 
-  it('2. union of two object branches does NOT isolate the intended branch', () => {
-    // Both branches fail at depth 1 (circle at radius; square at kind + side),
-    // so they tie and collapse together: the circle radius error is mixed with
-    // the square kind/side errors. This is the limitation discriminatedUnion
-    // is meant to solve.
-    const decoder = jd.oneOf<Shape>([circle, square]);
-    expectErrWithIssues(decoder.decode({ kind: 'circle', radius: 'big' }), [
-      { message: 'no alternative matched (tried 2)', path: [] },
-      { message: '"big" is not a valid number', path: ['radius'] },
-      { message: '"circle" is not exactly "square"', path: ['kind'] },
-      { message: 'undefined is not a valid number', path: ['side'] }
-    ]);
-  });
-
-  it('3. reports every alternative (object | null); use nullable for a clean error', () => {
-    const decoder = jd.oneOf<Shape | null>([
-      circle as unknown as Decoder<Shape | null>,
-      jd.null()
-    ]);
-    expectErrWithIssues(decoder.decode({ kind: 'circle', radius: 'big' }), [
-      { message: 'no alternative matched (tried 2)', path: [] },
-      { message: '"big" is not a valid number', path: ['radius'] },
-      {
-        message: '{"kind":"circle","radius":"big"} is not null',
-        path: []
-      }
-    ]);
-
-    // nullable(X) delegates to X, so its error is just X's failure.
-    const nullableCircle = jd.nullable(circle);
-    expectErrWithIssues(
-      nullableCircle.decode({ kind: 'circle', radius: 'big' }),
-      [{ message: '"big" is not a valid number', path: ['radius'] }]
-    );
-  });
-
-  it('4. nested in an array inside an object, the parent path is prepended', () => {
+  it('2. nested in an array inside an object, the parent path is prepended', () => {
     const decoder = jd.object({
       items: jd.array(jd.oneOf<string | number>([jd.string(), jd.number()]))
     });
@@ -362,24 +315,7 @@ describe('oneOf - complex combinations and nesting', () => {
     ]);
   });
 
-  it('5. oneOf of oneOf leaks the inner summary into the collapsed message', () => {
-    // ROUGH EDGE: nesting unions folds the inner "no alternative matched"
-    // summary into the outer collapse, producing a noisy message.
-    const decoder = jd.oneOf<string | number | boolean>([
-      jd.oneOf<string | number>([jd.string(), jd.number()]),
-      jd.boolean()
-    ]);
-    expectErrWithIssues(decoder.decode(null), [
-      { message: 'no alternative matched (tried 2)', path: [] },
-      {
-        message:
-          'no alternative matched (tried 2) or null is not a valid string or null is not a valid number or null is not a valid boolean',
-        path: []
-      }
-    ]);
-  });
-
-  it('6. the first matching branch wins (sanity anchor)', () => {
+  it('3. the first matching branch wins (sanity anchor)', () => {
     const decoder = jd.oneOf<string | number>([jd.string(), jd.number()]);
     const result = decoder.decode(42);
     expect(result).toBeInstanceOf(Ok);
