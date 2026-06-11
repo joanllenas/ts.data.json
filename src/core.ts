@@ -8,12 +8,38 @@ import type { DecodingIssue } from './utils/result';
 import * as Result from './utils/result';
 import type { StandardSchemaV1 } from './utils/standard-schema-v1';
 
+/**
+ * Renders a {@link DecodingIssue} `path` as a human-readable location string.
+ *
+ * Object keys are joined with dots, while array indices use bracket notation,
+ * matching the convention developers expect from JSON paths.
+ *
+ * @param path - The structured path from the decoded root to the failing field.
+ * @returns The location string (empty for a root-level issue).
+ * @category Error Handling
+ *
+ * @example
+ * ```ts
+ * formatIssuePath(['user', 'name']); // 'user.name'
+ * formatIssuePath(['user', 'roles', 1]); // 'user.roles[1]'
+ * formatIssuePath([0, 'email']); // '[0].email'
+ * ```
+ */
+export function formatIssuePath(path: ReadonlyArray<string | number>): string {
+  return path.reduce<string>((location, segment) => {
+    if (typeof segment === 'number') {
+      return `${location}[${segment}]`;
+    }
+    return location.length === 0 ? String(segment) : `${location}.${segment}`;
+  }, '');
+}
+
 function formatIssues(issues: ReadonlyArray<DecodingIssue>): string {
   return issues
     .map(issue =>
       issue.path.length === 0
         ? issue.message
-        : `${issue.path.join('.')}: ${issue.message}`
+        : `${formatIssuePath(issue.path)}: ${issue.message}`
     )
     .join('; ');
 }
@@ -80,6 +106,10 @@ export class Decoder<T> implements StandardSchemaV1<unknown, T> {
    * ```ts
    * JsonDecoder.string().parse('hello'); // 'hello'
    * JsonDecoder.string().parse(123); // throws Error('123 is not a valid string')
+   *
+   * // The thrown message prefixes each failure with its location, array indices use bracket notation:
+   * const decoder = JsonDecoder.object({ items: JsonDecoder.array(JsonDecoder.number()) });
+   * decoder.parse({ items: ['x'] }); // throws Error('items[0]: "x" is not a valid number')
    * ```
    */
   parse(json: any): T {

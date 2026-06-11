@@ -31,6 +31,36 @@ isActiveDecoder.decode(true); // Ok({ value: true })
 isActiveDecoder.decode('true'); // Err({ issues: [{ message: '"true" is not a valid boolean', path: [] }] })
 ```
 
+## Enums
+
+Decode against a TypeScript `enum` with `enumeration`. A rejected value is
+formatted with `JSON.stringify`, just like the other primitive decoders, so the
+quoting depends on the value's type:
+
+```typescript
+enum Color {
+  Red = 'red',
+  Blue = 'blue'
+}
+
+const colorDecoder = JsonDecoder.enumeration<Color>(Color);
+colorDecoder.decode('red'); // Ok({ value: 'red' })
+
+// A string value keeps its quotes...
+colorDecoder.decode('green');
+// Err({ issues: [{ message: '"green" is not a valid enum value', path: [] }] })
+
+// ...while a numeric value is rendered without quotes.
+enum Priority {
+  Low = 1,
+  High = 2
+}
+
+const priorityDecoder = JsonDecoder.enumeration<Priority>(Priority);
+priorityDecoder.decode(3);
+// Err({ issues: [{ message: '3 is not a valid enum value', path: [] }] })
+```
+
 ## Object Decoding
 
 Most of the time, you'll work with objects. Here's how to decode them:
@@ -196,7 +226,7 @@ When a decode fails, the `Err` result holds an `issues` array. Each entry contai
 const result = userDecoder.decode({ id: 'bad', name: 42, email: 'john@example.com' });
 if (!result.isOk()) {
   result.issues.forEach(issue => {
-    const location = issue.path.length > 0 ? issue.path.join('.') : 'root';
+    const location = issue.path.length > 0 ? JsonDecoder.formatIssuePath(issue.path) : 'root';
     console.log(`${location}: ${issue.message}`);
     // id: "bad" is not a valid number
     // name: 42 is not a valid string

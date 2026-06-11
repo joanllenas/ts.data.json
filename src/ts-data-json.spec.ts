@@ -182,15 +182,15 @@ describe('json-decoder', () => {
     });
     it('should fail when the value is not in the enum', () => {
       expectErrWithIssues(JsonDecoder.enumeration<IntEnum>(IntEnum).decode(3), [
-        { message: '"3" is not a valid enum value', path: [] }
+        { message: '3 is not a valid enum value', path: [] }
       ]);
       expectErrWithIssues(
         JsonDecoder.enumeration<IntEnum>(OddlyOrderedIntEnum).decode(3),
-        [{ message: '"3" is not a valid enum value', path: [] }]
+        [{ message: '3 is not a valid enum value', path: [] }]
       );
       expectErrWithIssues(
         JsonDecoder.enumeration<HeterogeneousEnum>(HeterogeneousEnum).decode(0),
-        [{ message: '"0" is not a valid enum value', path: [] }]
+        [{ message: '0 is not a valid enum value', path: [] }]
       );
     });
   });
@@ -362,7 +362,13 @@ describe('json-decoder', () => {
           JsonDecoder.string(),
           JsonDecoder.number()
         ]).decode(true),
-        [{ message: 'true is not a valid string', path: [] }]
+        [
+          { message: 'no alternative matched (tried 2)', path: [] },
+          {
+            message: 'true is not a valid string or true is not a valid number',
+            path: []
+          }
+        ]
       );
     });
     it('should apply transformations', () => {
@@ -372,6 +378,55 @@ describe('json-decoder', () => {
         JsonDecoder.undefined()
       ]);
       expectOkWithValue(optionalV2.decode(null), undefined);
+    });
+  });
+
+  // discriminatedUnion
+  describe('discriminatedUnion (tagged union types)', () => {
+    type Circle = { kind: 'circle'; radius: number };
+    type Square = { kind: 'square'; side: number };
+    const shapeDecoder = JsonDecoder.discriminatedUnion('kind', {
+      circle: JsonDecoder.object<Circle>({
+        kind: JsonDecoder.literal('circle'),
+        radius: JsonDecoder.number()
+      }),
+      square: JsonDecoder.object<Square>({
+        kind: JsonDecoder.literal('square'),
+        side: JsonDecoder.number()
+      })
+    });
+
+    it('decodes each variant and infers the union type', () => {
+      // Type assertion: the decoder produces Circle | Square.
+      const _typeCheck: FromDecoder<typeof shapeDecoder> = {
+        kind: 'circle',
+        radius: 1
+      };
+      expectOkWithValue(shapeDecoder.decode({ kind: 'circle', radius: 5 }), {
+        kind: 'circle',
+        radius: 5
+      });
+      expectOkWithValue(shapeDecoder.decode({ kind: 'square', side: 4 }), {
+        kind: 'square',
+        side: 4
+      });
+    });
+
+    it('reports the expected tags for an unknown discriminant', () => {
+      expectErrWithIssues(shapeDecoder.decode({ kind: 'triangle' }), [
+        {
+          message:
+            '"kind" must be one of "circle", "square", but got "triangle"',
+          path: ['kind']
+        }
+      ]);
+    });
+
+    it('delegates to the matched variant on a field failure', () => {
+      expectErrWithIssues(
+        shapeDecoder.decode({ kind: 'circle', radius: 'x' }),
+        [{ message: '"x" is not a valid number', path: ['radius'] }]
+      );
     });
   });
 
@@ -407,7 +462,12 @@ describe('json-decoder', () => {
     it('should fail when any of the provided decoders fail', () => {
       expectErrWithIssues(userDecoder.decode({ firstname: 'John' }), [
         { message: 'undefined is not a valid string', path: ['lastname'] },
-        { message: 'undefined is not exactly "admin"', path: ['role'] }
+        { message: 'no alternative matched (tried 2)', path: ['role'] },
+        {
+          message:
+            'undefined is not exactly "admin" or undefined is not exactly "user"',
+          path: ['role']
+        }
       ]);
     });
 

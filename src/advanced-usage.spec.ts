@@ -168,23 +168,18 @@ describe('advanced-usage -- recursive types', () => {
 describe('advanced-usage -- union types and type discrimination', () => {
   type CircleShape = { type: 'circle'; radius: number };
   type RectangleShape = { type: 'rectangle'; width: number; height: number };
-  type Shape = CircleShape | RectangleShape;
 
-  const circleDecoder = JsonDecoder.object<CircleShape>({
-    type: JsonDecoder.literal('circle' as const),
-    radius: JsonDecoder.number()
+  const shapeDecoder = JsonDecoder.discriminatedUnion('type', {
+    circle: JsonDecoder.object<CircleShape>({
+      type: JsonDecoder.literal('circle' as const),
+      radius: JsonDecoder.number()
+    }),
+    rectangle: JsonDecoder.object<RectangleShape>({
+      type: JsonDecoder.literal('rectangle' as const),
+      width: JsonDecoder.number(),
+      height: JsonDecoder.number()
+    })
   });
-
-  const rectangleDecoder = JsonDecoder.object<RectangleShape>({
-    type: JsonDecoder.literal('rectangle' as const),
-    width: JsonDecoder.number(),
-    height: JsonDecoder.number()
-  });
-
-  const shapeDecoder = JsonDecoder.oneOf<Shape>([
-    circleDecoder as Decoder<Shape>,
-    rectangleDecoder as Decoder<Shape>
-  ]);
 
   it('decodes a circle shape', () => {
     expectOk(shapeDecoder.decode({ type: 'circle', radius: 5 }), {
@@ -225,13 +220,21 @@ describe('advanced-usage -- union types and type discrimination', () => {
     expectOk(result, ['Circle area: 78.53981633974483', 'Rectangle area: 200']);
   });
 
-  it('fails with a path-based issue for a bad discriminator', () => {
-    const result = shapeDecoder.decode({
-      type: 'triangle',
-      base: 10,
-      height: 5
-    });
-    expect(result.isOk()).toBe(false);
+  it('reports only the matched variant failure for a bad field', () => {
+    expectErrWithIssues(
+      shapeDecoder.decode({ type: 'circle', radius: 'big' }),
+      [{ message: '"big" is not a valid number', path: ['radius'] }]
+    );
+  });
+
+  it('lists the expected tags for an unknown discriminator', () => {
+    expectErrWithIssues(shapeDecoder.decode({ type: 'triangle' }), [
+      {
+        message:
+          '"type" must be one of "circle", "rectangle", but got "triangle"',
+        path: ['type']
+      }
+    ]);
   });
 });
 

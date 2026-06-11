@@ -5,6 +5,7 @@
  */
 
 import { Decoder } from '../core';
+import { primitiveError } from '../utils/errors';
 import * as Result from '../utils/result';
 
 /**
@@ -23,7 +24,10 @@ import * as Result from '../utils/result';
  *
  * const colorDecoder = JsonDecoder.enumeration(Color);
  * colorDecoder.decode('red'); // Ok<Color>
+ * // The rejected value is rendered with JSON.stringify, so a string keeps its quotes...
  * colorDecoder.decode('green'); // Err with issues: [{ message: '"green" is not a valid enum value', path: [] }]
+ * // ...while a non-string value (here a number) is rendered without quotes.
+ * colorDecoder.decode(42); // Err with issues: [{ message: '42 is not a valid enum value', path: [] }]
  * ```
  */
 export function enumeration<E>(enumObj: object): Decoder<E> {
@@ -32,8 +36,6 @@ export function enumeration<E>(enumObj: object): Decoder<E> {
     if (enumValue !== undefined) {
       return Result.ok<E>(enumValue);
     }
-    return Result.err<E>([
-      { message: `"${json}" is not a valid enum value`, path: [] }
-    ]);
+    return Result.err<E>(primitiveError(json, 'enum value'));
   });
 }

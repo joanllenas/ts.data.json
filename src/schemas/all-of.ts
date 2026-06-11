@@ -34,7 +34,13 @@ export type AllOfOutput<T extends readonly Decoder<any>[]> =
   UnionToIntersection<DecoderOutput<T[number]>>;
 
 /**
- * A decoder that succeeds only if all provided decoders succeed.
+ * A decoder that succeeds only if all provided decoders succeed, deep-merging
+ * their results into one value. Use it to combine several object decoders into a
+ * single one — modelling intersection types (`A & B`), "extends", or mixins.
+ *
+ * **When to use:** `allOf` is for *combining* decoders that must all hold (an
+ * intersection). For *alternatives* where only one should hold (a union), use
+ * {@link oneOf} or {@link discriminatedUnion} instead.
  *
  * @category Utils
  * @param decoders Array of decoders to try in sequence
@@ -54,7 +60,8 @@ export type AllOfOutput<T extends readonly Decoder<any>[]> =
  *  userDecoder.decode({ firstname: 'John' });
  *  // Err({ issues: [
  *  //   { message: 'undefined is not a valid string', path: ['lastname'] },
- *  //   { message: 'undefined is not exactly "admin"', path: ['role'] }
+ *  //   { message: 'no alternative matched (tried 2)', path: ['role'] },
+ *  //   { message: 'undefined is not exactly "admin" or undefined is not exactly "user"', path: ['role'] }
  *  // ] })
  * ```
  */

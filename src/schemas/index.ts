@@ -8,6 +8,7 @@ export * from './all-of';
 export * from './array';
 export * from './boolean';
 export * from './constant';
+export * from './discriminated-union';
 export * from './empty-object';
 export * from './enum';
 export * from './fail';

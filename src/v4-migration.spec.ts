@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { Decoder } from './core';
+import { Decoder, formatIssuePath } from './core';
 import * as JsonDecoder from './schemas';
 import {
   Err,
@@ -139,21 +139,27 @@ describe('v4-migration -- structured error model', () => {
 });
 
 // ---------------------------------------------------------------------------
-// oneOf now surfaces the deepest branch's issues (not a generic message)
+// oneOf now reports a "none matched" summary followed by every alternative's
+// failure (issues sharing a path collapsed into one "X or Y" message), instead
+// of the old generic message.
 // ---------------------------------------------------------------------------
 
-describe('v4-migration -- oneOf surfaces the deepest branch', () => {
-  it('a simple mismatch surfaces the first branch failure', () => {
+describe('v4-migration -- oneOf reports none-matched plus every alternative', () => {
+  it('a flat mismatch surfaces the summary plus every rejected alternative', () => {
     const stringOrNumber = JsonDecoder.oneOf<string | number>([
       JsonDecoder.string(),
       JsonDecoder.number()
     ]);
     expectErrWithIssues(stringOrNumber.decode(true), [
-      { message: 'true is not a valid string', path: [] }
+      { message: 'no alternative matched (tried 2)', path: [] },
+      {
+        message: 'true is not a valid string or true is not a valid number',
+        path: []
+      }
     ]);
   });
 
-  it('the branch that decoded furthest wins', () => {
+  it('reports every alternative (object | null)', () => {
     type Shape = { kind: 'circle'; radius: number } | null;
     const shapeDecoder = JsonDecoder.oneOf<Shape>([
       JsonDecoder.object({
@@ -164,15 +170,58 @@ describe('v4-migration -- oneOf surfaces the deepest branch', () => {
     ]);
     expectErrWithIssues(
       shapeDecoder.decode({ kind: 'circle', radius: 'big' }),
+      [
+        { message: 'no alternative matched (tried 2)', path: [] },
+        { message: '"big" is not a valid number', path: ['radius'] },
+        { message: '{"kind":"circle","radius":"big"} is not null', path: [] }
+      ]
+    );
+  });
+
+  it('an empty decoder list reports that none of zero alternatives matched', () => {
+    expectErrWithIssues(JsonDecoder.oneOf<never>([]).decode(true), [
+      { message: 'no alternative matched (tried 0)', path: [] }
+    ]);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// New capability: discriminatedUnion for tagged unions of objects.
+// ---------------------------------------------------------------------------
+
+describe('v4-migration -- discriminatedUnion (new tagged-union decoder)', () => {
+  const shapeDecoder = JsonDecoder.discriminatedUnion('type', {
+    circle: JsonDecoder.object({
+      type: JsonDecoder.literal('circle' as const),
+      radius: JsonDecoder.number()
+    }),
+    rectangle: JsonDecoder.object({
+      type: JsonDecoder.literal('rectangle' as const),
+      width: JsonDecoder.number(),
+      height: JsonDecoder.number()
+    })
+  });
+
+  it('decodes the matching variant', () => {
+    expectOk(shapeDecoder.decode({ type: 'circle', radius: 5 }), {
+      type: 'circle',
+      radius: 5
+    });
+  });
+
+  it('reports only the matching variant failure for a bad field', () => {
+    expectErrWithIssues(
+      shapeDecoder.decode({ type: 'circle', radius: 'big' }),
       [{ message: '"big" is not a valid number', path: ['radius'] }]
     );
   });
 
-  it('an empty decoder list falls back to the generic message', () => {
-    expectErrWithIssues(JsonDecoder.oneOf<never>([]).decode(true), [
+  it('lists the expected tags for an unknown discriminator', () => {
+    expectErrWithIssues(shapeDecoder.decode({ type: 'triangle' }), [
       {
-        message: 'true could not be decoded with any of the provided decoders',
-        path: []
+        message:
+          '"type" must be one of "circle", "rectangle", but got "triangle"',
+        path: ['type']
       }
     ]);
   });
@@ -261,7 +310,7 @@ describe('v4-migration -- structured issues with paths', () => {
     if (!result.isOk()) {
       const fieldErrors = result.issues.reduce<Record<string, string>>(
         (acc, issue) => {
-          acc[issue.path.join('.')] = issue.message;
+          acc[formatIssuePath(issue.path)] = issue.message;
           return acc;
         },
         {}
