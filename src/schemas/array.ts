@@ -1,12 +1,11 @@
 /**
  * @module
  * @mergeModuleWith decoders
- * @category Api docs
+ * @category Main entry point
  */
 
 import { Decoder } from '../core';
-import { primitiveError, prependPath } from '../utils/errors';
-import * as Result from '../utils/result';
+import { arrayFn } from '../internal/schemas';
 
 /**
  * Decoder for arrays.
@@ -30,24 +29,5 @@ import * as Result from '../utils/result';
  * ```
  */
 export function array<T>(decoder: Decoder<T>): Decoder<Array<T>> {
-  return new Decoder<Array<T>>(json => {
-    if (json instanceof Array) {
-      const arr: Array<T> = [];
-      const allIssues: Result.DecodingIssue[] = [];
-      for (let i = 0; i < json.length; i++) {
-        const result = decoder.decode(json[i]);
-        if (result.isOk()) {
-          arr.push(result.value);
-        } else {
-          allIssues.push(...prependPath(result.issues, i));
-        }
-      }
-      if (allIssues.length > 0) {
-        return Result.err<Array<T>>(allIssues);
-      }
-      return Result.ok<Array<T>>(arr);
-    } else {
-      return Result.err<Array<T>>(primitiveError(json, 'array'));
-    }
-  });
+  return new Decoder<Array<T>>(arrayFn(Decoder.toDecodeFn(decoder)));
 }

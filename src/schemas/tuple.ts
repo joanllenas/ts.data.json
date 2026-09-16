@@ -1,12 +1,12 @@
 /**
  * @module
  * @mergeModuleWith decoders
- * @category Api docs
+ * @category Main entry point
  */
 
 import { Decoder } from '../core';
-import { primitiveError, prependPath } from '../utils/errors';
-import * as Result from '../utils/result';
+import { tupleFn } from '../internal/schemas';
+import type { OutputsOf } from '../internal/types';
 
 /**
  * Type-level helper that extracts the type parameters from an array of decoders.
@@ -22,9 +22,8 @@ import * as Result from '../utils/result';
  * type Point = TupleOfResults<[Decoder<number>, Decoder<number>]>; // [number, number]
  * ```
  */
-export type TupleOfResults<T extends readonly [] | readonly Decoder<any>[]> = {
-  [K in keyof T]: T[K] extends Decoder<infer R> ? R : never;
-};
+export type TupleOfResults<T extends readonly [] | readonly Decoder<any>[]> =
+  OutputsOf<T>;
 
 /**
  * Decoder for tuples with fixed length and types.
@@ -51,33 +50,7 @@ export type TupleOfResults<T extends readonly [] | readonly Decoder<any>[]> = {
 export function tuple<T extends readonly [] | readonly Decoder<any>[]>(
   decoders: T
 ): Decoder<TupleOfResults<T>> {
-  return new Decoder<TupleOfResults<T>>(json => {
-    if (json instanceof Array) {
-      if (json.length !== decoders.length) {
-        return Result.err<TupleOfResults<T>>([
-          {
-            message: `tuple received ${json.length} items but expected ${decoders.length}`,
-            path: []
-          }
-        ]);
-      }
-      const arr = [];
-      const allIssues: Result.DecodingIssue[] = [];
-      for (let i = 0; i < json.length; i++) {
-        const result = decoders[i].decode(json[i]);
-        if (result.isOk()) {
-          arr.push(result.value);
-        } else {
-          allIssues.push(...prependPath(result.issues, i));
-        }
-      }
-      if (allIssues.length > 0) {
-        return Result.err<TupleOfResults<T>>(allIssues);
-      }
-      // Cast to a tuple of the right type.
-      return Result.ok<TupleOfResults<T>>(arr as unknown as TupleOfResults<T>);
-    } else {
-      return Result.err<TupleOfResults<T>>(primitiveError(json, 'tuple'));
-    }
-  });
+  return new Decoder<TupleOfResults<T>>(
+    tupleFn(decoders.map(Decoder.toDecodeFn))
+  );
 }

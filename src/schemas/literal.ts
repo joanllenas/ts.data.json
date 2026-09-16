@@ -1,11 +1,11 @@
 /**
  * @module
  * @mergeModuleWith decoders
- * @category Api docs
+ * @category Main entry point
  */
 
 import { Decoder } from '../core';
-import * as Result from '../utils/result';
+import { literalFn } from '../internal/schemas';
 
 /**
  * Decoder that only accepts a specific value.
@@ -23,16 +23,5 @@ import * as Result from '../utils/result';
  * ```
  */
 export function literal<const T>(value: T): Decoder<T> {
-  return new Decoder((json: any) => {
-    if (json === value) {
-      return Result.ok<T>(value);
-    } else {
-      return Result.err<T>([
-        {
-          message: `${JSON.stringify(json)} is not exactly ${JSON.stringify(value)}`,
-          path: []
-        }
-      ]);
-    }
-  });
+  return new Decoder(literalFn(value));
 }

@@ -1,11 +1,11 @@
 /**
  * @module
  * @mergeModuleWith decoders
- * @category Api docs
+ * @category Main entry point
  */
 
 import { Decoder } from '../core';
-import * as Result from '../utils/result';
+import { nullableFn } from '../internal/schemas';
 
 /**
  * Decoder that accepts null values.
@@ -34,10 +34,5 @@ import * as Result from '../utils/result';
  * ```
  */
 export function nullable<T>(decoder: Decoder<T>): Decoder<T | null> {
-  return new Decoder<T | null>((json: any) => {
-    if (json === null) {
-      return Result.ok<T | null>(null);
-    }
-    return decoder.decode(json);
-  });
+  return new Decoder<T | null>(nullableFn(Decoder.toDecodeFn(decoder)));
 }

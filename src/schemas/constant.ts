@@ -1,11 +1,11 @@
 /**
  * @module
  * @mergeModuleWith decoders
- * @category Api docs
+ * @category Main entry point
  */
 
 import { Decoder } from '../core';
-import * as Result from '../utils/result';
+import { constantFn } from '../internal/schemas';
 
 /**
  * Decoder that always succeeds with the specific provided value.
@@ -24,5 +24,5 @@ import * as Result from '../utils/result';
  * ```
  */
 export function constant<T>(value: T): Decoder<T> {
-  return new Decoder<T>(() => Result.ok(value));
+  return new Decoder<T>(constantFn(value));
 }

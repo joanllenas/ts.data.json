@@ -1,12 +1,11 @@
 /**
  * @module
  * @mergeModuleWith decoders
- * @category Api docs
+ * @category Main entry point
  */
 
 import { Decoder } from '../core';
-import * as Result from '../utils/result';
-import { primitiveError } from '../utils/errors';
+import { booleanFn } from '../internal/schemas';
 
 /**
  * Decoder for `boolean` values.
@@ -21,11 +20,5 @@ import { primitiveError } from '../utils/errors';
  * ```
  */
 export function boolean(): Decoder<boolean> {
-  return new Decoder<boolean>((json: any) => {
-    if (typeof json === 'boolean') {
-      return Result.ok<boolean>(json);
-    } else {
-      return Result.err<boolean>(primitiveError(json, 'boolean'));
-    }
-  });
+  return new Decoder<boolean>(booleanFn());
 }

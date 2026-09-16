@@ -1,11 +1,11 @@
 /**
  * @module
  * @mergeModuleWith decoders
- * @category Api docs
+ * @category Main entry point
  */
 
 import { Decoder } from '../core';
-import * as Result from '../utils/result';
+import { failFn } from '../internal/schemas';
 
 /**
  * Decoder that always fails with the given error message.
@@ -21,7 +21,5 @@ import * as Result from '../utils/result';
  * ```
  */
 export function fail<T>(error: string): Decoder<T> {
-  return new Decoder<T>(() => {
-    return Result.err<T>([{ message: error, path: [] }]);
-  });
+  return new Decoder<T>(failFn<T>(error));
 }

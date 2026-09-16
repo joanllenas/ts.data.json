@@ -1,12 +1,11 @@
 /**
  * @module
  * @mergeModuleWith decoders
- * @category Api docs
+ * @category Main entry point
  */
 
 import { Decoder } from '../core';
-import * as Result from '../utils/result';
-import { primitiveError } from '../utils/errors';
+import { stringFn } from '../internal/schemas';
 
 /**
  * Decoder for `string` values.
@@ -21,11 +20,5 @@ import { primitiveError } from '../utils/errors';
  * ```
  */
 export function string(): Decoder<string> {
-  return new Decoder<string>((json: any) => {
-    if (typeof json === 'string') {
-      return Result.ok<string>(json);
-    } else {
-      return Result.err<string>(primitiveError(json, 'string'));
-    }
-  });
+  return new Decoder<string>(stringFn());
 }

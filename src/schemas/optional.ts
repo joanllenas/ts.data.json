@@ -1,11 +1,11 @@
 /**
  * @module
  * @mergeModuleWith decoders
- * @category Api docs
+ * @category Main entry point
  */
 
 import { Decoder } from '../core';
-import * as Result from '../utils/result';
+import { optionalFn } from '../internal/schemas';
 
 /**
  * Decoder that makes a field optional.
@@ -34,11 +34,5 @@ import * as Result from '../utils/result';
  * ```
  */
 export function optional<T>(decoder: Decoder<T>): Decoder<T | undefined> {
-  return new Decoder<T | undefined>((json: any) => {
-    if (json === undefined) {
-      return Result.ok<undefined>(undefined);
-    } else {
-      return decoder.decode(json);
-    }
-  });
+  return new Decoder<T | undefined>(optionalFn(Decoder.toDecodeFn(decoder)));
 }

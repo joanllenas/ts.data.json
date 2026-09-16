@@ -1,12 +1,12 @@
 /**
  * @module
  * @mergeModuleWith decoders
- * @category Api docs
+ * @category Main entry point
  */
 
 import { Decoder, type FromDecoder } from '../core';
-import { primitiveError } from '../utils/errors';
-import * as Result from '../utils/result';
+import { discriminatedUnionFn } from '../internal/schemas';
+import type { DecodeFn } from '../internal/runtime';
 
 /**
  * Decoder for tagged (discriminated) unions.
@@ -61,22 +61,13 @@ export function discriminatedUnion<M extends Record<string, Decoder<any>>>(
   discriminant: string,
   mapping: M
 ): Decoder<FromDecoder<M[keyof M]>> {
-  return new Decoder<FromDecoder<M[keyof M]>>((json: any) => {
-    if (json === null || typeof json !== 'object') {
-      return Result.err(primitiveError(json, 'object'));
+  const variants: Record<string, DecodeFn<any>> = {};
+  for (const tag in mapping) {
+    if (Object.prototype.hasOwnProperty.call(mapping, tag)) {
+      variants[tag] = Decoder.toDecodeFn(mapping[tag]);
     }
-    const tag = json[discriminant];
-    if (!Object.prototype.hasOwnProperty.call(mapping, tag)) {
-      const expected = Object.keys(mapping)
-        .map(key => JSON.stringify(key))
-        .join(', ');
-      return Result.err([
-        {
-          message: `"${discriminant}" must be one of ${expected}, but got ${JSON.stringify(tag)}`,
-          path: [discriminant]
-        }
-      ]);
-    }
-    return mapping[tag].decode(json);
-  });
+  }
+  return new Decoder<FromDecoder<M[keyof M]>>(
+    discriminatedUnionFn(discriminant, variants)
+  );
 }

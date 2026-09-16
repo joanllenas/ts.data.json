@@ -1,11 +1,11 @@
 /**
  * @module
  * @mergeModuleWith decoders
- * @category Api docs
+ * @category Main entry point
  */
 
 import { Decoder } from '../core';
-import * as Result from '../utils/result';
+import { nullFn } from '../internal/schemas';
 
 /**
  * Decoder for `null` values.
@@ -23,15 +23,7 @@ import * as Result from '../utils/result';
  * @category Primitives
  */
 function null_(): Decoder<null> {
-  return new Decoder((json: any) => {
-    if (json === null) {
-      return Result.ok<null>(null);
-    } else {
-      return Result.err<null>([
-        { message: `${JSON.stringify(json)} is not null`, path: [] }
-      ]);
-    }
-  });
+  return new Decoder(nullFn());
 }
 
 export { null_ as null };

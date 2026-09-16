@@ -1,12 +1,11 @@
 /**
  * @module
  * @mergeModuleWith decoders
- * @category Api docs
+ * @category Main entry point
  */
 
 import { Decoder } from '../core';
-import * as Result from '../utils/result';
-import { primitiveError } from '../utils/errors';
+import { numberFn } from '../internal/schemas';
 
 /**
  * Decoder for `number` values.
@@ -21,11 +20,5 @@ import { primitiveError } from '../utils/errors';
  * ```
  */
 export function number(): Decoder<number> {
-  return new Decoder<number>((json: any) => {
-    if (typeof json === 'number') {
-      return Result.ok<number>(json);
-    } else {
-      return Result.err<number>(primitiveError(json, 'number'));
-    }
-  });
+  return new Decoder<number>(numberFn());
 }

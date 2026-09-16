@@ -2,7 +2,7 @@
  * This module contains the Result type, which is a type-safe way to handle success and error cases.
  *
  * @module result
- * @category Api docs
+ * @category Main entry point
  */
 
 /**

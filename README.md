@@ -17,7 +17,7 @@ TypeScript types vanish at runtime, so the moment JSON crosses into your app fro
 
 ## Features
 
-- **Tiny & tree-shakeable** -- zero dependencies, ships ESM + CJS, `sideEffects: false`. You bundle only the decoders you import.
+- **Tiny & tree-shakeable** -- zero dependencies, ships ESM + CJS, `sideEffects: false`. You bundle only the decoders you import, and the [`mini` entry point](#the-mini-entry-point) drops the class wrapper for about 1 kB less.
 - **Rich, structured errors** -- every failure is a `{ message, path }` issue, and _all_ failures are reported at once, not just the first.
 - **Standard Schema compliant** -- decoders implement the [Standard Schema](https://standardschema.dev) spec, so they drop straight into any Standard-Schema-aware tool.
 - **Type inference** -- derive your static types from the decoders themselves with `FromDecoder`. No duplicate interfaces to keep in sync.
@@ -85,6 +85,40 @@ if (!result.isOk()) {
   // roles[1]: 42 is not a valid string
 }
 ```
+
+## The `mini` entry point
+
+`ts.data.json/mini` is the same library without the `Decoder` class. A decoder is a plain function `(json) => Result<T>`, and the methods become standalone imports:
+
+```ts
+import * as J from 'ts.data.json/mini';
+
+const userDecoder = J.object({
+  id: J.number(),
+  name: J.string()
+});
+
+type User = J.FromDecoder<typeof userDecoder>; // { id: number; name: string }
+
+J.decode(userDecoder, json); // Result<User>, never throws
+J.parse(userDecoder, json); // User, throws on failure
+J.map(J.string(), iso => new Date(iso)); // instead of .map()
+```
+
+Both entry points bundle only the decoders you import. What `mini` removes is the fixed cost of the class: its prototype and the per-instance Standard Schema property, neither of which a bundler can drop. Measured against the published build, minified and gzipped:
+
+| What you import                             | main entry      | `mini`          |
+| ------------------------------------------- | --------------- | --------------- |
+| `string()` alone                            | 1457 B / 631 B  | 452 B / 269 B   |
+| object + string + number + array + optional | 2562 B / 1033 B | 1451 B / 673 B  |
+| the whole API                               | 6909 B / 2214 B | 6057 B / 2108 B |
+
+So the saving is about 1 kB minified, which matters most for an app that uses only a few decoders. Reach for `mini` when you are counting bytes, and for the main entry when you prefer the chained method style.
+
+Two things to know:
+
+- `null` and `undefined` are exported under their own names, so a named import has to alias them: `import { null as jsonNull } from 'ts.data.json/mini'`. The namespace import above avoids this.
+- `mini` exports a `Decoder<T>` type, but it is a function type, not the class. Decoders from the two entry points are not interchangeable, so pick one per project.
 
 ## Documentation
 

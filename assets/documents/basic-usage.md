@@ -252,6 +252,27 @@ type User = JsonDecoder.FromDecoder<typeof userDecoder>;
 // type User = { id: number; name: string; email: string }
 ```
 
+## Choosing an Entry Point
+
+Everything above uses the main entry point, where a decoder is a class instance and you call methods on it. There is a second entry point, `ts.data.json/mini`, where a decoder is a plain function and the methods are standalone imports:
+
+```typescript
+import * as J from 'ts.data.json/mini';
+
+const userDecoder = J.object({
+  id: J.number(),
+  name: J.string()
+});
+
+J.decode(userDecoder, json); // instead of userDecoder.decode(json)
+J.parse(userDecoder, json); // instead of userDecoder.parse(json)
+J.map(J.string(), s => s.trim()); // instead of .map(s => s.trim())
+```
+
+Both entry points validate identically and report the same issues. `mini` exists to drop the class wrapper, which saves about 1 kB minified: roughly 450 bytes instead of 1450 for a single decoder. Use it when you are counting bytes, and the main entry point when you prefer the chained method style.
+
+Decoders from the two entry points are different types and cannot be mixed, so pick one per project.
+
 ## Best Practices
 
 1. **Reuse Decoders**: Create reusable decoders for common patterns:

@@ -1,12 +1,11 @@
 /**
  * @module
  * @mergeModuleWith decoders
- * @category Api docs
+ * @category Main entry point
  */
 
 import { Decoder } from '../core';
-import { primitiveError } from '../utils/errors';
-import * as Result from '../utils/result';
+import { enumerationFn } from '../internal/schemas';
 
 /**
  * Decoder for `enumeration` values.
@@ -31,11 +30,5 @@ import * as Result from '../utils/result';
  * ```
  */
 export function enumeration<E>(enumObj: object): Decoder<E> {
-  return new Decoder<E>((json: any) => {
-    const enumValue = Object.values(enumObj).find((x: any) => x === json);
-    if (enumValue !== undefined) {
-      return Result.ok<E>(enumValue);
-    }
-    return Result.err<E>(primitiveError(json, 'enum value'));
-  });
+  return new Decoder<E>(enumerationFn<E>(enumObj));
 }
