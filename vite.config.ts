@@ -4,9 +4,13 @@ import dts from 'vite-plugin-dts';
 export default defineConfig({
   build: {
     lib: {
-      entry: 'src/index.ts',
+      entry: {
+        index: 'src/index.ts',
+        mini: 'src/mini.ts'
+      },
       formats: ['es', 'cjs'],
-      fileName: format => `index.${format === 'es' ? 'js' : 'cjs'}`
+      fileName: (format, entryName) =>
+        `${entryName}.${format === 'es' ? 'js' : 'cjs'}`
     },
     rollupOptions: {
       external: ['typescript']
@@ -19,7 +23,8 @@ export default defineConfig({
   },
   plugins: [
     dts({
-      outDirs: 'dist/types'
+      outDirs: 'dist/types',
+      exclude: ['**/*.spec.ts', '**/*.type-test.ts']
     })
   ],
   test: {

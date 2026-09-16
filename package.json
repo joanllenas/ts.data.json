@@ -16,6 +16,16 @@
         "types": "./dist/types/src/index.d.ts",
         "default": "./dist/index.cjs"
       }
+    },
+    "./mini": {
+      "import": {
+        "types": "./dist/types/src/mini.d.ts",
+        "default": "./dist/mini.js"
+      },
+      "require": {
+        "types": "./dist/types/src/mini.d.ts",
+        "default": "./dist/mini.cjs"
+      }
     }
   },
   "files": [

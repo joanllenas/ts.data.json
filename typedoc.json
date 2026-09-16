@@ -1,6 +1,11 @@
 {
   "$schema": "https://typedoc.org/schema.json",
-  "entryPoints": ["src/core.ts", "src/schemas/index.ts", "src/utils/result.ts"],
+  "entryPoints": [
+    "src/core.ts",
+    "src/schemas/index.ts",
+    "src/utils/result.ts",
+    "src/mini.ts"
+  ],
   "out": "docs/latest",
   "githubPages": true,
   "basePath": "/ts.data.json",
@@ -8,6 +13,14 @@
   "excludePrivate": true,
   "excludeProtected": true,
   "excludeInternal": true,
+  "intentionallyNotExported": [
+    "OutputOf",
+    "OutputsOf",
+    "UnionToIntersectionOf",
+    "IntersectionOfOutputs",
+    "StandardSchemaV1",
+    "StandardSchemaV1.Props"
+  ],
   "includeVersion": true,
   "theme": "default",
   "name": "ts.data.json",
