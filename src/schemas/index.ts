@@ -1,7 +1,7 @@
 /**
  * This module contains all the decoders that are available in ts.data.json.
  * @module decoders
- * @category Api docs
+ * @category Main entry point
  */
 
 export * from './all-of';

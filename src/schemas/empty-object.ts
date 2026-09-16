@@ -1,18 +1,13 @@
 /**
  * @module
  * @mergeModuleWith decoders
- * @category Api docs
+ * @category Main entry point
  */
 
 import { Decoder } from '../core';
 import { emptyObjectFn } from '../internal/schemas';
 import type { EmptyObject } from '../internal/types';
 
-/**
- * Represents an empty object.
- *
- * @category Internal Types
- */
 export type { EmptyObject } from '../internal/types';
 
 /**

@@ -1,7 +1,7 @@
 /**
  * This module contains the Decoder type, which is a type-safe way to handle JSON decoding.
  * @module core
- * @category Api docs
+ * @category Main entry point
  */
 
 import * as Result from './utils/result';
@@ -28,6 +28,7 @@ export { formatIssuePath } from './internal/runtime';
  * ```
  *
  * @typeParam D - A JsonDecoder.Decoder type
+ * @category Core Types
  */
 export type FromDecoder<D> = OutputOf<D>;
 
@@ -51,6 +52,7 @@ export type FromDecoder<D> = OutputOf<D>;
  * ```
  *
  * @template T - The type that this decoder will produce when successful
+ * @category Core Types
  */
 export class Decoder<T> implements StandardSchemaV1<unknown, T> {
   /**

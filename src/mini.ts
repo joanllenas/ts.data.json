@@ -13,6 +13,7 @@
  * ```
  *
  * @module mini
+ * @category Mini entry point
  */
 
 import { ok, err, type Result, type DecodingIssue } from './utils/result';
@@ -53,15 +54,16 @@ import {
   type EmptyObject
 } from './internal/schemas';
 
-export {
-  Ok,
-  Err,
-  ok,
-  err,
-  type Result,
-  type DecodingIssue
-} from './utils/result';
+/** @category Results */
+export { Ok, Err, ok, err, type Result } from './utils/result';
+
+/** @category Error Handling */
+export { type DecodingIssue } from './utils/result';
+
+/** @category Error Handling */
 export { formatIssuePath } from './internal/runtime';
+
+/** @category Internal Types */
 export type { EmptyObject } from './internal/schemas';
 
 // ---------------------------------------------------------------------------
@@ -72,11 +74,15 @@ export type { EmptyObject } from './internal/schemas';
  * A decoder: a function that validates an unknown JSON value and returns a {@link Result}.
  * Build decoders with the schema functions below, run them with {@link decode}, {@link parse}, or {@link decodePromise},
  * and combine them with {@link map} and {@link flatMap}
+ *
+ * @category Core Types
  */
 export type Decoder<T> = (json: any) => Result<T>;
 
 /**
  * Extracts the decoded type `T` from a {@link Decoder}.
+ *
+ * @category Core Types
  *
  * @example
  * ```ts
@@ -86,10 +92,18 @@ export type Decoder<T> = (json: any) => Result<T>;
  */
 export type FromDecoder<D> = OutputOf<D>;
 
-/** Infers the decoded type of a decoder. */
+/**
+ * Infers the decoded type of a decoder.
+ *
+ * @category Internal Types
+ */
 export type DecoderOutput<D> = OutputOf<D>;
 
-/** Converts a union to an intersection. */
+/**
+ * Converts a union to an intersection.
+ *
+ * @category Internal Types
+ */
 export type UnionToIntersection<U> = UnionToIntersectionOf<U>;
 
 // ---------------------------------------------------------------------------
@@ -100,63 +114,153 @@ export type UnionToIntersection<U> = UnionToIntersectionOf<U>;
 // because the factories already take and return plain decode functions.
 // ---------------------------------------------------------------------------
 
-/** Decoder for `string` values. */
+/**
+ * Decoder for `string` values.
+ *
+ * @category Primitives
+ * @function
+ */
 export const string: () => Decoder<string> = stringFn;
 
-/** Decoder for `number` values. */
+/**
+ * Decoder for `number` values.
+ *
+ * @category Primitives
+ * @function
+ */
 export const number: () => Decoder<number> = numberFn;
 
-/** Decoder for `boolean` values. */
+/**
+ * Decoder for `boolean` values.
+ *
+ * @category Primitives
+ * @function
+ */
 export const boolean: () => Decoder<boolean> = booleanFn;
 
+/**
+ * Decoder for `null` values.
+ *
+ * @category Primitives
+ * @function
+ */
 const nullDecoder: () => Decoder<null> = nullFn;
+
+/**
+ * Decoder for `undefined` values.
+ *
+ * @category Primitives
+ * @function
+ */
 const undefinedDecoder: () => Decoder<undefined> = undefinedFn;
 export { nullDecoder as null, undefinedDecoder as undefined };
 
-/** Decoder that always succeeds with the provided value, ignoring its input. */
+/**
+ * Decoder that always succeeds with the provided value, ignoring its input.
+ *
+ * @category Utils
+ * @function
+ */
 export const constant: <T>(value: T) => Decoder<T> = constantFn;
 
-/** Decoder that always succeeds, returning its input as `any`. */
+/**
+ * Decoder that always succeeds, returning its input as `any`.
+ *
+ * @category Utils
+ * @function
+ */
 export const succeed: () => Decoder<any> = succeedFn;
 
-/** Decoder that always fails with the given error message. */
+/**
+ * Decoder that always fails with the given error message.
+ *
+ * @category Utils
+ * @function
+ */
 export const fail: <T>(error: string) => Decoder<T> = failFn;
 
-/** Decoder that only accepts the exact provided value. */
+/**
+ * Decoder that only accepts the exact provided value.
+ *
+ * @category Utils
+ * @function
+ */
 export const literal: <const T>(value: T) => Decoder<T> = literalFn;
 
-/** Decoder for `enum` values. */
+/**
+ * Decoder for `enum` values.
+ *
+ * @category Data Structures
+ * @function
+ */
 export const enumeration: <E>(enumObj: object) => Decoder<E> = enumerationFn;
 
-/** Decoder for an empty object (`{}`). */
+/**
+ * Decoder for an empty object (`{}`).
+ *
+ * @category Data Structures
+ * @function
+ */
 export const emptyObject: () => Decoder<EmptyObject> = emptyObjectFn;
 
-/** Decoder for arrays whose elements all match `decoder`. */
+/**
+ * Decoder for arrays whose elements all match `decoder`.
+ *
+ * @category Data Structures
+ * @function
+ */
 export const array: <T>(decoder: Decoder<T>) => Decoder<Array<T>> = arrayFn;
 
-/** Decoder for `Record<string, V>` values. */
+/**
+ * Decoder for `Record<string, V>` values.
+ *
+ * @category Data Structures
+ * @function
+ */
 export const record: <V>(decoder: Decoder<V>) => Decoder<{ [K: string]: V }> =
   recordFn;
 
-/** Decoder that accepts the decoded value or `undefined`. */
+/**
+ * Decoder that accepts the decoded value or `undefined`.
+ *
+ * @category Utils
+ * @function
+ */
 export const optional: <T>(decoder: Decoder<T>) => Decoder<T | undefined> =
   optionalFn;
 
-/** Decoder that accepts the decoded value or `null`. */
+/**
+ * Decoder that accepts the decoded value or `null`.
+ *
+ * @category Utils
+ * @function
+ */
 export const nullable: <T>(decoder: Decoder<T>) => Decoder<T | null> =
   nullableFn;
 
-/** Decoder that falls back to `defaultValue` when `decoder` fails. */
+/**
+ * Decoder that falls back to `defaultValue` when `decoder` fails.
+ *
+ * @category Utils
+ * @function
+ */
 export const fallback: <T>(defaultValue: T, decoder: Decoder<T>) => Decoder<T> =
   fallbackFn;
 
-/** Decoder for recursive structures, resolving `mkDecoder` lazily. */
+/**
+ * Decoder for recursive structures, resolving `mkDecoder` lazily.
+ *
+ * @category Data Structures
+ * @function
+ */
 export const lazy: <T>(mkDecoder: () => Decoder<T>) => Decoder<T> = lazyFn;
 
 // --- Builders whose precise types need a thin wrapper ----------------------
 
 /**
  * Field spec for {@link object}: a decoder for the same JSON key, or `{ fromKey, decoder }` to read a different key.
+ *
+ * @category Internal Types
  */
 export type DecoderObject<T> = {
   [P in keyof Required<T>]:
@@ -164,7 +268,11 @@ export type DecoderObject<T> = {
     | { fromKey: string; decoder: Decoder<T[P]> };
 };
 
-/** Field spec for {@link objectStrict}. Identical to {@link DecoderObject}. */
+/**
+ * Field spec for {@link objectStrict}. Identical to {@link DecoderObject}.
+ *
+ * @category Internal Types
+ */
 export type DecoderObjectStrict<T> = DecoderObject<T>;
 
 // A `DecoderObject` is heterogeneous, so it has to be widened before its entries can be iterated.
@@ -175,21 +283,37 @@ const fieldsOf = <T>(decoders: DecoderObject<T>) =>
     d => d
   );
 
-/** Decoder for objects with the given field decoders. */
+/**
+ * Decoder for objects with the given field decoders.
+ *
+ * @category Data Structures
+ */
 export function object<T>(decoders: DecoderObject<T>): Decoder<T> {
   return objectFn<T>(fieldsOf(decoders));
 }
 
-/** Like {@link object}, but fails when the input has unknown keys. */
+/**
+ * Like {@link object}, but fails when the input has unknown keys.
+ *
+ * @category Data Structures
+ */
 export function objectStrict<T>(decoders: DecoderObjectStrict<T>): Decoder<T> {
   return objectStrictFn<T>(fieldsOf(decoders));
 }
 
-/** Maps each decoder in a tuple to the type it produces. */
+/**
+ * Maps each decoder in a tuple to the type it produces.
+ *
+ * @category Internal Types
+ */
 export type TupleOfResults<T extends readonly [] | readonly Decoder<any>[]> =
   OutputsOf<T>;
 
-/** Decoder for fixed-length, fixed-type tuples. */
+/**
+ * Decoder for fixed-length, fixed-type tuples.
+ *
+ * @category Data Structures
+ */
 export function tuple<T extends readonly [] | readonly Decoder<any>[]>(
   decoders: T
 ): Decoder<TupleOfResults<T>> {
@@ -198,11 +322,19 @@ export function tuple<T extends readonly [] | readonly Decoder<any>[]>(
   >;
 }
 
-/** Intersection of every decoder's output in an {@link allOf}. */
+/**
+ * Intersection of every decoder's output in an {@link allOf}.
+ *
+ * @category Internal Types
+ */
 export type AllOfOutput<T extends readonly Decoder<any>[]> =
   IntersectionOfOutputs<T>;
 
-/** Decoder that succeeds only if every decoder succeeds, deep-merging results. */
+/**
+ * Decoder that succeeds only if every decoder succeeds, deep-merging results.
+ *
+ * @category Utils
+ */
 export function allOf<T extends readonly Decoder<any>[]>(
   decoders: T
 ): Decoder<AllOfOutput<T>> {
@@ -217,6 +349,8 @@ export function allOf<T extends readonly Decoder<any>[]>(
  * The output type is inferred as the union of the alternatives.
  * Pass an explicit type argument when you want to state the target type instead.
  *
+ * @category Utils
+ *
  * @example
  * ```ts
  * oneOf([string(), number()]); // Decoder<string | number>
@@ -230,7 +364,11 @@ export function oneOf(decoders: ReadonlyArray<Decoder<any>>): Decoder<any> {
   return oneOfFn(decoders);
 }
 
-/** Decoder for tagged (discriminated) unions. */
+/**
+ * Decoder for tagged (discriminated) unions.
+ *
+ * @category Utils
+ */
 export function discriminatedUnion<M extends Record<string, Decoder<any>>>(
   discriminant: string,
   mapping: M
@@ -247,6 +385,8 @@ export function discriminatedUnion<M extends Record<string, Decoder<any>>>(
 /**
  * Runs a decoder and returns a {@link Result} (never throws).
  *
+ * @category Entry Point
+ *
  * @example
  * ```ts
  * const r = decode(string(), 'hi'); // Ok<string>
@@ -259,6 +399,7 @@ export function decode<T>(decoder: Decoder<T>, json: unknown): Result<T> {
 /**
  * Runs a decoder and returns the decoded value, throwing on failure.
  *
+ * @category Entry Point
  * @throws {Error} An Error whose message describes the failure and whose `cause` holds the structured `DecodingIssue[]`.
  */
 export function parse<T>(decoder: Decoder<T>, json: unknown): T {
@@ -271,6 +412,8 @@ export function parse<T>(decoder: Decoder<T>, json: unknown): T {
 
 /**
  * Runs a decoder and resolves with the decoded value, rejecting on failure.
+ *
+ * @category Entry Point
  */
 export function decodePromise<T>(
   decoder: Decoder<T>,
@@ -289,6 +432,8 @@ export function decodePromise<T>(
 /**
  * Transforms the decoded value of a successful decoder.
  *
+ * @category Transformation
+ *
  * @example
  * ```ts
  * const date = map(string(), iso => new Date(iso));
@@ -306,6 +451,8 @@ export function map<T, O>(
 
 /**
  * Chains a decoder into another decoder that depends on the decoded value.
+ *
+ * @category Transformation
  *
  * @example
  * ```ts
@@ -327,6 +474,8 @@ export function flatMap<T, O>(
 /**
  * Adapts a decoder into a [Standard Schema](https://standardschema.dev) so it drops into any Standard-Schema-aware tool.
  * Opt-in, so apps that don't use Standard Schema never bundle the adapter.
+ *
+ * @category Entry Point
  *
  * @example
  * ```ts

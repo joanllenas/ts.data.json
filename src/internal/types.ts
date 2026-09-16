@@ -52,5 +52,7 @@ export type IntersectionOfOutputs<T extends readonly unknown[]> =
 /**
  * The type an `emptyObject` decoder produces. Re-exported by both entry points,
  * so unlike the shapes above it is public API.
+ *
+ * @category Internal Types
  */
 export type EmptyObject = Record<string, never>;

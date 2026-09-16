@@ -26,7 +26,22 @@
   "name": "ts.data.json",
   "readme": "assets/documents/basic-usage.md",
   "sort": ["alphabetical-ignoring-documents"],
-  "categoryOrder": ["Guides", "Api docs", "*"],
+  "categoryOrder": [
+    "Guides",
+    "Main entry point",
+    "Mini entry point",
+    "Core Types",
+    "Constructor",
+    "Entry Point",
+    "Transformation",
+    "Primitives",
+    "Data Structures",
+    "Utils",
+    "Results",
+    "Error Handling",
+    "Internal Types",
+    "*"
+  ],
   "disableSources": true,
   "visibilityFilters": {
     "protected": false,
