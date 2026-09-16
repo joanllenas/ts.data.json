@@ -2,6 +2,7 @@
 
 ![Build](https://github.com/joanllenas/ts.data.json/actions/workflows/main.yml/badge.svg)
 ![codecov](https://codecov.io/gh/joanllenas/ts.data.json/graph/badge.svg?token=LI9KXL4QT0)
+[![socket.dev](https://badge.socket.dev/npm/package/ts.data.json)](https://socket.dev/npm/package/ts.data.json)
 [![npm version](https://badge.fury.io/js/ts.data.json.svg)](https://www.npmjs.com/package/ts.data.json)
 [![bundle size](https://badgen.net/bundlephobia/minzip/ts.data.json)](https://bundlephobia.com/package/ts.data.json)
 [![npm downloads](https://badgen.net/npm/dm/ts.data.json)](https://www.npmjs.com/package/ts.data.json)
