@@ -5,6 +5,7 @@
  */
 
 import { Decoder } from '../core';
+import { lazyFn } from '../internal/schemas';
 
 /**
  * Decoder for recursive data structures.
@@ -32,5 +33,5 @@ import { Decoder } from '../core';
  * ```
  */
 export function lazy<T>(mkDecoder: () => Decoder<T>): Decoder<T> {
-  return new Decoder((json: any) => mkDecoder().decode(json));
+  return new Decoder(lazyFn(() => Decoder.toDecodeFn(mkDecoder())));
 }

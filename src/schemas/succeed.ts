@@ -5,7 +5,7 @@
  */
 
 import { Decoder } from '../core';
-import * as Result from '../utils/result';
+import { succeedFn } from '../internal/schemas';
 
 /**
  * Decoder that always succeeds with the given value.
@@ -20,7 +20,5 @@ import * as Result from '../utils/result';
  * ```
  */
 export function succeed(): Decoder<any> {
-  return new Decoder<any>((json: any) => {
-    return Result.ok<any>(json);
-  });
+  return new Decoder<any>(succeedFn());
 }

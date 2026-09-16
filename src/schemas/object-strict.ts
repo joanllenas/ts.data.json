@@ -5,8 +5,11 @@
  */
 
 import { Decoder } from '../core';
-import { primitiveError, prependPath } from '../utils/errors';
-import * as Result from '../utils/result';
+import {
+  objectStrictFn,
+  normalizeFields,
+  type FieldSpec
+} from '../internal/schemas';
 
 /**
  * Represents an object that maps properties of a TypeScript type `T` to
@@ -74,55 +77,12 @@ export type DecoderObjectStrict<T> = {
  * ```
  */
 export function objectStrict<T>(decoders: DecoderObjectStrict<T>): Decoder<T> {
-  return new Decoder<T>((json: any) => {
-    if (json !== null && typeof json === 'object') {
-      // Build an allowed JSON key set from provided decoders. If a decoder
-      // entry uses `{ fromKey, decoder }`, then the allowed JSON key for that
-      // property is `fromKey`. Otherwise the allowed key is the TypeScript
-      // property name (the key of `decoders`).
-      const allowedKeys = new Set<string>();
-      for (const key in decoders) {
-        if (Object.prototype.hasOwnProperty.call(decoders, key)) {
-          const decoderObject = decoders[key];
-          if (decoderObject instanceof Decoder) {
-            allowedKeys.add(key);
-          } else {
-            allowedKeys.add(decoderObject.fromKey);
-          }
-        }
-      }
-      const allIssues: Result.DecodingIssue[] = [];
-      for (const key in json) {
-        if (!allowedKeys.has(key)) {
-          allIssues.push({
-            message: `Unknown key "${key}" found in strict object`,
-            path: []
-          });
-        }
-      }
-      const result: any = {};
-      for (const key in decoders) {
-        if (Object.prototype.hasOwnProperty.call(decoders, key)) {
-          let r;
-          const decoderObject = decoders[key];
-          if (decoderObject instanceof Decoder) {
-            r = decoderObject.decode(json[key]);
-          } else {
-            r = decoderObject.decoder.decode(json[decoderObject.fromKey]);
-          }
-          if (r.isOk()) {
-            result[key] = r.value;
-          } else {
-            allIssues.push(...prependPath(r.issues, key as string));
-          }
-        }
-      }
-      if (allIssues.length > 0) {
-        return Result.err<T>(allIssues);
-      }
-      return Result.ok<T>(result);
-    } else {
-      return Result.err<T>(primitiveError(json, 'object'));
-    }
-  });
+  return new Decoder<T>(
+    objectStrictFn<T>(
+      normalizeFields<Decoder<any>>(
+        decoders as Record<string, FieldSpec<Decoder<any>>>,
+        Decoder.toDecodeFn
+      )
+    )
+  );
 }

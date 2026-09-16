@@ -4,45 +4,11 @@
  * @category Api docs
  */
 
-import type { DecodingIssue } from './utils/result';
 import * as Result from './utils/result';
 import type { StandardSchemaV1 } from './utils/standard-schema-v1';
-
-/**
- * Renders a {@link DecodingIssue} `path` as a human-readable location string.
- *
- * Object keys are joined with dots, while array indices use bracket notation,
- * matching the convention developers expect from JSON paths.
- *
- * @param path - The structured path from the decoded root to the failing field.
- * @returns The location string (empty for a root-level issue).
- * @category Error Handling
- *
- * @example
- * ```ts
- * formatIssuePath(['user', 'name']); // 'user.name'
- * formatIssuePath(['user', 'roles', 1]); // 'user.roles[1]'
- * formatIssuePath([0, 'email']); // '[0].email'
- * ```
- */
-export function formatIssuePath(path: ReadonlyArray<string | number>): string {
-  return path.reduce<string>((location, segment) => {
-    if (typeof segment === 'number') {
-      return `${location}[${segment}]`;
-    }
-    return location.length === 0 ? String(segment) : `${location}.${segment}`;
-  }, '');
-}
-
-function formatIssues(issues: ReadonlyArray<DecodingIssue>): string {
-  return issues
-    .map(issue =>
-      issue.path.length === 0
-        ? issue.message
-        : `${formatIssuePath(issue.path)}: ${issue.message}`
-    )
-    .join('; ');
-}
+import { formatIssues, type DecodeFn } from './internal/runtime';
+import type { OutputOf } from './internal/types';
+export { formatIssuePath } from './internal/runtime';
 
 /**
  * Extracts the type parameter T from a JsonDecoder.Decoder<T>.
@@ -63,7 +29,7 @@ function formatIssues(issues: ReadonlyArray<DecodingIssue>): string {
  *
  * @typeParam D - A JsonDecoder.Decoder type
  */
-export type FromDecoder<D> = D extends Decoder<infer T> ? T : never;
+export type FromDecoder<D> = OutputOf<D>;
 
 /**
  * A decoder that can validate and transform JSON data into strongly typed TypeScript values.
@@ -94,6 +60,17 @@ export class Decoder<T> implements StandardSchemaV1<unknown, T> {
    * @category Constructor
    */
   constructor(private decodeFn: (json: any) => Result.Result<T>) {}
+
+  /**
+   * Unwraps a decoder into the plain decode function that the shared schema factories in `src/internal` take.
+   * A static method reaches `decodeFn` without widening the class API,
+   * and returns it directly so adapting adds no call indirection.
+   *
+   * @internal
+   */
+  static toDecodeFn<U>(decoder: Decoder<U>): DecodeFn<U> {
+    return decoder.decodeFn;
+  }
 
   /**
    * Parses a JSON object of type <T> and returns the decoded value or throws an error

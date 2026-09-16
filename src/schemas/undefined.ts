@@ -5,7 +5,7 @@
  */
 
 import { Decoder } from '../core';
-import * as Result from '../utils/result';
+import { undefinedFn } from '../internal/schemas';
 
 /**
  * Decoder for `undefined` values.
@@ -23,15 +23,7 @@ import * as Result from '../utils/result';
  * @category Primitives
  */
 function undefined_(): Decoder<undefined> {
-  return new Decoder((json: any) => {
-    if (json === undefined) {
-      return Result.ok<undefined>(undefined);
-    } else {
-      return Result.err<undefined>([
-        { message: `${JSON.stringify(json)} is not undefined`, path: [] }
-      ]);
-    }
-  });
+  return new Decoder(undefinedFn());
 }
 
 export { undefined_ as undefined };

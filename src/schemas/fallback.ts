@@ -5,7 +5,7 @@
  */
 
 import { Decoder } from '../core';
-import * as Result from '../utils/result';
+import { fallbackFn } from '../internal/schemas';
 
 /**
  * Decoder that falls back to a default value if the given decoder fails.
@@ -23,12 +23,5 @@ import * as Result from '../utils/result';
  * ```
  */
 export function fallback<T>(defaultValue: T, decoder: Decoder<T>): Decoder<T> {
-  return new Decoder<T>((json: any) => {
-    const result = decoder.decode(json);
-    if (result.isOk()) {
-      return result;
-    } else {
-      return Result.ok<T>(defaultValue);
-    }
-  });
+  return new Decoder<T>(fallbackFn(defaultValue, Decoder.toDecodeFn(decoder)));
 }

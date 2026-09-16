@@ -5,15 +5,15 @@
  */
 
 import { Decoder } from '../core';
-import { primitiveError } from '../utils/errors';
-import * as Result from '../utils/result';
+import { emptyObjectFn } from '../internal/schemas';
+import type { EmptyObject } from '../internal/types';
 
 /**
  * Represents an empty object.
  *
  * @category Internal Types
  */
-export type EmptyObject = Record<string, never>;
+export type { EmptyObject } from '../internal/types';
 
 /**
  * Decoder for an empty object ({}).
@@ -28,15 +28,5 @@ export type EmptyObject = Record<string, never>;
  * ```
  */
 export function emptyObject(): Decoder<EmptyObject> {
-  return new Decoder<EmptyObject>((json: any) => {
-    if (
-      json !== null &&
-      typeof json === 'object' &&
-      Object.keys(json).length === 0
-    ) {
-      return Result.ok<EmptyObject>(json);
-    } else {
-      return Result.err<EmptyObject>(primitiveError(json, 'empty object'));
-    }
-  });
+  return new Decoder<EmptyObject>(emptyObjectFn());
 }

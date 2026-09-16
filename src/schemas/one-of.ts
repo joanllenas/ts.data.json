@@ -5,7 +5,8 @@
  */
 
 import { Decoder } from '../core';
-import * as Result from '../utils/result';
+import { oneOfFn } from '../internal/schemas';
+import type { DecoderOutput } from './all-of';
 
 /**
  * Decoder for a union of alternatives. Tries each decoder in order and returns
@@ -27,7 +28,14 @@ import * as Result from '../utils/result';
  *
  * @example
  * ```ts
- * const stringOrNumber = JsonDecoder.oneOf<string | number>([
+ * // The output type is inferred as the union of the alternatives.
+ * const stringOrNumber = JsonDecoder.oneOf([
+ *   JsonDecoder.string(),
+ *   JsonDecoder.number()
+ * ]); // Decoder<string | number>
+ *
+ * // Pass an explicit type argument to state the target type instead.
+ * const stringOrNumber2 = JsonDecoder.oneOf<string | number>([
  *   JsonDecoder.string(),
  *   JsonDecoder.number()
  * ]);
@@ -61,55 +69,10 @@ import * as Result from '../utils/result';
  * // Err({ issues: [{ message: '"big" is not a valid number', path: ['radius'] }] })
  * ```
  */
-export function oneOf<T>(decoders: Array<Decoder<T>>): Decoder<T> {
-  return new Decoder<T>((json: any) => {
-    const branches: ReadonlyArray<Result.DecodingIssue>[] = [];
-    for (let i = 0; i < decoders.length; i++) {
-      const result = decoders[i].decode(json);
-      if (result.isOk()) {
-        return result;
-      }
-      branches.push(result.issues);
-    }
-    // No alternative matched: report a summary followed by every alternative's
-    // failure. Issues sharing a path are collapsed into a single "X or Y"
-    // message so competing alternatives don't read as conjunctive requirements.
-    return Result.err<T>([
-      {
-        message: `no alternative matched (tried ${decoders.length})`,
-        path: []
-      },
-      ...collapseAlternatives(branches)
-    ]);
-  });
-}
-
-/**
- * Collapses issues from competing branches into one issue per path, joining the
- * distinct messages at that path with " or ".
- */
-function collapseAlternatives(
-  branches: ReadonlyArray<ReadonlyArray<Result.DecodingIssue>>
-): Result.DecodingIssue[] {
-  const byPath = new Map<
-    string,
-    { path: ReadonlyArray<string | number>; messages: string[] }
-  >();
-  for (const branch of branches) {
-    for (const issue of branch) {
-      const key = JSON.stringify(issue.path);
-      const entry = byPath.get(key);
-      if (entry) {
-        if (!entry.messages.includes(issue.message)) {
-          entry.messages.push(issue.message);
-        }
-      } else {
-        byPath.set(key, { path: issue.path, messages: [issue.message] });
-      }
-    }
-  }
-  return Array.from(byPath.values()).map(({ path, messages }) => ({
-    message: messages.join(' or '),
-    path
-  }));
+export function oneOf<T>(decoders: Array<Decoder<T>>): Decoder<T>;
+export function oneOf<D extends readonly Decoder<any>[]>(
+  decoders: D
+): Decoder<DecoderOutput<D[number]>>;
+export function oneOf(decoders: ReadonlyArray<Decoder<any>>): Decoder<any> {
+  return new Decoder<any>(oneOfFn(decoders.map(Decoder.toDecodeFn)));
 }

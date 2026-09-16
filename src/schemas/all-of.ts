@@ -5,25 +5,26 @@
  */
 
 import { Decoder } from '../core';
-import * as Result from '../utils/result';
+import { allOfFn } from '../internal/schemas';
+import type {
+  OutputOf,
+  UnionToIntersectionOf,
+  IntersectionOfOutputs
+} from '../internal/types';
 
 /**
  * Infers the decoder output type.
  *
  * @category Internal Types
  */
-export type DecoderOutput<D> = D extends Decoder<infer T> ? T : never;
+export type DecoderOutput<D> = OutputOf<D>;
 
 /**
  * Union to intersection inference.
  *
  * @category Internal Types
  */
-export type UnionToIntersection<U> = (
-  U extends any ? (x: U) => any : never
-) extends (x: infer I) => any
-  ? I
-  : never;
+export type UnionToIntersection<U> = UnionToIntersectionOf<U>;
 
 /**
  * Merges allOf types into one.
@@ -31,7 +32,7 @@ export type UnionToIntersection<U> = (
  * @category Internal Types
  */
 export type AllOfOutput<T extends readonly Decoder<any>[]> =
-  UnionToIntersection<DecoderOutput<T[number]>>;
+  IntersectionOfOutputs<T>;
 
 /**
  * A decoder that succeeds only if all provided decoders succeed, deep-merging
@@ -68,72 +69,5 @@ export type AllOfOutput<T extends readonly Decoder<any>[]> =
 export function allOf<T extends readonly Decoder<any>[]>(
   decoders: T
 ): Decoder<AllOfOutput<T>> {
-  return new Decoder((json: any) => {
-    const isObj = isPlainObject(json);
-    let lastJson = json;
-    const allIssues: Result.DecodingIssue[] = [];
-    for (let i = 0; i < decoders.length; i++) {
-      const result = decoders[i].decode(lastJson);
-      if (result.isOk()) {
-        if (isObj) {
-          lastJson = deepMerge({ target: lastJson, source: result.value });
-        } else if (!Array.isArray(json)) {
-          lastJson = result.value;
-        }
-      } else {
-        allIssues.push(...result.issues);
-      }
-    }
-    if (allIssues.length > 0) {
-      return Result.err<T>(allIssues);
-    }
-    return Result.ok(lastJson);
-  });
-}
-
-/**
- * Deeply merges two plain objects into one.
- * Arrays are not merged.
- *
- * @param target is the base object you are updating.
- * @param source contains new values that override or extend the target.
- *
- * @example
- * ```ts
- * const target = { a: 1, b: { x: 10, y: 20 } };
- * const source = { b: { y: 99, z: 42 }, c: 3 };
- * const result = deepMerge(target, source);
- * console.log(result);
- * // Output:
- * // { a: 1, b: { x: 10, y: 99, z: 42 }, c: 3 }
- * ```
- */
-function deepMerge<
-  T extends Record<string, any>,
-  U extends Record<string, any>
->({ target, source }: { target: T; source: U }): T & U {
-  const result: Record<string, any> = { ...target };
-
-  for (const key in source) {
-    if (Object.prototype.hasOwnProperty.call(source, key)) {
-      const sourceValue = source[key];
-      const targetValue = target[key];
-
-      if (isPlainObject(sourceValue) && isPlainObject(targetValue)) {
-        result[key] = deepMerge({ target: targetValue, source: sourceValue });
-      } else {
-        result[key] = sourceValue;
-      }
-    }
-  }
-
-  return result as T & U;
-}
-
-function isPlainObject(value: unknown): value is Record<string, unknown> {
-  return (
-    typeof value === 'object' &&
-    value !== null &&
-    Object.getPrototypeOf(value) === Object.prototype
-  );
+  return new Decoder(allOfFn(decoders.map(Decoder.toDecodeFn)));
 }

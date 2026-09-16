@@ -5,8 +5,7 @@
  */
 
 import { Decoder } from '../core';
-import { primitiveError, prependPath } from '../utils/errors';
-import * as Result from '../utils/result';
+import { objectFn, normalizeFields, type FieldSpec } from '../internal/schemas';
 
 /**
  * Represents an object that maps properties of a TypeScript type `T` to
@@ -84,32 +83,12 @@ export type DecoderObject<T> = {
  * ```
  */
 export function object<T>(decoders: DecoderObject<T>): Decoder<T> {
-  return new Decoder<T>((json: any) => {
-    if (json !== null && typeof json === 'object') {
-      const result: any = {};
-      const allIssues: Result.DecodingIssue[] = [];
-      for (const key in decoders) {
-        if (Object.prototype.hasOwnProperty.call(decoders, key)) {
-          let r;
-          const decoderObject = decoders[key];
-          if (decoderObject instanceof Decoder) {
-            r = decoderObject.decode(json[key]);
-          } else {
-            r = decoderObject.decoder.decode(json[decoderObject.fromKey]);
-          }
-          if (r.isOk()) {
-            result[key] = r.value;
-          } else {
-            allIssues.push(...prependPath(r.issues, key as string));
-          }
-        }
-      }
-      if (allIssues.length > 0) {
-        return Result.err<T>(allIssues);
-      }
-      return Result.ok<T>(result);
-    } else {
-      return Result.err<T>(primitiveError(json, 'object'));
-    }
-  });
+  return new Decoder<T>(
+    objectFn<T>(
+      normalizeFields<Decoder<any>>(
+        decoders as Record<string, FieldSpec<Decoder<any>>>,
+        Decoder.toDecodeFn
+      )
+    )
+  );
 }
