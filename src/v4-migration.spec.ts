@@ -166,7 +166,7 @@ describe('v4-migration -- oneOf reports none-matched plus every alternative', ()
         kind: JsonDecoder.literal('circle' as const),
         radius: JsonDecoder.number()
       }) as Decoder<Shape>,
-      JsonDecoder.null()
+      JsonDecoder.nullValue()
     ]);
     expectErrWithIssues(
       shapeDecoder.decode({ kind: 'circle', radius: 'big' }),

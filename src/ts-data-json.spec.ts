@@ -105,30 +105,33 @@ describe('json-decoder', () => {
   });
 
   // null
-  describe('null', () => {
+  describe('nullValue', () => {
     it('should decode null', () => {
-      expectOkWithValue(JsonDecoder.null().decode(null), null);
+      expectOkWithValue(JsonDecoder.nullValue().decode(null), null);
     });
     it('should fail if not null', () => {
-      expectErrWithIssues(JsonDecoder.null().decode(1), [
+      expectErrWithIssues(JsonDecoder.nullValue().decode(1), [
         { message: '1 is not null', path: [] }
       ]);
-      expectErrWithIssues(JsonDecoder.null().decode(undefined), [
+      expectErrWithIssues(JsonDecoder.nullValue().decode(undefined), [
         { message: 'undefined is not null', path: [] }
       ]);
     });
   });
 
   // undefined
-  describe('undefined', () => {
+  describe('undefinedValue', () => {
     it('should decode undefined', () => {
-      expectOkWithValue(JsonDecoder.undefined().decode(undefined), undefined);
+      expectOkWithValue(
+        JsonDecoder.undefinedValue().decode(undefined),
+        undefined
+      );
     });
     it('should fail if not undefined', () => {
-      expectErrWithIssues(JsonDecoder.undefined().decode(1), [
+      expectErrWithIssues(JsonDecoder.undefinedValue().decode(1), [
         { message: '1 is not undefined', path: [] }
       ]);
-      expectErrWithIssues(JsonDecoder.undefined().decode(null), [
+      expectErrWithIssues(JsonDecoder.undefinedValue().decode(null), [
         { message: 'null is not undefined', path: [] }
       ]);
     });
@@ -374,8 +377,8 @@ describe('json-decoder', () => {
     it('should apply transformations', () => {
       const optionalV2 = JsonDecoder.oneOf([
         JsonDecoder.string(),
-        JsonDecoder.null().map(() => undefined),
-        JsonDecoder.undefined()
+        JsonDecoder.nullValue().map(() => undefined),
+        JsonDecoder.undefinedValue()
       ]);
       expectOkWithValue(optionalV2.decode(null), undefined);
     });
@@ -603,8 +606,8 @@ describe('json-decoder', () => {
 
       it('returns null when every member returns null', () => {
         const decoder = JsonDecoder.allOf([
-          JsonDecoder.null(),
-          JsonDecoder.null()
+          JsonDecoder.nullValue(),
+          JsonDecoder.nullValue()
         ]);
         expectOkWithValue(decoder.decode(null), null);
       });
@@ -1099,7 +1102,7 @@ describe('json-decoder', () => {
         value: JsonDecoder.string(),
         children: JsonDecoder.oneOf<Node<string>[]>([
           JsonDecoder.lazy(() => JsonDecoder.array(treeDecoder)),
-          JsonDecoder.undefined().map(() => [])
+          JsonDecoder.undefinedValue().map(() => [])
         ])
       }
     );

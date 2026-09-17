@@ -15,15 +15,16 @@ import { nullFn } from '../internal/schemas';
  *
  * @example
  * ```ts
- * const nullDecoder = JsonDecoder.null();
+ * const nullDecoder = JsonDecoder.nullValue();
  * nullDecoder.decode(null); // Ok<null>({value: null})
  * nullDecoder.decode(123); // Err({ issues: [{ message: '123 is not null', path: [] }] })
  * nullDecoder.decode(undefined); // Err({ issues: [{ message: 'undefined is not null', path: [] }] })
  * ```
  * @category Primitives
  */
-function null_(): Decoder<null> {
+export function nullValue(): Decoder<null> {
   return new Decoder(nullFn());
 }
 
-export { null_ as null };
+// Deprecated alias so 4.x code calling `null()` keeps working. Removed in 5.0.0.
+export { nullValue as null };

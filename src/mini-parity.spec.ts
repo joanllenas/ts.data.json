@@ -41,15 +41,15 @@ const cases: Case[] = [
     inputs: [true, false, 'true', 0, null]
   },
   {
-    name: 'null',
-    main: () => J.null(),
-    mini: () => M.null(),
+    name: 'nullValue',
+    main: () => J.nullValue(),
+    mini: () => M.nullValue(),
     inputs: [null, undefined, 0, 'null']
   },
   {
-    name: 'undefined',
-    main: () => J.undefined(),
-    mini: () => M.undefined(),
+    name: 'undefinedValue',
+    main: () => J.undefinedValue(),
+    mini: () => M.undefinedValue(),
     inputs: [undefined, null, 0, '']
   },
   {
@@ -191,12 +191,12 @@ const cases: Case[] = [
     main: () =>
       J.oneOf([
         J.object({ kind: J.literal('circle'), radius: J.number() }),
-        J.null()
+        J.nullValue()
       ]),
     mini: () =>
       M.oneOf([
         M.object({ kind: M.literal('circle'), radius: M.number() }),
-        M.null()
+        M.nullValue()
       ]),
     inputs: [
       { kind: 'circle', radius: 1 },

@@ -15,15 +15,16 @@ import { undefinedFn } from '../internal/schemas';
  *
  * @example
  * ```ts
- * const undefinedDecoder = JsonDecoder.undefined();
+ * const undefinedDecoder = JsonDecoder.undefinedValue();
  * undefinedDecoder.decode(undefined); // Ok<undefined>({value: undefined})
  * undefinedDecoder.decode(123); // Err({ issues: [{ message: '123 is not undefined', path: [] }] })
  * undefinedDecoder.decode(null); // Err({ issues: [{ message: 'null is not undefined', path: [] }] })
  * ```
  * @category Primitives
  */
-function undefined_(): Decoder<undefined> {
+export function undefinedValue(): Decoder<undefined> {
   return new Decoder(undefinedFn());
 }
 
-export { undefined_ as undefined };
+// Deprecated alias so 4.x code calling `undefined()` keeps working. Removed in 5.0.0.
+export { undefinedValue as undefined };
