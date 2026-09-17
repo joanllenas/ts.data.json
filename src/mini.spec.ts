@@ -39,8 +39,8 @@ describe('mini: primitives', () => {
   it('decodes number, boolean, null and undefined', () => {
     expectOk(Mini.decode(Mini.number(), 99), 99);
     expectOk(Mini.decode(Mini.boolean(), true), true);
-    expectOk(Mini.decode(Mini.null(), null), null);
-    expectOk(Mini.decode(Mini.undefined(), undefined), undefined);
+    expectOk(Mini.decode(Mini.nullValue(), null), null);
+    expectOk(Mini.decode(Mini.undefinedValue(), undefined), undefined);
   });
 });
 

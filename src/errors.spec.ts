@@ -43,17 +43,17 @@ describe('error handling', () => {
     });
   });
 
-  describe('null', () => {
+  describe('nullValue', () => {
     it('fails when not null', () => {
-      expectErrWithIssues(jd.null().decode(1), [
+      expectErrWithIssues(jd.nullValue().decode(1), [
         { message: '1 is not null', path: [] }
       ]);
     });
   });
 
-  describe('undefined', () => {
+  describe('undefinedValue', () => {
     it('fails when not undefined', () => {
-      expectErrWithIssues(jd.undefined().decode(1), [
+      expectErrWithIssues(jd.undefinedValue().decode(1), [
         { message: '1 is not undefined', path: [] }
       ]);
     });

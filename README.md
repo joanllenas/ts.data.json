@@ -115,9 +115,8 @@ Both entry points bundle only the decoders you import. What `mini` removes is th
 
 So the saving is about 1 kB minified, which matters most for an app that uses only a few decoders. Reach for `mini` when you are counting bytes, and for the main entry when you prefer the chained method style.
 
-Two things to know:
+One thing to know:
 
-- `null` and `undefined` are exported under their own names, so a named import has to alias them: `import { null as jsonNull } from 'ts.data.json/mini'`. The namespace import above avoids this.
 - `mini` exports a `Decoder<T>` type, but it is a function type, not the class. Decoders from the two entry points are not interchangeable, so pick one per project.
 
 ## Documentation

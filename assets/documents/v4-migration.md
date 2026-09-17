@@ -177,7 +177,7 @@ Decoder names are no longer part of error messages, and the failing key or index
 ```typescript
 type Shape = { kind: 'circle'; radius: number } | null;
 
-const shapeDecoder = JsonDecoder.oneOf<Shape>([JsonDecoder.object({ kind: JsonDecoder.literal('circle'), radius: JsonDecoder.number() }), JsonDecoder.null()]);
+const shapeDecoder = JsonDecoder.oneOf<Shape>([JsonDecoder.object({ kind: JsonDecoder.literal('circle'), radius: JsonDecoder.number() }), JsonDecoder.nullValue()]);
 
 shapeDecoder.decode({ kind: 'circle', radius: 'big' });
 // Err({ issues: [

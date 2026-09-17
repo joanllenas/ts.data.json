@@ -144,7 +144,7 @@ export const boolean: () => Decoder<boolean> = booleanFn;
  * @category Primitives
  * @function
  */
-const nullDecoder: () => Decoder<null> = nullFn;
+export const nullValue: () => Decoder<null> = nullFn;
 
 /**
  * Decoder for `undefined` values.
@@ -152,8 +152,7 @@ const nullDecoder: () => Decoder<null> = nullFn;
  * @category Primitives
  * @function
  */
-const undefinedDecoder: () => Decoder<undefined> = undefinedFn;
-export { nullDecoder as null, undefinedDecoder as undefined };
+export const undefinedValue: () => Decoder<undefined> = undefinedFn;
 
 /**
  * Decoder that always succeeds with the provided value, ignoring its input.

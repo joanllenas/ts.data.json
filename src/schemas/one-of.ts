@@ -58,7 +58,7 @@ import type { DecoderOutput } from './all-of';
  *   radius: JsonDecoder.number()
  * });
  *
- * JsonDecoder.oneOf([circle, JsonDecoder.null()]).decode({ kind: 'circle', radius: 'big' });
+ * JsonDecoder.oneOf([circle, JsonDecoder.nullValue()]).decode({ kind: 'circle', radius: 'big' });
  * // Err({ issues: [
  * //   { message: 'no alternative matched (tried 2)', path: [] },
  * //   { message: '{"kind":"circle","radius":"big"} is not null', path: [] },
