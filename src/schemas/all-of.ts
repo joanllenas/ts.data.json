@@ -43,6 +43,21 @@ export type AllOfOutput<T extends readonly Decoder<any>[]> =
  * intersection). For *alternatives* where only one should hold (a union), use
  * {@link oneOf} or {@link discriminatedUnion} instead.
  *
+ * **Output:** the value is built only from the results of the decoders, never
+ * from the input. A key that no decoder declares is dropped, the same as with
+ * {@link object}.
+ *
+ * **Merging:** two results that are both plain objects are deeply merged. For a
+ * key that both contain, the value of the later decoder is kept. In every other
+ * case (a primitive, an array, `null` or a class instance on either side) the
+ * later result replaces the earlier one. Arrays are never merged, at any depth.
+ * So when the decoders do not return plain objects, the output is the result of
+ * the last decoder.
+ *
+ * **Input of each decoder:** each decoder receives the input with the results
+ * of the earlier decoders applied to it. An array input is the exception: every
+ * decoder receives the original array.
+ *
  * @category Utils
  * @param decoders Array of decoders to try in sequence
  * @returns A decoder that tries each decoder in sequence until all succeed
@@ -57,6 +72,9 @@ export type AllOfOutput<T extends readonly Decoder<any>[]> =
  *    [firstnameDecoder, lastnameDecoder, JsonDecoder.object({ role: roleDecoder })]
  *  );
  *  userDecoder.decode({ firstname: 'John', lastname: 'Doe', role: 'admin' }); // Ok<User>
+ *  // A key that no decoder declares is not part of the output:
+ *  userDecoder.decode({ firstname: 'John', lastname: 'Doe', role: 'admin', password: 'x' });
+ *  // Ok({ firstname: 'John', lastname: 'Doe', role: 'admin' })
  *  // All failing sub-decoders are run and their issues are accumulated:
  *  userDecoder.decode({ firstname: 'John' });
  *  // Err({ issues: [
@@ -64,6 +82,16 @@ export type AllOfOutput<T extends readonly Decoder<any>[]> =
  *  //   { message: 'no alternative matched (tried 2)', path: ['role'] },
  *  //   { message: 'undefined is not exactly "admin" or undefined is not exactly "user"', path: ['role'] }
  *  // ] })
+ * ```
+ *
+ * @example
+ * ```ts
+ *  // Results that are not plain objects are not merged. The output is the result of the last decoder.
+ *  const trimmedUpperCaseDecoder = JsonDecoder.allOf([
+ *    JsonDecoder.string().map(value => value.trim()),
+ *    JsonDecoder.string().map(value => value.toUpperCase())
+ *  ]);
+ *  trimmedUpperCaseDecoder.decode(' hi '); // Ok('HI')
  * ```
  */
 export function allOf<T extends readonly Decoder<any>[]>(

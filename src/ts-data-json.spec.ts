@@ -506,7 +506,148 @@ describe('json-decoder', () => {
           }))
         )
       ]);
-      expectOkWithValue(accumulatorDeocder.decode([{ a: 0 }]), [{ a: 0 }]);
+      // Each member receives the original array, so the result is { a: 1 } and not { a: 2 }.
+      expectOkWithValue(accumulatorDeocder.decode([{ a: 0 }]), [{ a: 1 }]);
+    });
+
+    describe('the output contains only the keys that the members declare', () => {
+      it('drops an unknown key with a single member', () => {
+        const decoder = JsonDecoder.allOf([
+          JsonDecoder.object({ a: JsonDecoder.number() })
+        ]);
+        expectOkWithValue(decoder.decode({ a: 1, extra: true }), { a: 1 });
+      });
+
+      it('drops an unknown key with two members', () => {
+        const decoder = JsonDecoder.allOf([
+          JsonDecoder.object({ a: JsonDecoder.number() }),
+          JsonDecoder.object({ n: JsonDecoder.string() })
+        ]);
+        expectOkWithValue(decoder.decode({ a: 1, n: 'x', extra: true }), {
+          a: 1,
+          n: 'x'
+        });
+      });
+
+      it('drops an unknown key inside a nested object', () => {
+        const decoder = JsonDecoder.allOf([
+          JsonDecoder.object({
+            o: JsonDecoder.object({ a: JsonDecoder.number() })
+          }),
+          JsonDecoder.object({ n: JsonDecoder.string() })
+        ]);
+        expectOkWithValue(decoder.decode({ o: { a: 1, junk: true }, n: 'x' }), {
+          o: { a: 1 },
+          n: 'x'
+        });
+      });
+
+      it('drops the source key of a fromKey field', () => {
+        const decoder = JsonDecoder.allOf([
+          JsonDecoder.object<{ stars: number }>({
+            stars: {
+              fromKey: 'stargazers_count',
+              decoder: JsonDecoder.number()
+            }
+          })
+        ]);
+        expectOkWithValue(decoder.decode({ stargazers_count: 7 }), {
+          stars: 7
+        });
+      });
+
+      it('returns the same value as object() for the same input', () => {
+        const objectDecoder = JsonDecoder.object({ a: JsonDecoder.number() });
+        const input = { a: 1, extra: true };
+        expect(JsonDecoder.allOf([objectDecoder]).decode(input)).toEqual(
+          objectDecoder.decode(input)
+        );
+      });
+
+      it('drops an unknown key inside the items of an array input', () => {
+        const decoder = JsonDecoder.allOf([
+          JsonDecoder.array(JsonDecoder.object({ a: JsonDecoder.number() }))
+        ]);
+        expectOkWithValue(decoder.decode([{ a: 1, junk: true }]), [{ a: 1 }]);
+      });
+
+      it('does not modify the input', () => {
+        const decoder = JsonDecoder.allOf([
+          JsonDecoder.object({ a: JsonDecoder.number() }),
+          JsonDecoder.object({ n: JsonDecoder.string() })
+        ]);
+        const input = { a: 1, n: 'x', extra: true };
+        decoder.decode(input);
+        expect(input).toEqual({ a: 1, n: 'x', extra: true });
+      });
+    });
+
+    describe('members that do not return a plain object', () => {
+      it('returns the result of the last member for primitives', () => {
+        const decoder = JsonDecoder.allOf([
+          JsonDecoder.string().map(value => value + '!'),
+          JsonDecoder.string().map(value => value.toUpperCase())
+        ]);
+        expectOkWithValue(decoder.decode('a'), 'A!');
+      });
+
+      it('returns the result of the last member for arrays, without merging them', () => {
+        const decoder = JsonDecoder.allOf([
+          JsonDecoder.array(JsonDecoder.number()),
+          JsonDecoder.array(JsonDecoder.number()).map(values =>
+            values.map(value => value + 1)
+          )
+        ]);
+        expectOkWithValue(decoder.decode([1, 2]), [2, 3]);
+      });
+
+      it('returns null when every member returns null', () => {
+        const decoder = JsonDecoder.allOf([
+          JsonDecoder.null(),
+          JsonDecoder.null()
+        ]);
+        expectOkWithValue(decoder.decode(null), null);
+      });
+
+      it('replaces an earlier plain object with a later primitive', () => {
+        const decoder: Decoder<unknown> = JsonDecoder.allOf([
+          JsonDecoder.object({ a: JsonDecoder.number() }),
+          JsonDecoder.object({ a: JsonDecoder.number() }).map(obj => obj.a)
+        ]);
+        expectOkWithValue(decoder.decode({ a: 1, extra: true }), 1);
+      });
+
+      it('replaces an earlier primitive with a later plain object', () => {
+        const decoder: Decoder<unknown> = JsonDecoder.allOf([
+          JsonDecoder.object({ a: JsonDecoder.number() }).map(obj => obj.a),
+          JsonDecoder.object({ a: JsonDecoder.number() })
+        ]);
+        expectOkWithValue(decoder.decode({ a: 1, extra: true }), { a: 1 });
+      });
+
+      it('does not copy array indexes into the input of the next member', () => {
+        const decoder: Decoder<unknown> = JsonDecoder.allOf([
+          JsonDecoder.object({ a: JsonDecoder.number() }).map(obj => [obj.a]),
+          JsonDecoder.record(JsonDecoder.number())
+        ]);
+        expectOkWithValue(decoder.decode({ a: 1 }), { a: 1 });
+      });
+
+      it('replaces a nested array with the array of the later member', () => {
+        const decoder = JsonDecoder.allOf([
+          JsonDecoder.object({
+            tags: JsonDecoder.array(JsonDecoder.string())
+          }),
+          JsonDecoder.object({
+            tags: JsonDecoder.array(JsonDecoder.string()).map(tags =>
+              tags.map(tag => tag.toUpperCase())
+            )
+          })
+        ]);
+        expectOkWithValue(decoder.decode({ tags: ['a', 'b'] }), {
+          tags: ['A', 'B']
+        });
+      });
     });
   });
 

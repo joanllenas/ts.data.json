@@ -114,6 +114,17 @@ describe('mini: combinators', () => {
     ]);
   });
 
+  it('allOf returns only the keys that the members declare', () => {
+    const decoder = Mini.allOf([
+      Mini.object({ o: Mini.object({ a: Mini.number() }) }),
+      Mini.object<{ stars: number }>({
+        stars: { fromKey: 'stargazers_count', decoder: Mini.number() }
+      })
+    ]);
+    const input = { o: { a: 1, junk: true }, stargazers_count: 7, extra: true };
+    expectOk(Mini.decode(decoder, input), { o: { a: 1 }, stars: 7 });
+  });
+
   it('fallback substitutes a default on failure', () => {
     expectOk(Mini.decode(Mini.fallback(0, Mini.number()), 'nope'), 0);
   });

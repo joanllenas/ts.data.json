@@ -401,15 +401,25 @@ function collapseAlternatives(
 export function allOfFn(decoders: ReadonlyArray<DecodeFn<any>>): DecodeFn<any> {
   return (json: any) => {
     const isObj = isPlainObject(json);
-    let lastJson = json;
+    // Each member receives the input with the earlier results applied, so it can still read keys that no earlier member declared.
+    let memberInput = json;
+    // The output is built from member results only, never from the input, so it cannot contain undeclared keys.
+    let merged: unknown = undefined;
     const allIssues: DecodingIssue[] = [];
     for (let i = 0; i < decoders.length; i++) {
-      const result = decoders[i](lastJson);
+      const result = decoders[i](memberInput);
       if (result.isOk()) {
+        merged = mergeResults(merged, result.value);
         if (isObj) {
-          lastJson = deepMerge({ target: lastJson, source: result.value });
+          // `deepMerge` would copy the indexes of an array or a string as keys.
+          if (isPlainObject(result.value)) {
+            memberInput = deepMerge({
+              target: memberInput,
+              source: result.value
+            });
+          }
         } else if (!Array.isArray(json)) {
-          lastJson = result.value;
+          memberInput = result.value;
         }
       } else {
         allIssues.push(...result.issues);
@@ -418,8 +428,19 @@ export function allOfFn(decoders: ReadonlyArray<DecodeFn<any>>): DecodeFn<any> {
     if (allIssues.length > 0) {
       return err(allIssues);
     }
-    return ok(lastJson);
+    return ok(merged);
   };
+}
+
+/**
+ * Combines the results of two `allOf` members. Two plain objects are deeply merged.
+ * In every other case the later result replaces the earlier one, which is also what {@link deepMerge} does for nested keys.
+ */
+function mergeResults(earlier: unknown, later: unknown): unknown {
+  if (isPlainObject(earlier) && isPlainObject(later)) {
+    return deepMerge({ target: earlier, source: later });
+  }
+  return later;
 }
 
 /**
