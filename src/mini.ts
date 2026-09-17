@@ -333,6 +333,10 @@ export type AllOfOutput<T extends readonly Decoder<any>[]> =
 /**
  * Decoder that succeeds only if every decoder succeeds, deep-merging results.
  *
+ * The output is built only from the results of the decoders, never from the input, so a key that no decoder declares is dropped.
+ * Two results that are both plain objects are deeply merged, and the value of the later decoder is kept for a key that both contain.
+ * In every other case (a primitive, an array, `null` or a class instance on either side) the later result replaces the earlier one.
+ *
  * @category Utils
  */
 export function allOf<T extends readonly Decoder<any>[]>(

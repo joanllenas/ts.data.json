@@ -211,7 +211,13 @@ const cases: Case[] = [
       J.allOf([J.object({ a: J.number() }), J.object({ b: J.string() })]),
     mini: () =>
       M.allOf([M.object({ a: M.number() }), M.object({ b: M.string() })]),
-    inputs: [{ a: 1, b: 'x' }, { a: 1 }, {}, null]
+    inputs: [
+      { a: 1, b: 'x' },
+      { a: 1, b: 'x', extra: true },
+      { a: 1 },
+      {},
+      null
+    ]
   },
   {
     name: 'discriminatedUnion',
