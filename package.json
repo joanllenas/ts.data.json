@@ -49,6 +49,7 @@
     "prebeta": "npm run test && npm run lint",
     "beta": "npm whoami && npm run build && npm publish --tag beta",
     "docs": "typedoc",
+    "docs:check": "typedoc --out node_modules/.cache/docs-check --treatWarningsAsErrors",
     "postdocs": "mkdir -p docs/media && cp assets/media/github-mark.png docs/media/ && cp assets/media/github-mark-white.png docs/media/"
   },
   "keywords": [
