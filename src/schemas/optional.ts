@@ -21,13 +21,10 @@ import { optionalFn } from '../internal/schemas';
  *   age?: number;
  * }
  *
- * const userDecoder = JsonDecoder.object<User>(
- *   {
- *     name: JsonDecoder.string(),
- *     age: JsonDecoder.optional(JsonDecoder.number())
- *   },
- *   'User'
- * );
+ * const userDecoder = JsonDecoder.object<User>({
+ *   name: JsonDecoder.string(),
+ *   age: JsonDecoder.optional(JsonDecoder.number())
+ * });
  *
  * userDecoder.decode({name: 'John'}); // Ok<User>
  * userDecoder.decode({name: 'John', age: 30}); // Ok<User>

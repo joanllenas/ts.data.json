@@ -8,7 +8,7 @@ import { Decoder } from '../core';
 import { succeedFn } from '../internal/schemas';
 
 /**
- * Decoder that always succeeds with the given value.
+ * Decoder that always succeeds, returning its input unchanged.
  *
  * @category Utils
  * @returns A decoder that always succeeds

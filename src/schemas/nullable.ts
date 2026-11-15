@@ -21,13 +21,10 @@ import { nullableFn } from '../internal/schemas';
  *   age: number | null;
  * }
  *
- * const userDecoder = JsonDecoder.object<User>(
- *   {
- *     name: JsonDecoder.string(),
- *     age: JsonDecoder.nullable(JsonDecoder.number())
- *   },
- *   'User'
- * );
+ * const userDecoder = JsonDecoder.object<User>({
+ *   name: JsonDecoder.string(),
+ *   age: JsonDecoder.nullable(JsonDecoder.number())
+ * });
  *
  * userDecoder.decode({name: 'John', age: null}); // Ok<User>
  * userDecoder.decode({name: 'John', age: 30}); // Ok<User>

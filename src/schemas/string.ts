@@ -16,7 +16,7 @@ import { stringFn } from '../internal/schemas';
  * @example
  * ```ts
  * JsonDecoder.string().decode('hi'); // Ok<string>({value: 'hi'})
- * JsonDecoder.string().decode(5); // Err({ issues: [{ message: '"5" is not a valid string', path: [] }] })
+ * JsonDecoder.string().decode(5); // Err({ issues: [{ message: '5 is not a valid string', path: [] }] })
  * ```
  */
 export function string(): Decoder<string> {

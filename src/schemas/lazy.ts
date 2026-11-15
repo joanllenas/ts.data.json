@@ -21,14 +21,11 @@ import { lazyFn } from '../internal/schemas';
  *   children?: Tree[];
  * }
  *
- * const treeDecoder = JsonDecoder.lazy(() =>
- *   JsonDecoder.object<Tree>(
- *     {
- *       value: JsonDecoder.number(),
- *       children: JsonDecoder.optional(JsonDecoder.array(treeDecoder))
- *     },
- *     'Tree'
- *   )
+ * const treeDecoder: JsonDecoder.Decoder<Tree> = JsonDecoder.lazy(() =>
+ *   JsonDecoder.object<Tree>({
+ *     value: JsonDecoder.number(),
+ *     children: JsonDecoder.optional(JsonDecoder.array(treeDecoder))
+ *   })
  * );
  * ```
  */

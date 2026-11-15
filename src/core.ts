@@ -21,7 +21,7 @@ export { formatIssuePath } from './internal/runtime';
  * const userDecoder = JsonDecoder.object({
  *   id: JsonDecoder.number(),
  *   name: JsonDecoder.string()
- * }, 'User');
+ * });
  *
  * // You can extract the type from the decoder:
  * type User = JsonDecoder.FromDecoder<typeof userDecoder>;
@@ -110,7 +110,7 @@ export class Decoder<T> implements StandardSchemaV1<unknown, T> {
    * @example
    * ```ts
    * JsonDecoder.string().decode('hi'); // Ok<string>({value: 'hi'})
-   * JsonDecoder.string().decode(5); // Err({ issues: [{ message: '"5" is not a valid string', path: [] }] })
+   * JsonDecoder.string().decode(5); // Err({ issues: [{ message: '5 is not a valid string', path: [] }] })
    * ```
    */
   decode(json: any): Result.Result<T> {
