@@ -13,7 +13,7 @@
         "default": "./dist/index.js"
       },
       "require": {
-        "types": "./dist/types/src/index.d.ts",
+        "types": "./dist/types-cjs/src/index.d.cts",
         "default": "./dist/index.cjs"
       }
     },
@@ -23,7 +23,7 @@
         "default": "./dist/mini.js"
       },
       "require": {
-        "types": "./dist/types/src/mini.d.ts",
+        "types": "./dist/types-cjs/src/mini.d.cts",
         "default": "./dist/mini.cjs"
       }
     }
