@@ -98,7 +98,7 @@ const cases: Case[] = [
     name: 'record of number',
     main: () => J.record(J.number()),
     mini: () => M.record(M.number()),
-    inputs: [{}, { a: 1 }, { a: '1', b: '2' }, null, 5]
+    inputs: [{}, { a: 1 }, { a: '1', b: '2' }, null, 5, [1, 2]]
   },
   {
     name: 'tuple',
@@ -116,7 +116,8 @@ const cases: Case[] = [
       { id: 1 },
       {},
       null,
-      'nope'
+      'nope',
+      []
     ]
   },
   {
@@ -147,7 +148,8 @@ const cases: Case[] = [
       { name: 'a', extra: 1 },
       { name: 1, extra: 1 },
       {},
-      null
+      null,
+      []
     ]
   },
   {
@@ -237,7 +239,8 @@ const cases: Case[] = [
       { kind: 'circle', r: 'big' },
       { kind: 'triangle' },
       {},
-      null
+      null,
+      []
     ]
   },
   {

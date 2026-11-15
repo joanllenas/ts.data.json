@@ -6,7 +6,7 @@
     "src/utils/result.ts",
     "src/mini.ts"
   ],
-  "out": "docs/latest",
+  "out": "docs",
   "githubPages": true,
   "basePath": "/ts.data.json",
   "exclude": ["**/*.spec.ts", "**/*.test.ts"],
