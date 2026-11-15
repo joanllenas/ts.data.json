@@ -26,7 +26,8 @@
         "types": "./dist/types-cjs/src/mini.d.cts",
         "default": "./dist/mini.cjs"
       }
-    }
+    },
+    "./package.json": "./package.json"
   },
   "files": [
     "dist/"
