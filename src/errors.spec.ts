@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { formatIssuePath } from './core';
-import * as jd from './schemas';
-import { Err, Ok, Result } from './utils/result';
+// The published entry point, so a dropped or renamed export fails this suite.
+import * as jd from './index';
+import { Err, formatIssuePath, Ok, Result } from './index';
 
 const expectErrWithIssues = <a>(
   result: Result<a>,

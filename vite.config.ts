@@ -34,13 +34,15 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
+      // Without `include`, a file that no test imports is absent from the report.
+      include: ['src/**/*.ts'],
       exclude: [
         'node_modules/**',
         'dist/**',
         '**/*.d.ts',
         '**/*.spec.ts',
-        'vite.config.ts',
-        'src/index.ts'
+        '**/*.type-test.ts',
+        'vite.config.ts'
       ]
     }
   }
