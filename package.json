@@ -42,6 +42,7 @@
     "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.test.json --noEmit",
     "test:dist": "vitest run -c vitest.dist.config.ts",
     "check:pack": "publint --strict && attw --pack . --profile node16",
+    "check:consumer": "node scripts/check-consumer.mjs",
     "lint": "eslint src/",
     "format": "prettier ./src --write && prettier ./assets/documents --write",
     "format:check": "prettier ./src --check && prettier ./assets/documents --check",
