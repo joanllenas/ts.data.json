@@ -37,6 +37,7 @@
     "test:watch": "vitest",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
+    "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.test.json --noEmit",
     "lint": "eslint src/",
     "format": "prettier ./src --write && prettier ./assets/documents --write",
     "format:check": "prettier ./src --check && prettier ./assets/documents --check",
