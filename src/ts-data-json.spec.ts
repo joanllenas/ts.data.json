@@ -431,6 +431,13 @@ describe('json-decoder', () => {
         [{ message: '"x" is not a valid number', path: ['radius'] }]
       );
     });
+
+    it('fails for an array, because a JSON array is not an object', () => {
+      expectErrWithIssues(
+        shapeDecoder.decode([]),
+        primitiveError([], 'object')
+      );
+    });
   });
 
   // allOf
@@ -750,6 +757,18 @@ describe('json-decoder', () => {
       expectErrWithIssues(userDecoder.decode(5), primitiveError(5, 'object'));
     });
 
+    it('should fail decoding an array', () => {
+      // Before #62, a `length` field read the length of the array and returned Ok.
+      const lengthDecoder = JsonDecoder.object({
+        length: JsonDecoder.number()
+      });
+      expectErrWithIssues(
+        lengthDecoder.decode([1, 2]),
+        primitiveError([1, 2], 'object')
+      );
+      expectErrWithIssues(userDecoder.decode([]), primitiveError([], 'object'));
+    });
+
     it('should allow decoding from different keys', () => {
       const paymentDecoderFromDifferentKeys = JsonDecoder.object<Payment>({
         iban: { fromKey: 'the_iban', decoder: JsonDecoder.string() },
@@ -840,6 +859,16 @@ describe('json-decoder', () => {
           primitiveError('hello', 'object')
         );
       });
+      it('should fail when the provided json is an array', () => {
+        expectErrWithIssues(
+          JsonDecoder.objectStrict({}).decode([]),
+          primitiveError([], 'object')
+        );
+        expectErrWithIssues(
+          strictUserDecoder.decode([]),
+          primitiveError([], 'object')
+        );
+      });
     });
   });
 
@@ -868,6 +897,12 @@ describe('json-decoder', () => {
       expectErrWithIssues(
         JsonDecoder.emptyObject().decode(null),
         primitiveError(null, 'empty object')
+      );
+    });
+    it('should fail to decode an empty array', () => {
+      expectErrWithIssues(
+        JsonDecoder.emptyObject().decode([]),
+        primitiveError([], 'empty object')
       );
     });
   });
@@ -932,6 +967,17 @@ describe('json-decoder', () => {
       expectErrWithIssues(
         JsonDecoder.record(JsonDecoder.number()).decode('hello'),
         primitiveError('hello', 'object')
+      );
+    });
+
+    it('should fail when the provided json is an array', () => {
+      expectErrWithIssues(
+        JsonDecoder.record(JsonDecoder.number()).decode([1, 2]),
+        primitiveError([1, 2], 'object')
+      );
+      expectErrWithIssues(
+        groupOfUsersDecoder.decode([]),
+        primitiveError([], 'object')
       );
     });
 

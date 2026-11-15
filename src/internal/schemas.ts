@@ -160,7 +160,7 @@ export function enumerationFn<E>(enumObj: object): DecodeFn<E> {
 /** @internal */
 export function emptyObjectFn(): DecodeFn<EmptyObject> {
   return (json: any) =>
-    json !== null && typeof json === 'object' && Object.keys(json).length === 0
+    isNonArrayObject(json) && Object.keys(json).length === 0
       ? ok<EmptyObject>(json)
       : err<EmptyObject>(primitiveError(json, 'empty object'));
 }
@@ -228,7 +228,7 @@ export function tupleFn(decoders: ReadonlyArray<DecodeFn<any>>): DecodeFn<any> {
 /** @internal */
 export function objectFn<T>(fields: ReadonlyArray<ObjectField>): DecodeFn<T> {
   return (json: any) => {
-    if (json !== null && typeof json === 'object') {
+    if (isNonArrayObject(json)) {
       const result: any = {};
       const allIssues: DecodingIssue[] = [];
       for (let i = 0; i < fields.length; i++) {
@@ -258,7 +258,7 @@ export function objectStrictFn<T>(
   // Both are already resolved in `sourceKey`, so the set is built once here rather than on every decode
   const allowedKeys = new Set<string>(fields.map(field => field.sourceKey));
   return (json: any) => {
-    if (json !== null && typeof json === 'object') {
+    if (isNonArrayObject(json)) {
       const allIssues: DecodingIssue[] = [];
       for (const key in json) {
         if (!allowedKeys.has(key)) {
@@ -291,7 +291,7 @@ export function objectStrictFn<T>(
 /** @internal */
 export function recordFn<V>(decode: DecodeFn<V>): DecodeFn<{ [K: string]: V }> {
   return (json: any) => {
-    if (json !== null && typeof json === 'object') {
+    if (isNonArrayObject(json)) {
       const obj: { [K: string]: V } = {};
       const allIssues: DecodingIssue[] = [];
       for (const key in json) {
@@ -468,6 +468,11 @@ function deepMerge<
   return result as T & U;
 }
 
+// `typeof` returns 'object' for an array, but a JSON array is not a JSON object (#62).
+function isNonArrayObject(value: unknown): boolean {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
 function isPlainObject(value: unknown): value is Record<string, unknown> {
   return (
     typeof value === 'object' &&
@@ -482,7 +487,7 @@ export function discriminatedUnionFn(
   mapping: Record<string, DecodeFn<any>>
 ): DecodeFn<any> {
   return (json: any) => {
-    if (json === null || typeof json !== 'object') {
+    if (!isNonArrayObject(json)) {
       return err(primitiveError(json, 'object'));
     }
     const tag = json[discriminant];
