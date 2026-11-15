@@ -26,5 +26,11 @@ export function nullValue(): Decoder<null> {
   return new Decoder(nullFn());
 }
 
-// Deprecated alias so 4.x code calling `null()` keeps working. Removed in 5.0.0.
-export { nullValue as null };
+// A bare `export { nullValue as null }` loses the tag in the emitted declarations.
+/**
+ * @deprecated Use {@link nullValue} instead. Removed in 5.0.0.
+ * @category Primitives
+ */
+const nullAlias = nullValue;
+
+export { nullAlias as null };

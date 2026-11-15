@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import * as JsonDecoder from './schemas';
-import { Err, Ok, ok, type Result } from './utils/result';
-import { FromDecoder } from './core';
+// The published entry point, so a dropped or renamed export fails this suite.
+import * as JsonDecoder from './index';
+import { Err, FromDecoder, Ok, ok, type Result } from './index';
 
 // ---------------------------------------------------------------------------
 // Helpers (mirrors the pattern from ts-data-json.spec.ts)

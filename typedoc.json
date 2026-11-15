@@ -65,5 +65,10 @@
   "headings": {
     "readme": false,
     "document": false
+  },
+  "validation": {
+    "notExported": true,
+    "invalidLink": true,
+    "notDocumented": false
   }
 }

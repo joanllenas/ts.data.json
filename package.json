@@ -1,6 +1,6 @@
 {
   "name": "ts.data.json",
-  "version": "4.3.1",
+  "version": "4.4.0",
   "description": "A JSON decoding library for Typescript",
   "type": "module",
   "main": "./dist/index.cjs",
@@ -13,7 +13,7 @@
         "default": "./dist/index.js"
       },
       "require": {
-        "types": "./dist/types/src/index.d.ts",
+        "types": "./dist/types-cjs/src/index.d.cts",
         "default": "./dist/index.cjs"
       }
     },
@@ -23,10 +23,11 @@
         "default": "./dist/mini.js"
       },
       "require": {
-        "types": "./dist/types/src/mini.d.ts",
+        "types": "./dist/types-cjs/src/mini.d.cts",
         "default": "./dist/mini.cjs"
       }
-    }
+    },
+    "./package.json": "./package.json"
   },
   "files": [
     "dist/"
@@ -34,15 +35,21 @@
   "sideEffects": false,
   "scripts": {
     "build": "vite build",
+    "postbuild": "node scripts/fix-declaration-specifiers.mjs",
     "test:watch": "vitest",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
+    "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.test.json --noEmit",
+    "test:dist": "vitest run -c vitest.dist.config.ts",
+    "check:pack": "publint --strict && attw --pack . --profile node16",
+    "check:consumer": "node scripts/check-consumer.mjs",
     "lint": "eslint src/",
     "format": "prettier ./src --write && prettier ./assets/documents --write",
     "format:check": "prettier ./src --check && prettier ./assets/documents --check",
     "prebeta": "npm run test && npm run lint",
     "beta": "npm whoami && npm run build && npm publish --tag beta",
     "docs": "typedoc",
+    "docs:check": "typedoc --out node_modules/.cache/docs-check --treatWarningsAsErrors",
     "postdocs": "mkdir -p docs/media && cp assets/media/github-mark.png docs/media/ && cp assets/media/github-mark-white.png docs/media/"
   },
   "keywords": [
@@ -68,11 +75,13 @@
   },
   "homepage": "https://github.com/joanllenas/ts.data.json#readme",
   "devDependencies": {
+    "@arethetypeswrong/cli": "^0.18.5",
     "@standard-schema/spec": "^1.0.0",
     "@types/node": "^25.9.2",
     "@vitest/coverage-v8": "~4.1.8",
     "eslint": "~10.4.1",
     "prettier": "~3.8.4",
+    "publint": "^0.3.24",
     "typedoc": "~0.28.19",
     "typescript": "~6.0.3",
     "typescript-eslint": "~8.60.1",

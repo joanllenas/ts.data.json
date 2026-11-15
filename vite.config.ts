@@ -23,7 +23,12 @@ export default defineConfig({
   },
   plugins: [
     dts({
-      outDirs: 'dist/types',
+      // A `.d.ts` in a `"type": "module"` package is read as ESM, so `require` needs `.d.cts`.
+      // vite-plugin-dts 5.0.2 ignores `entryRoot`, so the `src/` path segment stays for now.
+      outDirs: [
+        'dist/types',
+        { dir: 'dist/types-cjs', moduleFormat: 'cjs' }
+      ],
       exclude: ['**/*.spec.ts', '**/*.type-test.ts']
     })
   ],
@@ -34,13 +39,15 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
+      // Without `include`, a file that no test imports is absent from the report.
+      include: ['src/**/*.ts'],
       exclude: [
         'node_modules/**',
         'dist/**',
         '**/*.d.ts',
         '**/*.spec.ts',
-        'vite.config.ts',
-        'src/index.ts'
+        '**/*.type-test.ts',
+        'vite.config.ts'
       ]
     }
   }

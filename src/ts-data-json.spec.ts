@@ -1,9 +1,9 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { describe, expect, it } from 'vitest';
-import { Decoder, FromDecoder } from './core';
+// The published entry point, so a dropped or renamed export fails this suite.
+import * as JsonDecoder from './index';
+import { Decoder, Err, err, FromDecoder, Ok, ok, Result } from './index';
 import { primitiveError } from './utils/errors';
-import * as JsonDecoder from './schemas';
-import { Err, err, Ok, ok, Result } from './utils/result';
 import type { StandardSchemaV1 } from './utils/standard-schema-v1';
 
 // Test utils

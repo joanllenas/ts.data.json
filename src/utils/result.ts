@@ -12,7 +12,7 @@
  * @example
  * ```typescript
  * // A failure at users[2].name would look like:
- * const issue: DecodingIssue = { message: '"null" is not a valid string', path: ['users', 2, 'name'] };
+ * const issue: DecodingIssue = { message: 'null is not a valid string', path: ['users', 2, 'name'] };
  * ```
  */
 export interface DecodingIssue {
@@ -98,7 +98,7 @@ export class Err<T> {
    *
    * @example
    * ```typescript
-   * const result: Result<number> = err("Invalid input");
+   * const result: Result<number> = err([{ message: 'Invalid input', path: [] }]);
    * const mapped: Result<string> = result.map(x => x.toString());
    * // mapped = Err([{ message: "Invalid input", path: [] }])
    * ```

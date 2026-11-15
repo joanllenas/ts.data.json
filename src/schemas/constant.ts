@@ -20,7 +20,7 @@ import { constantFn } from '../internal/schemas';
  *
  * trueDecoder.decode(true); // Ok<boolean>({value: true})
  * trueDecoder.decode(false); // Ok<boolean>({value: true})
- * trueDecoder.decode("hello"); // Ok<boolean>({value: "true"})
+ * trueDecoder.decode('hello'); // Ok<boolean>({value: true})
  * ```
  */
 export function constant<T>(value: T): Decoder<T> {

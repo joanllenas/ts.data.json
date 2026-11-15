@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import * as J from './index';
 import * as M from './mini';
+import { ONLY_IN_MAIN } from '../test/expected-exports';
 
 // The two entry points share one set of decoding factories in src/internal.
 // Their public types are declared separately, so this suite is what proves the
@@ -283,11 +284,18 @@ describe('entry point parity', () => {
       // Takes a thunk rather than a value, so it has its own case in mini.spec.ts.
       'lazy'
     ]);
+    // Derived from both entries, so a schema added to only one of them also fails.
+    const notInBoth = new Set(Object.keys(ONLY_IN_MAIN));
     const covered = new Set(cases.flatMap(({ name }) => name.split(' ')));
-    const schemas = Object.keys(M).filter(
+    const both = {
+      ...(M as Record<string, unknown>),
+      ...(J as Record<string, unknown>)
+    };
+    const schemas = Object.keys(both).filter(
       name =>
-        typeof (M as Record<string, unknown>)[name] === 'function' &&
-        !notSchemas.has(name)
+        typeof both[name] === 'function' &&
+        !notSchemas.has(name) &&
+        !notInBoth.has(name)
     );
     expect(schemas.length).toBeGreaterThan(0);
     expect(schemas.filter(name => !covered.has(name))).toEqual([]);

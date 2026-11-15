@@ -26,5 +26,11 @@ export function undefinedValue(): Decoder<undefined> {
   return new Decoder(undefinedFn());
 }
 
-// Deprecated alias so 4.x code calling `undefined()` keeps working. Removed in 5.0.0.
-export { undefinedValue as undefined };
+// A bare `export { undefinedValue as undefined }` loses the tag in the emitted declarations.
+/**
+ * @deprecated Use {@link undefinedValue} instead. Removed in 5.0.0.
+ * @category Primitives
+ */
+const undefinedAlias = undefinedValue;
+
+export { undefinedAlias as undefined };

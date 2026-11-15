@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { Decoder, FromDecoder } from './core';
-import * as JsonDecoder from './schemas';
-import { Err, err, Ok, ok, Result } from './utils/result';
+// The published entry point, so a dropped or renamed export fails this suite.
+import * as JsonDecoder from './index';
+import { Decoder, Err, err, FromDecoder, Ok, ok, Result } from './index';
 
 // ---------------------------------------------------------------------------
 // Helpers
