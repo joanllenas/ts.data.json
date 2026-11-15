@@ -43,7 +43,7 @@
     "prebeta": "npm run test && npm run lint",
     "beta": "npm whoami && npm run build && npm publish --tag beta",
     "docs": "typedoc",
-    "postdocs": "mkdir -p docs/latest/media && cp assets/media/github-mark.png docs/latest/media/ && cp assets/media/github-mark-white.png docs/latest/media/"
+    "postdocs": "mkdir -p docs/media && cp assets/media/github-mark.png docs/media/ && cp assets/media/github-mark-white.png docs/media/"
   },
   "keywords": [
     "json",
